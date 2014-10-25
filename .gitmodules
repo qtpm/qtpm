@@ -1,0 +1,6 @@
+[submodule "qtpm_cui/NLTemplate"]
+	path = qtpm_cui/NLTemplate
+	url = git@github.com:catnapgames/NLTemplate.git
+[submodule "qtpm_cui/rest-licenses"]
+	path = qtpm_cui/rest-licenses
+	url = git@github.com:shibukawa/rest-licenses.git
