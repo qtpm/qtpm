@@ -9,13 +9,14 @@ class ExternalProcess : public QObject
 {
     Q_OBJECT
 public:
-    explicit ExternalProcess(bool dumpStdoutAndError, QObject *parent = 0);
+    explicit ExternalProcess(bool dumpStdoutAndError, bool storeStdout=false, QObject *parent = 0);
     ~ExternalProcess();
 
     void run(const QString& command, const QStringList& arguments);
     void run(const QString& command, const QStringList& arguments, const QDir& workdir);
     int waitForFinished(int msec=30000);
     int exitCode() const;
+    QString stdoutResult() const;
 
 signals:
     void finished(int exitCode);
@@ -31,6 +32,8 @@ protected slots:
 protected:
     QProcess* _process;
     bool _dumpStdoutAndError;
+    bool _storeStdout;
+    QStringList _stdout;
 };
 
 #endif // EXTERNALPROCESS_H

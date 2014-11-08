@@ -3,12 +3,13 @@
 #include "parameterparser.h"
 #include <iostream>
 #include "externalprocess.h"
+#include "platformdatabase.h"
 #include <QDebug>
 #include <QScopedPointer>
 
 
-BuildTask::BuildTask(const QDir& package, const QDir& destination, ParameterParser *param, QObject *parent) :
-    QObject(parent), _packageDir(package), _destinationDir(destination), _param(param)
+BuildTask::BuildTask(const QDir& package, bool verbose, ParameterParser *param, PlatformDatabase* database, QDir* destination, QObject *parent) :
+    QObject(parent), _packageDir(package), _destinationDir(destination), _param(param), _verbose(verbose), _database(database)
 {
 }
 
@@ -70,8 +71,37 @@ QStringList BuildTask::parseBuildOption(const QString &option)
 
 void BuildTask::run()
 {
+    if (this->_verbose) {
+        std::cout << "start building " << _packageDir.path().toStdString() << std::endl;
+    }
     auto app = QCoreApplication::instance();
     auto param = this->_param;
+
+    PlatformDatabase database(this);
+    if (!this->_database) {
+        this->_database = &database;
+        QString qtpathParam = this->_param->param("qtdir");
+        if (qtpathParam.isEmpty()) {
+            if (!database.resolveQtPath()) {
+                std::cerr << "Can't find qt directory. Use --qtdir option or set QTDIR by using qtpm config subcommand." << std::endl;
+                if (app) {
+                    app->exit(1);
+                }
+            }
+        } else {
+            if (!database.setQtPath(qtpathParam, false)) {
+                std::cerr << "Specified qt directory is wrong. <qtdir>/bin/qmake should exist." << std::endl;
+                if (app) {
+                    app->exit(1);
+                }
+            }
+        }
+    }
+    QDir installDir = this->_database->installDirectory();
+    if (!this->_destinationDir) {
+        this->_destinationDir = &installDir;
+    }
+
     if (!QpmPackage::hasQtPackageIni(this->_packageDir)) {
         std::cerr << "qtpackage.ini doesn't exist in " << this->_packageDir.path().toStdString() << std::endl;
         app->exit(1);
@@ -95,7 +125,7 @@ void BuildTask::run()
         return;
     }
 
-    if (param->param("buildType").isEmpty()) {
+    if (!param || param->param("buildType").isEmpty()) {
         buildType = package->buildType();
     } else {
         buildType = param->param("buildType");
@@ -109,7 +139,7 @@ void BuildTask::run()
 
     QString buildOptionString;
 
-    if (param->param("buildOption").isEmpty()) {
+    if (!param || param->param("buildOption").isEmpty()) {
         buildOptionString = package->buildOption();
     } else {
         buildOptionString = param->param("buildOption");
@@ -119,10 +149,11 @@ void BuildTask::run()
     if (buildType == "configure") {
         success = this->_buildByConfigure(srcDir, buildOptionString);
     } else if (buildType == "cmake") {
-        success = this->_buildByCMake(srcDir, buildOptionString);
+        success = this->_buildByCMake(package->name(), srcDir, buildOptionString);
     }
     if (success) {
-        if (param->flag("save")) {
+        this->_copyPriFile(package.data());
+        if (param && param->flag("save")) {
             if (!param->param("buildOption").isEmpty()) {
                 package->setBuildOption(param->param("buildOption"));
             }
@@ -136,46 +167,52 @@ void BuildTask::run()
     }
 }
 
-bool BuildTask::_buildByCMake(const QDir& srcDir, const QString& buildOptionString)
+bool BuildTask::_buildByCMake(const QString& name, const QDir& srcDir, const QString& buildOptionString)
 {
+    if (this->_verbose) {
+        std::cout << "  use CMake" << std::endl;
+    }
+    ExternalProcess cmakeProcess(true, false, this);
+    QString osName = this->_database->currentPlatform();
     QString makeCommand;
-    ExternalProcess cmakeProcess(true, this);
     QStringList arguments;
-#ifdef Q_OS_WIN32
-    arguments << "-G" << "\"NMake Makefiles\"";
-    makeCommand = "nmake";
-#else
-    arguments << "-G" << "Unix Makefiles";
-    makeCommand = "make";
-#endif
-    arguments << QString("-DCMAKE_INSTALL_PREFIX:PATH=%1").arg(this->_destinationDir.path())
+    if (osName.startsWith("win") && osName != "win32-g++" && osName != "mingw" && osName != "cygwin") {
+        arguments << "-G" << "NMake Makefiles";
+        makeCommand = "nmake";
+    } else {
+        arguments << "-G" << "Unix Makefiles";
+        makeCommand = "make";
+    }
+    arguments << QString("-DCMAKE_INSTALL_PREFIX:PATH=%1").arg(this->_destinationDir->path())
               << this->parseBuildOption(buildOptionString)
               << srcDir.absolutePath();
+    ;
     std::cout << "cmake " << arguments.join(" ").toStdString() << std::endl;
-    QDir buildDir = QDir(this->_packageDir.filePath("build"));
-    if (!buildDir.exists()) {
-        this->_packageDir.mkdir("build");
-    }
-    cmakeProcess.run("cmake", arguments, buildDir);
+    QDir buildDir = QDir(QDir::current().filePath("build"));
+    QDir::current().mkpath("build");
+    QDir buildPackageDir = buildDir.filePath(name);
+    buildDir.mkdir(name);
+
+    cmakeProcess.run("cmake", arguments, buildPackageDir);
     cmakeProcess.waitForFinished(-1);
     if (cmakeProcess.exitCode() != 0) {
         return false;
     }
 
-    ExternalProcess makeProcess(true, this);
+    ExternalProcess makeProcess(true, false, this);
     QStringList marguments;
     std::cout << makeCommand.toStdString() << std::endl;
-    makeProcess.run(makeCommand, marguments, buildDir);
+    makeProcess.run(makeCommand, marguments, buildPackageDir);
     makeProcess.waitForFinished(-1);
     if (makeProcess.exitCode() != 0) {
         return false;
     }
 
-    ExternalProcess makeInstallProcess(true, this);
+    ExternalProcess makeInstallProcess(true, false, this);
     QStringList marguments2;
     marguments2 << "install";
     std::cout << makeCommand.toStdString() << " install" << std::endl;
-    makeInstallProcess.run(makeCommand, marguments2, buildDir);
+    makeInstallProcess.run(makeCommand, marguments2, buildPackageDir);
     makeInstallProcess.waitForFinished(-1);
     if (makeInstallProcess.exitCode() != 0) {
         return false;
@@ -185,6 +222,9 @@ bool BuildTask::_buildByCMake(const QDir& srcDir, const QString& buildOptionStri
 
 bool BuildTask::_buildByConfigure(const QDir& srcDir, const QString& buildOptionString)
 {
+    if (this->_verbose) {
+        std::cout << "  use configure" << std::endl;
+    }
     QString makeCommand;
     ExternalProcess configureProcess(true, this);
     QStringList arguments;
@@ -193,7 +233,7 @@ bool BuildTask::_buildByConfigure(const QDir& srcDir, const QString& buildOption
 #else
     makeCommand = "make";
 #endif
-    arguments << QString("--prefix=%1").arg(this->_destinationDir.path())
+    arguments << QString("--prefix=%1").arg(this->_destinationDir->path())
               << this->parseBuildOption(buildOptionString);
     std::cout << "./configure " << arguments.join(" ").toStdString() << std::endl;
     configureProcess.run(srcDir.filePath("configure"), arguments, srcDir);
@@ -221,4 +261,38 @@ bool BuildTask::_buildByConfigure(const QDir& srcDir, const QString& buildOption
         return false;
     }
     return true;
+}
+
+void BuildTask::_copyPriFile(QpmPackage* package)
+{
+    QFileInfo bestMatch;
+    QFileInfo secondMatch;
+    QStringList matchPlatforms;
+    QString osName = this->_database->currentPlatform();
+    if (this->_database) {
+        matchPlatforms = this->_database->searchRelatedPlatforms(osName);
+    }
+    auto prifiles = this->_packageDir.entryInfoList(QStringList() << "*.pri", QDir::Files, QDir::Name);
+    for (const QFileInfo& priinfo : prifiles) {
+        // todo fix scoring logic
+        auto baseName = priinfo.baseName();
+        if (osName == baseName) {
+            bestMatch = priinfo;
+        } else if (matchPlatforms.contains(baseName)) {
+            secondMatch = priinfo;
+        }
+    }
+
+    QString priName = QString("%1.pri").arg(package->name());
+    if (bestMatch.isFile()) {
+        QFile::copy(bestMatch.absoluteFilePath(), this->_destinationDir->filePath(priName));
+        if (this->_verbose) {
+            std::cout << "copying " << bestMatch.fileName().toStdString() << " as " << priName.toStdString() << std::endl;
+        }
+    } else if (secondMatch.isFile()) {
+        QFile::copy(secondMatch.absoluteFilePath(), this->_destinationDir->filePath(priName));
+        if (this->_verbose) {
+            std::cout << "copying " << secondMatch.fileName().toStdString() << " as " << priName.toStdString() << std::endl;
+        }
+    }
 }

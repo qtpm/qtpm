@@ -1,5 +1,6 @@
 #include "testutil.h"
 #include <QDir>
+#include <QTextStream>
 #include <QDateTime>
 #include <QDebug>
 #include <stdexcept>
@@ -44,4 +45,22 @@ void TestUtil::makeFile(const QString filename, const QString content)
     QTextStream stream(&file);
     stream << content << endl;
     file.close();
+}
+
+QString TestUtil::readFile(const QString &filename)
+{
+    if (this->_testDir.isEmpty()) {
+        throw new std::logic_error("temp dir is not initialized");
+    }
+    QDir tempdir(this->_testDir);
+    QString filepath = tempdir.filePath(filename);
+    QFile file(filepath);
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        throw new std::logic_error("file creation error");
+    }
+    QTextStream stream(&file);
+    QString result = stream.readAll();
+    file.close();
+    return result;
 }

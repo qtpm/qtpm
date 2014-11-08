@@ -5,13 +5,15 @@
 #include <QObject>
 #include <QDir>
 
+class QpmPackage;
 class ParameterParser;
+class PlatformDatabase;
 
 class BuildTask : public QObject
 {
     Q_OBJECT
 public:
-    explicit BuildTask(const QDir& package, const QDir& destination, ParameterParser *param, QObject *parent = 0);
+    explicit BuildTask(const QDir& package, bool verbose, ParameterParser *param = 0, PlatformDatabase* database = 0, QDir* destination = 0, QObject *parent = 0);
     QStringList parseBuildOption(const QString& option);
 signals:
 
@@ -20,11 +22,14 @@ public slots:
 
 protected:
     QDir _packageDir;
-    QDir _destinationDir;
+    QDir *_destinationDir;
     ParameterParser* _param;
+    bool _verbose;
+    PlatformDatabase* _database;
 
-    bool _buildByCMake(const QDir& srcDir, const QString& buildOptionString);
+    bool _buildByCMake(const QString& name, const QDir& srcDir, const QString& buildOptionString);
     bool _buildByConfigure(const QDir& srcDir, const QString& buildOptionString);
+    void _copyPriFile(QpmPackage *package);
 };
 
 #endif // BUILDTASK_H

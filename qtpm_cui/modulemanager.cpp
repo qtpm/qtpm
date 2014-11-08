@@ -2,6 +2,7 @@
 #include "qpmpackage.h"
 #include "tasks/extracttask.h"
 #include <QFileInfo>
+#include <memory>
 #include <QDebug>
 
 ModuleManager::ModuleManager()
@@ -28,15 +29,17 @@ void ModuleManager::addModuleDependent(const QString &dependentName, const QStri
     QFileInfo info(moduleIdentifier);
     if (info.exists()) {
         if (info.isDir()) {
+            qDebug() << "module is dir";
             auto qtpackage = new QpmPackage(QDir(moduleIdentifier));
-            this->addLocalModuleDependent(dependentName, qtpackage->name(), moduleIdentifier);
+            this->_addLocalModuleDependent(dependentName, qtpackage->name(), moduleIdentifier, Module::LocalDirModule, qtpackage);
         } else if (this->supportedSuffixes().contains(info.completeSuffix())) {
+            qDebug() << "mmodule is an archive file";
             ExtractTask task;
             QString resultDirPath;
             if (task.run(dependentName, destDir, resultDirPath)) {
                 auto moduleDir = QDir(destDir.filePath(resultDirPath));
                 auto qtpackage = new QpmPackage(moduleDir);
-                this->addLocalModuleDependent(dependentName, qtpackage->name(), moduleIdentifier, qtpackage);
+                this->_addLocalModuleDependent(dependentName, qtpackage->name(), moduleIdentifier, Module::LocalFileModule, qtpackage);
             } else {
                 QString error("Module error: fail to extract archive file %1");
                 this->_errorMessages.append(error.arg(moduleIdentifier));
@@ -46,11 +49,12 @@ void ModuleManager::addModuleDependent(const QString &dependentName, const QStri
             this->_errorMessages.append(error.arg(this->supportedSuffixes().join(", "), moduleIdentifier));
         }
     } else {
+        qDebug() << "mmodule is git package";
 
     }
 }
 
-void ModuleManager::addInstalledModule(const QString &moduleName, const QString &version)
+void ModuleManager::_addInstalledModule(const QString &moduleName, const QString &version)
 {
     auto module = new Module(moduleName);
     module->setStatus(Module::Installed);
@@ -58,32 +62,37 @@ void ModuleManager::addInstalledModule(const QString &moduleName, const QString 
     this->_modules.insert(moduleName, module);
 }
 
-void ModuleManager::addLocalModuleDependent(const QString& dependentName, const QString &moduleName, const QString &localPath, QpmPackage *package)
+void ModuleManager::_addLocalModuleDependent(const QString& dependentName, const QString &shortName, const QString &localPath, Module::ModuleStatus status, QpmPackage *package)
 {
-    Module* module = this->_modules.value(moduleName, nullptr);
+    Module* module = this->_modules.value(shortName, nullptr);
     if (module) {
-        if (module->status() != Module::LocalModule) {
-            module->setStatus(Module::LocalModule);
+        if (!Module::isLocal(module->status())) {
+            module->setStatus(status);
             module->setLongPath(localPath);
-            this->_nextTargets.insert(moduleName);
+            this->_nextTargets.insert(shortName);
             if (package) {
                 module->setPackage(package);
             }
+            this->_addAlias(dependentName, shortName, localPath, status);
+        } else if (module->longPath() != localPath) {
+            this->_errorModules.insert(module);
         }
     } else {
-        module = new Module(moduleName);
-        module->setStatus(Module::LocalModule);
+        //qDebug() << "creating module object for" << moduleName;
+        module = new Module(shortName);
         module->setLongPath(localPath);
-        this->_modules.insert(moduleName, module);
-        this->_nextTargets.insert(moduleName);
-        module->addDependent(dependentName, "x");
+        module->setStatus(status);
+        this->_modules.insert(shortName, module);
+        this->_nextTargets.insert(shortName);
+        module->addDependent(dependentName, shortName);
         if (package) {
             module->setPackage(package);
         }
+        this->_addAlias(dependentName, shortName, localPath, status);
     }
 }
 
-void ModuleManager::addRemoteModuleDependent(const QString &dependentName, const QString &requiredModuleName, const QString &range, QpmPackage *package)
+void ModuleManager::_addRemoteModuleDependent(const QString &dependentName, const QString &requiredModuleName, const QString &range, QpmPackage *package)
 {
     Module* module = this->_modules.value(requiredModuleName, nullptr);
     if (module) {
@@ -123,16 +132,17 @@ void ModuleManager::setAvailableVersions(const QString &moduleName, const QStrin
     module->setAvailableVersions(availableVersions);
 }
 
-bool ModuleManager::addAlias(const QString& dependentName, const QString &shortName, const QString &longName, Module::ModuleStatus status)
+bool ModuleManager::_addAlias(const QString& dependentName, const QString &shortName, const QString &longName, Module::ModuleStatus status)
 {
     bool update = false;
-    if (dependentName != "app" and status == Module::LocalModule) {
+    if (dependentName != "app" && Module::isLocal(status)) {
         auto msg = QString("%1 is used from %2, but local path is not recommended except for root application packages.").arg(longName, dependentName);
         this->_warningMessages.append(msg);
     }
     this->_reverseAliases[longName] = shortName;
     if (this->_aliases.contains(shortName)) {
-        if (this->_aliasTypes[shortName] == Module::RemoteModule and status == Module::LocalModule) {
+        auto moduleStatus = this->_modules[shortName]->status();
+        if (moduleStatus == Module::RemoteModule && Module::isLocal(status)) {
             update = true;
         }
     } else {
@@ -149,10 +159,14 @@ bool ModuleManager::addAlias(const QString& dependentName, const QString &shortN
 
     if (update) {
         this->_aliases[shortName] = longName;
-        this->_aliasTypes[shortName] = status;
     }
 
     return update;
+}
+
+void ModuleManager::_addModule(Module *module)
+{
+    this->_modules.insert(module->name(), module);
 }
 
 bool ModuleManager::isInstalled(const QString &name) const
@@ -169,7 +183,13 @@ void ModuleManager::checkAliasConflict()
     while (i != this->_aliasLog.constEnd()) {
         const QString& shortName = i.key();
         auto statusMap = i.value();
-        Module::ModuleStatus currentStatus = this->_aliasTypes[shortName];
+        auto module = this->_modules[shortName];
+        Module::ModuleStatus currentStatus = module->status();
+        // In conflict checking logic, LocalDir and LocalFile have
+        // same priority.
+        if (currentStatus == Module::LocalDirModule) {
+            currentStatus = Module::LocalFileModule;
+        }
         const QString& currentModule = this->_aliases[shortName];
         if (statusMap[currentStatus].count() > 1) {
             QStringList modules = statusMap[currentStatus].keys();
@@ -181,10 +201,11 @@ void ModuleManager::checkAliasConflict()
     }
 }
 
-QList<Module *> ModuleManager::shift()
+QList<Module*> ModuleManager::shift()
 {
     QList<Module *> result;
-    foreach(const QString& moduleName, this->_nextTargets) {
+    for (const QString& moduleName : this->_nextTargets) {
+        qDebug() << "shift" << moduleName;
         Module* module = this->_modules.value(moduleName);
         if (module->findValidVersion()) {
             result.append(module);
@@ -196,7 +217,7 @@ QList<Module *> ModuleManager::shift()
     return result;
 }
 
-QList<Module *> ModuleManager::versionErrorModules() const
+QList<Module*> ModuleManager::versionErrorModules() const
 {
     return _errorModules.toList();
 }

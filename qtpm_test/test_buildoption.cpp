@@ -11,7 +11,8 @@ BuildOptionTest::BuildOptionTest(QObject *parent) :
 
 void BuildOptionTest::parse_simple_options()
 {
-    BuildTask task(QDir::temp(), QDir::temp(), nullptr);
+    QDir dest = QDir::temp();
+    BuildTask task(QDir::temp(), false, nullptr, nullptr, &dest);
 
     QStringList params = task.parseBuildOption("--static --prefix=/usr/bin/");
 
@@ -22,7 +23,8 @@ void BuildOptionTest::parse_simple_options()
 
 void BuildOptionTest::parse_quoted_options()
 {
-    BuildTask task(QDir::temp(), QDir::temp(), nullptr);
+    QDir dest = QDir::temp();
+    BuildTask task(QDir::temp(), false, nullptr, nullptr, &dest);
 
     QStringList params = task.parseBuildOption("--static --prefix \"/Program Files\" --debug");
     QCOMPARE(params.length(), 4);

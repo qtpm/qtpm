@@ -41,7 +41,10 @@ public:
         InitAppAction,
         InitLibAction,
         BuildAction,
-        RebuildAction
+        RebuildAction,
+        RefreshAction,
+        SearchAction,
+        ConfigAction
     };
 
     ParameterParser();

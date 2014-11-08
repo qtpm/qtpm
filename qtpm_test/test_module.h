@@ -13,6 +13,7 @@ public:
 private Q_SLOTS:
     void successfulCaseTest();
     void invalidCaseTest();
+    void localModuleCaseTest();
 };
 
 #endif // TEST_MODULE_H

@@ -13,6 +13,9 @@
 #include "test_gitresultparser.h"
 #include "test_archive.h"
 #include "test_buildoption.h"
+#include "test_aliasdatabase.h"
+#include "test_projecttask.h"
+#include "test_platformdatabase.h"
 
 
 int main(int argc, char** argv)
@@ -34,5 +37,8 @@ int main(int argc, char** argv)
     ASSERT_TEST(new ArchiveTest());
     ASSERT_TEST(new QPMPackageTest());
     ASSERT_TEST(new BuildOptionTest());
+    ASSERT_TEST(new AliasDatabaseTest());
+    ASSERT_TEST(new ProjectTaskTest());
+    ASSERT_TEST(new PlatformDatabaseTest());
     return status;
 }

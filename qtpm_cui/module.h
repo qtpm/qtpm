@@ -14,7 +14,8 @@ public:
     enum ModuleStatus {
         Installed,
         NewInstall,
-        LocalModule,
+        LocalFileModule,
+        LocalDirModule,
         RemoteModule,
         IndexedModule
     };
@@ -45,6 +46,8 @@ public:
 
     QString longPath() const;
     void setLongPath(const QString &longPath);
+
+    static bool isLocal(Module::ModuleStatus status);
 
 private:
     QString _name;

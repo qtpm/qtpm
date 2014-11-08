@@ -3,8 +3,8 @@
 #include <QDebug>
 
 
-ExternalProcess::ExternalProcess(bool dumpStdoutAndError, QObject *parent) :
-    QObject(parent), _process(nullptr), _dumpStdoutAndError(dumpStdoutAndError)
+ExternalProcess::ExternalProcess(bool dumpStdoutAndError, bool storeStdout, QObject *parent) :
+    QObject(parent), _process(nullptr), _dumpStdoutAndError(dumpStdoutAndError), _storeStdout(storeStdout)
 {
 }
 
@@ -41,6 +41,11 @@ int ExternalProcess::exitCode() const
     return this->_process->exitCode();
 }
 
+QString ExternalProcess::stdoutResult() const
+{
+    return this->_stdout.join("");
+}
+
 void ExternalProcess::_readyReadStandardError()
 {
     QString str = this->_process->readAllStandardError();
@@ -56,6 +61,9 @@ void ExternalProcess::_readyReadStandardOutput()
     emit onStdout(str);
     if (this->_dumpStdoutAndError) {
         std::cout << str.toStdString();
+    }
+    if (this->_storeStdout) {
+        this->_stdout.append(str);
     }
 }
 

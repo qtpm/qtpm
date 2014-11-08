@@ -4,6 +4,10 @@
 #include "tasks/initlibtask.h"
 #include "tasks/initapptask.h"
 #include "tasks/buildtask.h"
+#include "tasks/refreshaliastask.h"
+#include "tasks/searchtask.h"
+#include "tasks/configtask.h"
+#include "platformdatabase.h"
 #include <QTimer>
 #include <QDebug>
 #include <QDir>
@@ -22,17 +26,8 @@ int main(int argc, char *argv[])
     bool launch = false;
     int returnCode = 0;
 
-    QString defaultOSName;
-#if defined(Q_WS_WIN)
-    defaultOSName = "win";
-#elif defined(Q_OS_LINUX)
-    defaultOSName = "linux";
-#elif defined(Q_OS_MACX)
-    defaultOSName = "macx";
-#endif
-    QDir depsDir(QDir::current().filePath(QString("deps.%1").arg(defaultOSName)));
     if (subcommand == ParameterParser::BuildAction) {
-        auto command = new BuildTask(QDir::current(), depsDir, &parser, &a);
+        auto command = new BuildTask(QDir::current(), parser.flag("verbose"), &parser, nullptr, nullptr, &a);
         launch = true;
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::InstallAction) {
@@ -45,6 +40,18 @@ int main(int argc, char *argv[])
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::InitLibAction) {
         auto command = new InitLibTask(&parser, &a);
+        launch = true;
+        QTimer::singleShot(0, command, SLOT(run()));
+    } else if (subcommand == ParameterParser::RefreshAction) {
+        auto command = new RefreshAliasTask(&parser, &a);
+        launch = true;
+        QTimer::singleShot(0, command, SLOT(run()));
+    } else if (subcommand == ParameterParser::SearchAction) {
+        auto command = new SearchTask(&parser, &a);
+        launch = true;
+        QTimer::singleShot(0, command, SLOT(run()));
+    } else if (subcommand == ParameterParser::ConfigAction) {
+        auto command = new ConfigTask(&parser, &a);
         launch = true;
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::CommandListAction) {

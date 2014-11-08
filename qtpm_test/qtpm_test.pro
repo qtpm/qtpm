@@ -5,7 +5,6 @@
 #-------------------------------------------------
 
 QT       += testlib
-
 QT       -= gui
 
 TARGET = qtpm_test
@@ -29,7 +28,10 @@ SOURCES += \
     test_gitresultparser.cpp \
     test_resulthash.cpp \
     test_archive.cpp \
-    test_buildoption.cpp
+    test_buildoption.cpp \
+    test_aliasdatabase.cpp \
+    test_projecttask.cpp \
+    test_platformdatabase.cpp
 
 
 INCLUDEPATH += \
@@ -50,7 +52,10 @@ HEADERS += \
     test_gitresultparser.h \
     test_resulthash.h \
     test_archive.h \
-    test_buildoption.h
+    test_buildoption.h \
+    test_aliasdatabase.h \
+    test_projecttask.h \
+    test_platformdatabase.h
 
 include(../qtpm_cui/source.pri)
 

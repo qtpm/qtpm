@@ -30,14 +30,17 @@ void ParameterParserTest::installActionTest3() {
 
 void ParameterParserTest::installActionTest4() {
     ParameterParser parser;
-    QCOMPARE(parser.parse(QStringList() << "qtpm" << "install" << "--save-dev" << "github.com/shibukawa/testproject"), ParameterParser::InstallAction);
+    QCOMPARE(parser.parse(QStringList() << "qtpm" << "install" << "--save-dev" << "-v"
+        << "github.com/shibukawa/testproject"), ParameterParser::InstallAction);
     QVERIFY(parser.flag("save-dev"));
+    QVERIFY(parser.flag("verbose"));
     QCOMPARE(parser.args()[0], QString("github.com/shibukawa/testproject"));
 }
 
 void ParameterParserTest::installActionTest5() {
     ParameterParser parser;
-    QCOMPARE(parser.parse(QStringList() << "qtpm" << "--save" << "install" << "github.com/shibukawa/testproject"), ParameterParser::InstallAction);
+    QCOMPARE(parser.parse(QStringList() << "qtpm" << "--save" << "install"
+        << "github.com/shibukawa/testproject"), ParameterParser::InstallAction);
     QVERIFY(parser.flag("save"));
     QCOMPARE(parser.args()[0], QString("github.com/shibukawa/testproject"));
 }
@@ -46,6 +49,16 @@ void ParameterParserTest::installActionTest6() {
     ParameterParser parser;
     QCOMPARE(parser.parse(QStringList() << "qtpm" << "--update" << "install"), ParameterParser::InstallAction);
     QVERIFY(parser.flag("update"));
+}
+
+void ParameterParserTest::installActionTest7()
+{
+    ParameterParser parser;
+    QCOMPARE(parser.parse(QStringList()
+                << "qtpm" << "install" << "--qtdir" << "~/Qt/5.4/ios"),
+             ParameterParser::InstallAction);
+    QCOMPARE(parser.args().length(), 0);
+    QCOMPARE(parser.param("qtdir"), QString("~/Qt/5.4/ios"));
 }
 
 void ParameterParserTest::uninstallActionTest1()
@@ -161,13 +174,54 @@ void ParameterParserTest::initLibActionWithDevTypeTest() {
     QCOMPARE(parser.param("buildOption"), QString("\"--prefix=/tmp --enable-static\""));
 }
 
+void ParameterParserTest::refreshActionTest()
+{
+    auto cmd = QStringList() << "qtpm" << "refresh";
+    ParameterParser parser;
+    QCOMPARE(parser.parse(cmd), ParameterParser::RefreshAction);
+}
+
+void ParameterParserTest::searchActionTest1()
+{
+    ParameterParser parser;
+    QCOMPARE(parser.parse(QStringList() << "qtpm" << "search" << "zlib"), ParameterParser::SearchAction);
+    QCOMPARE(parser.args()[0], QString("zlib"));
+}
+
+void ParameterParserTest::searchActionTest2()
+{
+    ParameterParser parser;
+    QCOMPARE(parser.parse(QStringList() << "qtpm" << "search" << "--name" << "--distance" << "5" << "zlib"), ParameterParser::SearchAction);
+    QCOMPARE(parser.args()[0], QString("zlib"));
+    QVERIFY(parser.flag("name"));
+    QCOMPARE(parser.param("distance"), QString("5"));
+}
+
+void ParameterParserTest::configActionTest1()
+{
+    ParameterParser parser;
+    QCOMPARE(parser.parse(QStringList() << "qtpm" << "config"), ParameterParser::ConfigAction);
+}
+
+void ParameterParserTest::configActionTest2()
+{
+    ParameterParser parser;
+    QCOMPARE(parser.parse(QStringList() << "qtpm" << "config" << "qtdir" << "~/Qt/5.3/clang_64"), ParameterParser::ConfigAction);
+    QCOMPARE(parser.args()[0], QString("qtdir"));
+    QCOMPARE(parser.args()[1], QString("~/Qt/5.3/clang_64"));
+}
+
 void ParameterParserTest::buildTest()
 {
-    auto cmd = QStringList() << "qtpm" << "build" << "--build-option=\"--prefix=/tmp --enable-static\"" << "--save";
+    auto cmd = QStringList() << "qtpm" << "build"
+        << "--build-option=\"--prefix=/tmp --enable-static\"" << "--save" << "--verbose"
+        << "--qtdir" << "~/Qt/5.3/ios";
     ParameterParser parser;
     QCOMPARE(parser.parse(cmd), ParameterParser::BuildAction);
     QCOMPARE(parser.param("buildOption"), QString("\"--prefix=/tmp --enable-static\""));
+    QCOMPARE(parser.param("qtdir"), QString("~/Qt/5.3/ios"));
     QVERIFY(parser.flag("save"));
+    QVERIFY(parser.flag("verbose"));
 }
 //#include "tst_qtpm_parameterparser.moc"
 

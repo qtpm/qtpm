@@ -15,6 +15,9 @@ Module::~Module()
 bool Module::findValidVersion()
 {
     this->_fix = true;
+    if (Module::isLocal(this->_status)) {
+        return true;
+    }
     auto validVersions = QSemVer::filter(this->_dependents.values(), this->_availableVersions, true);
     if (!validVersions.isEmpty()) {
         this->_finalVersion = validVersions.front();
@@ -59,7 +62,7 @@ void Module::setFinalVersion(const QString &version)
 }
 bool Module::valid() const
 {
-    return !this->_finalVersion.isEmpty();
+    return (Module::isLocal(this->_status) || !this->_finalVersion.isEmpty());
 }
 bool Module::downloaded() const
 {
@@ -101,6 +104,11 @@ QString Module::longPath() const
 void Module::setLongPath(const QString &longPath)
 {
     _longPath = longPath;
+}
+
+bool Module::isLocal(Module::ModuleStatus status)
+{
+    return ((status == Module::LocalDirModule) || (status == Module::LocalFileModule));
 }
 
 QpmPackage *Module::package() const

@@ -17,7 +17,14 @@ HEADERS += \
     ../qtpm_cui/NLTemplate/NLTemplate/NLTemplate.h \
     ../qtpm_cui/tasks/initapptask.h \
     ../qtpm_cui/tasks/buildtask.h \
-    ../qtpm_cui/tasks/externalprocess.h
+    ../qtpm_cui/tasks/externalprocess.h \
+    $$PWD/aliasdatabase.h \
+    $$PWD/tasks/refreshaliastask.h \
+    $$PWD/tasks/searchtask.h \
+    $$PWD/tasks/projectfiletask.h \
+    $$PWD/platformdatabase.h \
+    $$PWD/qtpathresolver.h \
+    $$PWD/tasks/configtask.h
 
 SOURCES += \
     ../qtpm_cui/qsemver.cpp \
@@ -39,7 +46,14 @@ SOURCES += \
     ../qtpm_cui/NLTemplate/NLTemplate/NLTemplate.cpp \
     ../qtpm_cui/tasks/initapptask.cpp \
     ../qtpm_cui/tasks/buildtask.cpp \
-    ../qtpm_cui/tasks/externalprocess.cpp
+    ../qtpm_cui/tasks/externalprocess.cpp \
+    $$PWD/aliasdatabase.cpp \
+    $$PWD/tasks/refreshaliastask.cpp \
+    $$PWD/tasks/searchtask.cpp \
+    $$PWD/tasks/projectfiletask.cpp \
+    $$PWD/platformdatabase.cpp \
+    $$PWD/qtpathresolver.cpp \
+    $$PWD/tasks/configtask.cpp
 
 INCLUDEPATH += \
     ../qtpm_cui/deps/include \

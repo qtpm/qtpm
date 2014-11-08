@@ -12,6 +12,7 @@ public:
 
     QDir makeTestDir(bool skipRemove=false);
     void makeFile(const QString filename, const QString content);
+    QString readFile(const QString& filename);
 
 private:
     QString _testDir;

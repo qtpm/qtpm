@@ -10,11 +10,13 @@ static const char* defaultDescription = \
         "* Initialize library project\n\nand so on.";
 
 static const char* buildDescription = \
+        "qtpm: C++ Package Manager for Qt projects - Yoshiki Shibukawa, 2014 \n"
         "\n"
         "    qtpm build <options>\n";
 
 
 static const char* installDescription = \
+        "qtpm: C++ Package Manager for Qt projects - Yoshiki Shibukawa, 2014 \n"
         "\n"
         "    qtpm install\n"
         "    qtpm install <pkg>\n"
@@ -29,15 +31,39 @@ static const char* installDescription = \
         "    qtpm install <github url>/<github username>/<github project>@<version>\n";
 
 static const char* uninstallDescription = \
+        "qtpm: C++ Package Manager for Qt projects - Yoshiki Shibukawa, 2014 \n"
         "\n"
         "    qtpm uninstall <pkg>\n";
 
 static const char* updateDescription = \
+        "qtpm: C++ Package Manager for Qt projects - Yoshiki Shibukawa, 2014 \n"
         "\n"
         "    qtpm update\n"
         "    qtpm update <pkg>\n";
 
+static const char* refreshDescription = \
+        "qtpm: C++ Package Manager for Qt projects - Yoshiki Shibukawa, 2014 \n"
+        "\n"
+        "    qtpm refresh : refresh alias information.\n";
+
+static const char* searchDescription = \
+        "qtpm: C++ Package Manager for Qt projects - Yoshiki Shibukawa, 2014 \n"
+        "\n"
+        "    qtpm search <word>         : search word from alias name, url, description.\n"
+        "    qtpm search --title <word> : search alias names that have near name with word.\n";
+
+static const char* configDescription = \
+        "qtpm: C++ Package Manager for Qt projects - Yoshiki Shibukawa, 2014 \n"
+        "\n"
+        "    qtpm config                  : show existing all config values.\n"
+        "    qtpm config <config>         : show specified config value.\n"
+        "    qtpm config <config> <value> : set config value.\n"
+        "\n"
+        "Available Configs:\n"
+        "    qtdir\n";
+
 static const char* initDescription = \
+        "qtpm: C++ Package Manager for Qt projects - Yoshiki Shibukawa, 2014 \n"
         "\n"
         "    qtpm init\n"
         "\n"
@@ -78,6 +104,8 @@ ParameterParser::SubCommand ParameterParser::parse(const QStringList &params, co
     if (command == "install") {
         parser.clearPositionalArguments();
         parser.addPositionalArgument("install", "Install library.", "install [install_options] [install modules]");
+        const QCommandLineOption qtdirOption("qtdir", "qt tool/library path to build library.", "qtdir");
+        parser.addOption(qtdirOption);
         const QCommandLineOption bundleOption("bundle-only", "install only bundle libraries.");
         parser.addOption(bundleOption);
         const QCommandLineOption saveOption("save", "register the specified module to qtpackage.ini as a bundle module.");
@@ -86,6 +114,8 @@ ParameterParser::SubCommand ParameterParser::parse(const QStringList &params, co
         parser.addOption(saveDevOption);
         const QCommandLineOption updateOption("update", "update existing modulues.");
         parser.addOption(updateOption);
+        const QCommandLineOption verboseOption(QStringList() << "verbose" << "v", "show detail message.");
+        parser.addOption(verboseOption);
         parser.setApplicationDescription(installDescription);
 
         if (app) {
@@ -94,10 +124,12 @@ ParameterParser::SubCommand ParameterParser::parse(const QStringList &params, co
             parser.process(params);
         }
         this->_args = parser.positionalArguments().mid(1);
+        this->_params.insert("qtdir", parser.value(qtdirOption));
         this->_flags.insert("bundle-only", parser.isSet(bundleOption));
         this->_flags.insert("save", parser.isSet(saveOption));
         this->_flags.insert("save-dev", parser.isSet(saveDevOption));
         this->_flags.insert("update", parser.isSet(updateOption));
+        this->_flags.insert("verbose", parser.isSet(verboseOption));
         return ParameterParser::InstallAction;
     } else if (command == "uninstall") {
         parser.clearPositionalArguments();
@@ -130,21 +162,27 @@ ParameterParser::SubCommand ParameterParser::parse(const QStringList &params, co
         parser.clearPositionalArguments();
         parser.addPositionalArgument("build", "Build library.", "build [build_options]");
         parser.setApplicationDescription(buildDescription);
+        const QCommandLineOption qtdirOption("qtdir", "qt tool/library path to build library.", "qtdir");
+        parser.addOption(qtdirOption);
         const QCommandLineOption buildTypeOption(QStringList() << "build" << "b", "Build type: source, configure, scons.", "build");
         parser.addOption(buildTypeOption);
         const QCommandLineOption buildOptionOption(QStringList() << "build-option" << "o", "Build option like: --enable-static", "buildOption");
         parser.addOption(buildOptionOption);
         const QCommandLineOption saveOption(QStringList() << "save" << "s", "Save build param or/and build-option to setting file.");
         parser.addOption(saveOption);
+        const QCommandLineOption verboseOption(QStringList() << "verbose" << "v", "show detail message.");
+        parser.addOption(verboseOption);
 
         if (app) {
             parser.process(*app);
         } else {
             parser.process(params);
         }
+        this->_params.insert("qtdir", parser.value(qtdirOption));
         this->_params.insert("buildType", parser.value(buildTypeOption));
         this->_params.insert("buildOption", parser.value(buildOptionOption));
         this->_flags.insert("save", parser.isSet(saveOption));
+        this->_flags.insert("verbose", parser.isSet(verboseOption));
         return ParameterParser::BuildAction;
     } else if (command == "init-lib") {
         parser.clearPositionalArguments();
@@ -172,6 +210,7 @@ ParameterParser::SubCommand ParameterParser::parse(const QStringList &params, co
         return ParameterParser::InitLibAction;
     } else if (command == "init") {
         parser.clearPositionalArguments();
+        parser.setApplicationDescription(initDescription);
         parser.addPositionalArgument("init", "Initlize application project.", "init [initapp_options]");
         this->_addModuleOptions(parser);
         if (app) {
@@ -180,8 +219,51 @@ ParameterParser::SubCommand ParameterParser::parse(const QStringList &params, co
             parser.process(params);
         }
         this->_getModuleOptions(parser);
-        qDebug() << "optionNames:" << parser.optionNames();
         return ParameterParser::InitAppAction;
+    } else if (command == "refresh") {
+        parser.clearPositionalArguments();
+        parser.setApplicationDescription(refreshDescription);
+        parser.addPositionalArgument("refresh", "Initlize application project.", "refresh");
+        if (app) {
+            parser.process(*app);
+        } else {
+            parser.process(params);
+        }
+        return ParameterParser::RefreshAction;
+    } else if (command == "config") {
+        parser.clearPositionalArguments();
+        parser.setApplicationDescription(configDescription);
+        parser.addPositionalArgument("config", "Get/set qtpm config.", "config");
+        if (app) {
+            parser.process(*app);
+        } else {
+            parser.process(params);
+        }
+        this->_args = parser.positionalArguments().mid(1);
+        return ParameterParser::ConfigAction;
+    } else if (command == "search") {
+        parser.clearPositionalArguments();
+        parser.setApplicationDescription(searchDescription);
+        parser.addPositionalArgument("search", "Search module alias", "search [search_options] search_word");
+        const QCommandLineOption nameOption("name", "Search near names from passed word.");
+        parser.addOption(nameOption);
+        const QCommandLineOption distanceOption(QStringList() << "distance" << "d", "Levenshtein distance for filtering the result.", "distance", "4");
+        parser.addOption(distanceOption);
+        if (app) {
+            parser.process(*app);
+        } else {
+            parser.process(params);
+        }
+        this->_args = parser.positionalArguments().mid(1);
+        if (this->_args.length() != 1) {
+            std::cerr << "search command can have only one search word." << std::endl;
+            parser.showHelp();
+            return ParameterParser::InvalidAction;
+        } else {
+            this->_flags.insert("name", parser.isSet(nameOption));
+            this->_params.insert("distance", parser.value(distanceOption));
+            return ParameterParser::SearchAction;
+        }
     } else if (command == "command-help") {
         const QCommandLineOption commandHelpOption(QStringList() << "command-help", "Displays command list.");
         parser.addOption(commandHelpOption);
@@ -248,7 +330,9 @@ bool ParameterParser::commandHelpRequested() const
 
 void ParameterParser::showCommandHelp() const
 {
-    std::cout << "Usage: qtpm <command>" << std::endl
+    std::cout << "qtpm: C++ Package Manager for Qt projects - Yoshiki Shibukawa, 2014" << std::endl
+              << std::endl
+              << "Usage: qtpm <command>" << std::endl
               << std::endl
               << "where <command> is one of:" << std::endl
               << "    build     : build module" << std::endl
@@ -256,6 +340,9 @@ void ParameterParser::showCommandHelp() const
               << "    init-lib  : create setting file for module" << std::endl
               << "    install   : install module" << std::endl
               << "    uninstall : uninstall module" << std::endl
+              << "    refresh   : refresh module alias information" << std::endl
+              << "    search    : search module alias" << std::endl
+              << "    config    : set/get qtpm configuration" << std::endl
               << std::endl
               << "qtpm <cmd> -h     quick help on <cmd>" << std::endl;
 }

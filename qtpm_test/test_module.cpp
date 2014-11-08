@@ -30,3 +30,12 @@ void ModuleTest::invalidCaseTest()
     QVERIFY(!module->valid());
     delete module;
 }
+
+void ModuleTest::localModuleCaseTest()
+{
+    auto module = new Module("lib");
+    module->setStatus(Module::LocalFileModule);
+    QVERIFY(module->findValidVersion());
+    QVERIFY(module->valid());
+    delete module;
+}

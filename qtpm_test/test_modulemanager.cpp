@@ -14,7 +14,7 @@ void ModuleManagerTest::initialDepthTest()
     QScopedPointer<ModuleManager> manager(new ModuleManager());
 
     // first round
-    manager->addRemoteModuleDependent("app", "lib1", "~1.0.0");
+    manager->_addRemoteModuleDependent("app", "lib1", "~1.0.0");
     auto availableVersions = QStringList() << "1.0.1" << "1.1.1";
     manager->setAvailableVersions("lib1", availableVersions);
     auto nextModules = manager->shift(); // it returns first modules
@@ -29,13 +29,13 @@ void ModuleManagerTest::secondDepthTest1()
     QScopedPointer<ModuleManager> manager(new ModuleManager());
 
     // first depth
-    manager->addRemoteModuleDependent("app", "lib1", "~1.0.0");
+    manager->_addRemoteModuleDependent("app", "lib1", "~1.0.0");
     auto availableVersions1 = QStringList() << "1.0.1" << "1.1.1";
     manager->setAvailableVersions("lib1", availableVersions1);
     manager->shift(); // it returns first modules
 
     // second depth
-    manager->addRemoteModuleDependent("lib1", "lib2", "~2.0.0");
+    manager->_addRemoteModuleDependent("lib1", "lib2", "~2.0.0");
     auto availableVersions2 = QStringList() << "1.5.1" << "2.0.1";
     manager->setAvailableVersions("lib2", availableVersions2);
     auto nextModules = manager->shift(); // it returns second depth modules
@@ -50,11 +50,11 @@ void ModuleManagerTest::secondDepthTest2()
     QScopedPointer<ModuleManager> manager(new ModuleManager());
 
     // first depth
-    manager->addRemoteModuleDependent("app", "lib1", "~1.0.0");
+    manager->_addRemoteModuleDependent("app", "lib1", "~1.0.0");
     auto availableVersions1 = QStringList() << "1.0.1" << "1.1.1";
     manager->setAvailableVersions("lib1", availableVersions1);
 
-    manager->addRemoteModuleDependent("app", "lib2", "~2.0.0");
+    manager->_addRemoteModuleDependent("app", "lib2", "~2.0.0");
     auto availableVersions2 = QStringList() << "1.5.1" << "2.0.1";
     manager->setAvailableVersions("lib2", availableVersions2);
 
@@ -62,7 +62,7 @@ void ModuleManagerTest::secondDepthTest2()
 
     // second depth
     // app and lib1 uses same lib2 version
-    manager->addRemoteModuleDependent("lib1", "lib2", "~2.0.0");
+    manager->_addRemoteModuleDependent("lib1", "lib2", "~2.0.0");
     manager->setAvailableVersions("lib2", availableVersions2);
 
     auto nextModules = manager->shift(); // it returns second depth modules
@@ -74,7 +74,7 @@ void ModuleManagerTest::secondDepthTest2()
 void ModuleManagerTest::versionConflictAtFirstDepthTest()
 {
     QScopedPointer<ModuleManager> manager(new ModuleManager());
-    manager->addRemoteModuleDependent("app", "lib1", "~2.0.0");
+    manager->_addRemoteModuleDependent("app", "lib1", "~2.0.0");
     auto availableVersions = QStringList() << "1.0.1" << "1.1.1"; // 2.0.x is not available
     manager->setAvailableVersions("lib1", availableVersions);
     auto nextModules = manager->shift(); // it returns first modules
@@ -88,14 +88,14 @@ void ModuleManagerTest::versionConflictAtSecondDepthTest1()
     QScopedPointer<ModuleManager> manager(new ModuleManager());
 
     // first depth
-    manager->addRemoteModuleDependent("app", "lib1", "~1.0.0");
+    manager->_addRemoteModuleDependent("app", "lib1", "~1.0.0");
     auto availableVersions1 = QStringList() << "1.0.1" << "1.1.1";
     manager->setAvailableVersions("lib1", availableVersions1);
     manager->shift(); // it returns first modules
 
     // second depth
     // target version is not available
-    manager->addRemoteModuleDependent("lib1", "lib2", "~3.0.0");
+    manager->_addRemoteModuleDependent("lib1", "lib2", "~3.0.0");
     auto availableVersions2 = QStringList() << "1.5.1" << "2.0.1";
     manager->setAvailableVersions("lib2", availableVersions2);
     auto nextModules = manager->shift(); // it returns second depth modules
@@ -109,11 +109,11 @@ void ModuleManagerTest::versionConflictAtSecondDepthTest2()
     QScopedPointer<ModuleManager> manager(new ModuleManager());
 
     // first depth
-    manager->addRemoteModuleDependent("app", "lib1", "~1.0.0");
+    manager->_addRemoteModuleDependent("app", "lib1", "~1.0.0");
     auto availableVersions1 = QStringList() << "1.0.1" << "1.1.1";
     manager->setAvailableVersions("lib1", availableVersions1);
 
-    manager->addRemoteModuleDependent("app", "lib2", "~2.0.0");
+    manager->_addRemoteModuleDependent("app", "lib2", "~2.0.0");
     auto availableVersions2 = QStringList() << "1.5.1" << "2.0.1";
     manager->setAvailableVersions("lib2", availableVersions2);
 
@@ -121,7 +121,7 @@ void ModuleManagerTest::versionConflictAtSecondDepthTest2()
 
     // second depth
     // app and lib1 uses same lib2 version
-    manager->addRemoteModuleDependent("lib1", "lib2", "~1.0.0");
+    manager->_addRemoteModuleDependent("lib1", "lib2", "~1.0.0");
     manager->setAvailableVersions("lib2", availableVersions2);
 
     auto nextModules = manager->shift(); // it returns second depth modules
@@ -135,9 +135,9 @@ void ModuleManagerTest::useInstalledModuleTest1()
 {
     QScopedPointer<ModuleManager> manager(new ModuleManager());
 
-    manager->addInstalledModule("lib1", "1.0.0");
+    manager->_addInstalledModule("lib1", "1.0.0");
     auto availableVersions = QStringList() << "1.0.0" << "2.0.1";
-    manager->addRemoteModuleDependent("app", "lib1", "~1.0.0");
+    manager->_addRemoteModuleDependent("app", "lib1", "~1.0.0");
     manager->setAvailableVersions("lib1", availableVersions);
 
     auto nextModules = manager->shift();
@@ -149,9 +149,9 @@ void ModuleManagerTest::useInstalledModuleTest2()
 {
     QScopedPointer<ModuleManager> manager(new ModuleManager());
 
-    manager->addInstalledModule("lib1", "1.0.0");
+    manager->_addInstalledModule("lib1", "1.0.0");
     auto availableVersions = QStringList() << "1.0.0" << "2.0.1";
-    manager->addRemoteModuleDependent("app", "lib1", "~2.0.0");
+    manager->_addRemoteModuleDependent("app", "lib1", "~2.0.0");
     manager->setAvailableVersions("lib1", availableVersions);
 
     auto nextModules = manager->shift();
@@ -168,15 +168,15 @@ void ModuleManagerTest::useLocalModuleTest1()
 {
     QScopedPointer<ModuleManager> manager(new ModuleManager());
 
-    manager->addLocalModuleDependent("app", "lib1", "/home/my/lib1.tgz");
+    manager->_addLocalModuleDependent("app", "lib1", "/home/my/lib1.tgz", Module::LocalFileModule);
+    manager->_addRemoteModuleDependent("app", "lib1", "~1.0.0");
     auto availableVersions = QStringList() << "1.0.0" << "2.0.1";
-    manager->addRemoteModuleDependent("app", "lib1", "~1.0.0");
     manager->setAvailableVersions("lib1", availableVersions);
 
     auto nextModules = manager->shift();
 
     QCOMPARE(nextModules.length(), 1);
-    QCOMPARE(nextModules[0]->status(), Module::LocalModule);
+    QCOMPARE(nextModules[0]->status(), Module::LocalFileModule);
     QCOMPARE(nextModules[0]->name(), QString("lib1"));
     QCOMPARE(nextModules[0]->longPath(), QString("/home/my/lib1.tgz"));
 }
@@ -188,8 +188,8 @@ void ModuleManagerTest::useLocalModuleTest2()
 {
     QScopedPointer<ModuleManager> manager(new ModuleManager());
 
-    manager->addLocalModuleDependent("app", "lib1", "/home/my/lib1.tgz");
-    manager->addLocalModuleDependent("app", "lib1", "/home/my/Downloads/lib1.tgz");
+    manager->_addLocalModuleDependent("app", "lib1", "/home/my/lib1.tgz", Module::LocalFileModule);
+    manager->_addLocalModuleDependent("app", "lib1", "/home/my/Downloads/lib1.tgz", Module::LocalFileModule);
 
     manager->shift();
 
@@ -199,10 +199,11 @@ void ModuleManagerTest::useLocalModuleTest2()
 void ModuleManagerTest::aliasTest1()
 {
     QScopedPointer<ModuleManager> manager(new ModuleManager());
-
-    manager->addAlias("app", "lib1", "lib1", Module::IndexedModule);
-    manager->addAlias("app", "lib1", "github.com/shibukawa/lib1", Module::RemoteModule);
-    manager->addAlias("app", "lib1", "/home/my/lib1.tgz", Module::LocalModule);
+    auto module = new Module("lib1");
+    manager->_addModule(module);
+    manager->_addAlias("app", "lib1", "lib1", Module::IndexedModule);
+    manager->_addAlias("app", "lib1", "github.com/shibukawa/lib1", Module::RemoteModule);
+    manager->_addAlias("app", "lib1", "/home/my/lib1.tgz", Module::LocalFileModule);
     manager->checkAliasConflict();
     QVERIFY(manager->isInstalled("lib1"));
     QVERIFY(manager->isInstalled("/home/my/lib1.tgz"));
@@ -213,8 +214,11 @@ void ModuleManagerTest::aliasTest2()
 {
     QScopedPointer<ModuleManager> manager(new ModuleManager());
 
-    manager->addAlias("app", "lib1", "/home/my/lib1.tgz", Module::LocalModule);
-    manager->addAlias("app", "lib1", "/home/my/Downloads/lib1.tgz", Module::LocalModule);
+    auto module = new Module("lib1");
+    module->setStatus(Module::LocalFileModule);
+    manager->_addModule(module);
+    manager->_addAlias("app", "lib1", "/home/my/lib1.tgz", Module::LocalFileModule);
+    manager->_addAlias("app", "lib1", "/home/my/Downloads/lib1.tgz", Module::LocalFileModule);
     manager->checkAliasConflict();
     QVERIFY(manager->isInstalled("lib1"));
     QVERIFY(manager->isInstalled("/home/my/lib1.tgz"));
@@ -225,8 +229,11 @@ void ModuleManagerTest::aliasTest3()
 {
     QScopedPointer<ModuleManager> manager(new ModuleManager());
 
-    manager->addAlias("app", "lib1", "github.com/shibukawa/lib1", Module::RemoteModule);
-    manager->addAlias("app", "lib1", "github.com/shibu/lib1", Module::RemoteModule);
+    auto module = new Module("lib1");
+    module->setStatus(Module::RemoteModule);
+    manager->_addModule(module);
+    manager->_addAlias("app", "lib1", "github.com/shibukawa/lib1", Module::RemoteModule);
+    manager->_addAlias("app", "lib1", "github.com/shibu/lib1", Module::RemoteModule);
     manager->checkAliasConflict();
     QVERIFY(manager->isInstalled("lib1"));
     QVERIFY(manager->isInstalled("github.com/shibukawa/lib1"));
