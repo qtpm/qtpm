@@ -7,6 +7,7 @@
 #include "tasks/refreshaliastask.h"
 #include "tasks/searchtask.h"
 #include "tasks/configtask.h"
+#include "tasks/cleantask.h"
 #include "platformdatabase.h"
 #include <QTimer>
 #include <QDebug>
@@ -52,6 +53,10 @@ int main(int argc, char *argv[])
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::ConfigAction) {
         auto command = new ConfigTask(&parser, &a);
+        launch = true;
+        QTimer::singleShot(0, command, SLOT(run()));
+    } else if (subcommand == ParameterParser::CleanAction) {
+        auto command = new CleanTask(QDir::current(), &a);
         launch = true;
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::CommandListAction) {

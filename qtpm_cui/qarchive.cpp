@@ -60,7 +60,9 @@ bool QArchive::extract(const QString &path, const QDir &dir, QStringList &result
             return false;
         }
         const char* path = archive_entry_pathname(entry);
-        QString newPath = dir.filePath(QString(path));
+        QString newRelPath(path);
+        resultFileList << newRelPath;
+        QString newPath = dir.filePath(newRelPath);
         archive_entry_set_pathname(entry, newPath.toLocal8Bit().constData());
         r = archive_write_header(ext, entry);
         if (r != ARCHIVE_OK) {

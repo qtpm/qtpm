@@ -44,6 +44,8 @@ private Q_SLOTS:
     void configActionTest1();
     void configActionTest2();
 
+    void configCleanTest();
+
     void buildTest();
 };
 

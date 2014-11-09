@@ -31,7 +31,8 @@ SOURCES += \
     test_buildoption.cpp \
     test_aliasdatabase.cpp \
     test_projecttask.cpp \
-    test_platformdatabase.cpp
+    test_platformdatabase.cpp \
+    test_cleanaction.cpp
 
 
 INCLUDEPATH += \
@@ -55,7 +56,8 @@ HEADERS += \
     test_buildoption.h \
     test_aliasdatabase.h \
     test_projecttask.h \
-    test_platformdatabase.h
+    test_platformdatabase.h \
+    test_cleanaction.h
 
 include(../qtpm_cui/source.pri)
 

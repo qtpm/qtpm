@@ -16,6 +16,7 @@
 #include "test_aliasdatabase.h"
 #include "test_projecttask.h"
 #include "test_platformdatabase.h"
+#include "test_cleanaction.h"
 
 
 int main(int argc, char** argv)
@@ -40,5 +41,6 @@ int main(int argc, char** argv)
     ASSERT_TEST(new AliasDatabaseTest());
     ASSERT_TEST(new ProjectTaskTest());
     ASSERT_TEST(new PlatformDatabaseTest());
+    ASSERT_TEST(new CleanActionTest());
     return status;
 }

@@ -211,6 +211,12 @@ void ParameterParserTest::configActionTest2()
     QCOMPARE(parser.args()[1], QString("~/Qt/5.3/clang_64"));
 }
 
+void ParameterParserTest::configCleanTest()
+{
+    ParameterParser parser;
+    QCOMPARE(parser.parse(QStringList() << "qtpm" << "clean"), ParameterParser::CleanAction);
+}
+
 void ParameterParserTest::buildTest()
 {
     auto cmd = QStringList() << "qtpm" << "build"

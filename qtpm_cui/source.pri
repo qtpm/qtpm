@@ -24,7 +24,8 @@ HEADERS += \
     $$PWD/tasks/projectfiletask.h \
     $$PWD/platformdatabase.h \
     $$PWD/qtpathresolver.h \
-    $$PWD/tasks/configtask.h
+    $$PWD/tasks/configtask.h \
+    $$PWD/tasks/cleantask.h
 
 SOURCES += \
     ../qtpm_cui/qsemver.cpp \
@@ -53,7 +54,8 @@ SOURCES += \
     $$PWD/tasks/projectfiletask.cpp \
     $$PWD/platformdatabase.cpp \
     $$PWD/qtpathresolver.cpp \
-    $$PWD/tasks/configtask.cpp
+    $$PWD/tasks/configtask.cpp \
+    $$PWD/tasks/cleantask.cpp
 
 INCLUDEPATH += \
     ../qtpm_cui/deps/include \

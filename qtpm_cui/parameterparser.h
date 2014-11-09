@@ -44,7 +44,8 @@ public:
         RebuildAction,
         RefreshAction,
         SearchAction,
-        ConfigAction
+        ConfigAction,
+        CleanAction
     };
 
     ParameterParser();

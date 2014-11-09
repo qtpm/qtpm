@@ -62,6 +62,11 @@ static const char* configDescription = \
         "Available Configs:\n"
         "    qtdir\n";
 
+static const char* cleanDescription = \
+        "qtpm: C++ Package Manager for Qt projects - Yoshiki Shibukawa, 2014 \n"
+        "\n"
+        "    qtpm clean : remove files/directories made by qtpm command.\n";
+
 static const char* initDescription = \
         "qtpm: C++ Package Manager for Qt projects - Yoshiki Shibukawa, 2014 \n"
         "\n"
@@ -241,6 +246,16 @@ ParameterParser::SubCommand ParameterParser::parse(const QStringList &params, co
         }
         this->_args = parser.positionalArguments().mid(1);
         return ParameterParser::ConfigAction;
+    } else if (command == "clean") {
+        parser.clearPositionalArguments();
+        parser.setApplicationDescription(cleanDescription);
+        parser.addPositionalArgument("clean", "remove files/directories created by qtpm command", "config");
+        if (app) {
+            parser.process(*app);
+        } else {
+            parser.process(params);
+        }
+        return ParameterParser::CleanAction;
     } else if (command == "search") {
         parser.clearPositionalArguments();
         parser.setApplicationDescription(searchDescription);
