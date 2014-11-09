@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
         launch = true;
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::CleanAction) {
-        auto command = new CleanTask(QDir::current(), &a);
+        auto command = new CleanTask(QDir::current(), parser.flag("verbose"), &a);
         launch = true;
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::CommandListAction) {

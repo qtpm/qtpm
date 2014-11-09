@@ -250,11 +250,14 @@ ParameterParser::SubCommand ParameterParser::parse(const QStringList &params, co
         parser.clearPositionalArguments();
         parser.setApplicationDescription(cleanDescription);
         parser.addPositionalArgument("clean", "remove files/directories created by qtpm command", "config");
+        const QCommandLineOption verboseOption(QStringList() << "verbose" << "v", "show detail message.");
+        parser.addOption(verboseOption);
         if (app) {
             parser.process(*app);
         } else {
             parser.process(params);
         }
+        this->_flags.insert("verbose", parser.isSet(verboseOption));
         return ParameterParser::CleanAction;
     } else if (command == "search") {
         parser.clearPositionalArguments();

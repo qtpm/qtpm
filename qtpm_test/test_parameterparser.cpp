@@ -211,10 +211,11 @@ void ParameterParserTest::configActionTest2()
     QCOMPARE(parser.args()[1], QString("~/Qt/5.3/clang_64"));
 }
 
-void ParameterParserTest::configCleanTest()
+void ParameterParserTest::cleanTest()
 {
     ParameterParser parser;
-    QCOMPARE(parser.parse(QStringList() << "qtpm" << "clean"), ParameterParser::CleanAction);
+    QCOMPARE(parser.parse(QStringList() << "qtpm" << "clean" << "--verbose"), ParameterParser::CleanAction);
+    QVERIFY(parser.flag("verbose"));
 }
 
 void ParameterParserTest::buildTest()

@@ -8,7 +8,7 @@ class CleanTask : public QObject
 {
     Q_OBJECT
 public:
-    explicit CleanTask(const QDir& dir, QObject *parent = 0);
+    explicit CleanTask(const QDir& dir, bool verbose, QObject *parent = 0);
 
 signals:
 
@@ -17,6 +17,7 @@ public slots:
 
 private:
     QDir _dir;
+    bool _verbose;
 };
 
 #endif // CLEANTASK_H

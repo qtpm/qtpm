@@ -31,7 +31,7 @@ void CleanActionTest::init()
 
 void CleanActionTest::cleanTest()
 {
-    CleanTask task(this->_workdir);
+    CleanTask task(this->_workdir, false);
     task.run();
 
     QVERIFY(!this->_workdir.exists("deps.macx"));
