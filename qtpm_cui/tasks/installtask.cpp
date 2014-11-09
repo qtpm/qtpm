@@ -59,6 +59,7 @@ void InstallTask::run()
 
     auto args = this->_param->args();
     ModuleManager moduleManager;
+    moduleManager.setVerbose(verbose);
     QpmPackage* package = nullptr;
 
     if (QpmPackage::hasQtPackageIni(currentDir)) {
@@ -109,7 +110,11 @@ void InstallTask::run()
     while (modules.length() > 0) {
         foreach(Module* module, modules) {
             if (module->status() == Module::LocalFileModule) {
-                qDebug() << "local file name:" << module->name();
+                QDir moduleDir(QDir::current());
+                moduleDir.cd(".qtpm");
+                moduleDir.cd(module->name());
+                BuildTask task(moduleDir, this->_param->flag("verbose"), nullptr, &database, &installDir);
+                task.run();
             } else if (module->status() == Module::LocalDirModule) {
                 QDir moduleDir(module->longPath());
                 BuildTask task(moduleDir, this->_param->flag("verbose"), nullptr, &database, &installDir);

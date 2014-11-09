@@ -4,13 +4,15 @@
 #include <QFileInfo>
 #include <memory>
 #include <QDebug>
+#include <iostream>
 
-ModuleManager::ModuleManager()
+ModuleManager::ModuleManager() : _verbose(false)
 {
     // for unittest
 }
 
-ModuleManager::ModuleManager(const QDir &installDir) : _installDir(installDir)
+ModuleManager::ModuleManager(const QDir &installDir)
+    : _verbose(false), _installDir(installDir)
 {
     if (QDir::home().exists(".qtpm")) {
         QDir::home().mkdir(".qtpm");
@@ -25,18 +27,25 @@ ModuleManager::~ModuleManager()
 
 void ModuleManager::addModuleDependent(const QString &dependentName, const QString &moduleIdentifier, const QDir& destDir)
 {
+    if (this->_verbose) {
+        std::cout << "processing " << moduleIdentifier.toStdString() << std::endl;
+    }
     QRegExp modulePattern("([^#]+)(#[.*])?(@[.*])?");
     QFileInfo info(moduleIdentifier);
     if (info.exists()) {
         if (info.isDir()) {
-            qDebug() << "module is dir";
+            if (this->_verbose) {
+                std::cout << "    module is dir" << std::endl;
+            }
             auto qtpackage = new QpmPackage(QDir(moduleIdentifier));
             this->_addLocalModuleDependent(dependentName, qtpackage->name(), moduleIdentifier, Module::LocalDirModule, qtpackage);
         } else if (this->supportedSuffixes().contains(info.completeSuffix())) {
-            qDebug() << "mmodule is an archive file";
+            if (this->_verbose) {
+                std::cout << "    module is an archive file" << std::endl;
+            }
             ExtractTask task;
             QString resultDirPath;
-            if (task.run(dependentName, destDir, resultDirPath)) {
+            if (task.run(info.absoluteFilePath(), destDir, resultDirPath, this->_verbose)) {
                 auto moduleDir = QDir(destDir.filePath(resultDirPath));
                 auto qtpackage = new QpmPackage(moduleDir);
                 this->_addLocalModuleDependent(dependentName, qtpackage->name(), moduleIdentifier, Module::LocalFileModule, qtpackage);
@@ -49,8 +58,9 @@ void ModuleManager::addModuleDependent(const QString &dependentName, const QStri
             this->_errorMessages.append(error.arg(this->supportedSuffixes().join(", "), moduleIdentifier));
         }
     } else {
-        qDebug() << "mmodule is git package";
-
+        if (this->_verbose) {
+            std::cout << "    module is git package" << std::endl;
+        }
     }
 }
 
@@ -238,3 +248,13 @@ const QStringList &ModuleManager::warningMessages() const
 {
     return _warningMessages;
 }
+bool ModuleManager::verbose() const
+{
+    return _verbose;
+}
+
+void ModuleManager::setVerbose(bool verbose)
+{
+    _verbose = verbose;
+}
+

@@ -36,7 +36,11 @@ public:
     const QStringList& errorMessages() const;
     const QStringList& warningMessages() const;
 
+    bool verbose() const;
+    void setVerbose(bool verbose);
+
 private:
+    bool _verbose;
     QDir _installDir;
     QDir _repositoryDir;
     QSet<QString> _nextTargets;

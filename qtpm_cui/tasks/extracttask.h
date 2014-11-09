@@ -10,7 +10,7 @@ public:
     ExtractTask();
     virtual ~ExtractTask();
 
-    bool run(const QString& path, const QDir& destDir, QString& resultingDirName);
+    bool run(const QString& path, const QDir& destDir, QString& resultingDirName, bool verbose=false);
 };
 
 #endif // EXTRACTTASK_H

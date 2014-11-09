@@ -3,8 +3,9 @@
 #include "qarchive.h"
 #include <QDir>
 #include <QDateTime>
-#include <QDebug>
 #include <QScopedPointer>
+#include <iostream>
+
 
 ExtractTask::ExtractTask()
 {
@@ -14,7 +15,7 @@ ExtractTask::~ExtractTask()
 {
 }
 
-bool ExtractTask::run(const QString &path, const QDir &destDir, QString &resultingDirName)
+bool ExtractTask::run(const QString &path, const QDir &destDir, QString &resultingDirName, bool verbose)
 {
     QDir temp = QDir::temp();
     QString dirname = QString::number(QDateTime::currentMSecsSinceEpoch());
@@ -23,12 +24,17 @@ bool ExtractTask::run(const QString &path, const QDir &destDir, QString &resulti
     QScopedPointer<QpmPackage> package(nullptr);
 
     QStringList resultFiles;
-    qDebug() << "extracting..." << path;
+
+    if (verbose) {
+        std::cout << "    extracting... " << path.toStdString() << std::endl;
+    }
     bool result = QArchive::extract(path, tempDir, resultFiles);
 
     if (result) {
         if (resultFiles.length() == 0) {
-            qDebug() << "  empty archivefile";
+            if (verbose) {
+                std::cout << "    this is empty archive file." << std::endl;
+            }
             result = false;
         } else {
             QStringList fragments = QDir::fromNativeSeparators(resultFiles[0]).split("/");
@@ -40,7 +46,10 @@ bool ExtractTask::run(const QString &path, const QDir &destDir, QString &resulti
                 if (destDir.exists(package->name())) {
                     if (!QDir(destDir.filePath(package->name())).removeRecursively()) {
                         result = false;
-                        qDebug() << "remove existing folder fail";
+                        if (!verbose) {
+                            std::cerr << "    extracting... " << path.toStdString() << std::endl;
+                        }
+                        std::cerr << "    removing existing folder failed." << std::endl;
                     }
                 }
             }
