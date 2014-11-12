@@ -84,7 +84,7 @@ void InstallTask::run()
             }
             return;
         }
-        foreach (const QString& arg, args) {
+        for (const QString& arg : args) {
             //qDebug () << "adding from command: " << arg;
             moduleManager.addModuleDependent("app", arg, sourceDir);
         }
@@ -109,6 +109,7 @@ void InstallTask::run()
     QList<Module*> modules = moduleManager.shift();
     while (modules.length() > 0) {
         foreach(Module* module, modules) {
+            qDebug() << module->name();
             if (module->status() == Module::LocalFileModule) {
                 QDir moduleDir(QDir::current());
                 moduleDir.cd(".qtpm");
@@ -117,10 +118,15 @@ void InstallTask::run()
                 task.run();
             } else if (module->status() == Module::LocalDirModule) {
                 QDir moduleDir(module->longPath());
+                qDebug() << "moduleDir" << module->longPath();
                 BuildTask task(moduleDir, this->_param->flag("verbose"), nullptr, &database, &installDir);
                 task.run();
-            } else if (module->status() == Module::RemoteModule) {
+            } else if (module->status() == Module::RemoteBranchModule) {
                 qDebug() << "remote name:" << module->name();
+            } else if (module->status() == Module::RemoteVersionModule) {
+                qDebug() << "remote name:" << module->name();
+            } else {
+                qDebug() << "other:" << module->status() << module->name();
             }
         }
         modules = moduleManager.shift();

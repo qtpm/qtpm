@@ -26,8 +26,6 @@ struct People {
     }
 };
 
-class QCommandLineParser;
-
 class ParameterParser
 {
 public:

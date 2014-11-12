@@ -28,6 +28,13 @@ void CleanTask::run()
         }
         buildDir.removeRecursively();
     }
+    if (this->_dir.exists(".qtpm")) {
+        QDir workDir(this->_dir.filePath(".qtpm"));
+        if (this->_verbose) {
+            std::cout << "removing " << workDir.path().toStdString() << std::endl;
+        }
+        workDir.removeRecursively();
+    }
     if (this->_dir.exists("qtpackage.pri")) {
         if (this->_verbose) {
             std::cout << "removing qtpackage.pri" << std::endl;

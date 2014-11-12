@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     } else if (subcommand == ParameterParser::CommandListAction) {
         parser.showCommandHelp();
     } else {
-        qDebug() << subcommand;
+        parser.showCommandHelp();
     }
     if (launch) {
         return a.exec();

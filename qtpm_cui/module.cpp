@@ -15,7 +15,7 @@ Module::~Module()
 bool Module::findValidVersion()
 {
     this->_fix = true;
-    if (Module::isLocal(this->_status)) {
+    if (this->isLocal() || this->_status == Module::RemoteBranchModule) {
         return true;
     }
     auto validVersions = QSemVer::filter(this->_dependents.values(), this->_availableVersions, true);
@@ -25,12 +25,17 @@ bool Module::findValidVersion()
     return this->valid();
 }
 
-bool Module::addDependent(const QString &name, const QString &range)
+bool Module::addDependent(const QString &name, const QString &range, bool force)
 {
-    this->_dependents.insert(name, range);
-    if (this->_fix and this->valid()) {
-        auto versions = QStringList() << this->_finalVersion;
-        return !QSemVer::filter(range, versions, true).isEmpty();
+    if (force) {
+        this->_finalVersion = range;
+        this->_dependents.insert(name, range);
+    } else {
+        this->_dependents.insert(name, range);
+        if (this->_fix and this->valid()) {
+            auto versions = QStringList() << this->_finalVersion;
+            return !QSemVer::filter(range, versions, true).isEmpty();
+        }
     }
     return true;
 }
@@ -110,6 +115,21 @@ bool Module::isLocal(Module::ModuleStatus status)
 {
     return ((status == Module::LocalDirModule) || (status == Module::LocalFileModule));
 }
+
+bool Module::isLocal() const
+{
+    return Module::isLocal(this->_status);
+}
+QString Module::branch() const
+{
+    return _branch;
+}
+
+void Module::setBranch(const QString &branch)
+{
+    _branch = branch;
+}
+
 
 QpmPackage *Module::package() const
 {

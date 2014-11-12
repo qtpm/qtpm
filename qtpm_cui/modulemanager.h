@@ -56,9 +56,17 @@ private:
 
     void _addInstalledModule(const QString& moduleName, const QString& version);
     void _addLocalModuleDependent(const QString& dependentName, const QString& moduleName, const QString& localPath, Module::ModuleStatus status, QpmPackage* package=nullptr);
-    void _addRemoteModuleDependent(const QString& dependentName, const QString& requiredModuleName, const QString& range, QpmPackage* package=nullptr);
+    Module* _addRemoteModuleDependent(const QString& dependentName, const QString& requiredModuleName, Module::ModuleStatus status, const QString& range, QpmPackage* package=nullptr);
     bool _addAlias(const QString& dependentName, const QString& shortName, const QString& longName, Module::ModuleStatus status);
     void _addModule(Module* module);
+
+    void _prepareLocalDirModule(const QString &dependentName, const QFileInfo &info);
+    void _prepareLocalArchiveFileModule(const QString &dependentName, const QFileInfo &info, const QDir& destDir);
+    void _prepareDefaultGitModule(const QString &dependentName, const QString &moduleIdentifier, const QDir &destDir);
+    void _prepareVersionGitModule(const QString &dependentName, const QRegExp &moduleIdentifier, const QDir &destDir);
+    void _prepareBranchGitModule(const QString &dependentName, const QRegExp &moduleIdentifier, const QDir &destDir);
+
+    QDir _gitCheckout(const QString& url, const QDir& destDir, int& result, const QString &refrence="", bool isTag=false);
 
     friend class ModuleManagerTest;
 };

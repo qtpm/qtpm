@@ -2,6 +2,21 @@
 #include <QRegExp>
 #include <QDebug>
 #include <QDir>
+#include <iostream>
+
+const QString sshPatternSrc = "git@(\\w[\\w\\.]+):(\\w[\\w\\.-]+)/(\\w[\\w\\.-]+)\\.git";
+const QString httpsPatternSrc = "https?://(\\w[\\w\\.]+)/(\\w[\\w\\.-]+)/(\\w[\\w\\.-]+)(\\.git)?";
+
+AliasDatabase::AliasDatabase(QObject *parent) :
+    QObject(parent)
+{
+    QDir home = QDir::home();
+    if (!home.exists(".qtpm")) {
+        home.mkdir(".qtpm");
+    }
+    QDir qtpmDir = QDir(home.filePath(".qtpm"));
+    this->_settings = new QSettings(qtpmDir.filePath("alias.ini"), QSettings::IniFormat);
+}
 
 AliasDatabase::AliasDatabase(const QDir& dir, QObject *parent) :
     QObject(parent)
@@ -102,6 +117,39 @@ QList<DatabaseEntry> AliasDatabase::search_near_title(const QString &key, int di
     return result;
 }
 
+bool AliasDatabase::isUrl(const QString &text) const
+{
+    QRegExp sshPattern(sshPatternSrc);
+    QRegExp httpsPattern(httpsPatternSrc);
+    if (sshPattern.indexIn(text) != -1) {
+        return true;
+    }
+    if (httpsPattern.indexIn(text) != -1) {
+        return true;
+    }
+    return false;
+}
+
+QString AliasDatabase::toUrl(const QString moduleIdentifier) const
+{
+    QStringList fragments = moduleIdentifier.split("/");
+    QString url;
+    if (this->isUrl(moduleIdentifier)) {
+        url = moduleIdentifier;
+    } else if (fragments.count() == 1) {
+        if (this->contains(moduleIdentifier)) {
+            url = this->find(moduleIdentifier).url();
+        } else {
+            std::cerr << "    This module is not in alias database." << std::endl;
+        }
+    } else if (fragments.count() == 3) {
+        url = QString("git@%1:%2/%3.git").arg(fragments[0], fragments[1], fragments[2]);
+    } else {
+        std::cerr << "    Module identity is wrong it should be registered name in alias or [github.com]/[owner]/[repo] style name." << std::endl;
+    }
+    return url;
+}
+
 int AliasDatabase::_levenshtein_distance(const QString &str1, const QString &str2) const
 {
     const int len1 = str1.size();
@@ -128,8 +176,8 @@ int AliasDatabase::_levenshtein_distance(const QString &str1, const QString &str
 DatabaseEntry::DatabaseEntry(const QString& shortName, const QString& url, const QString& description)
     : _name(shortName), _url(url), _description(description), _invalid(false)
 {
-    QRegExp sshPattern("git@(\\w[\\w\\.]+):(\\w[\\w\\.-]+)/(\\w[\\w\\.-]+)\\.git");
-    QRegExp httpsPattern("https?://(\\w[\\w\\.]+)/(\\w[\\w\\.-]+)/(\\w[\\w\\.-]+)(\\.git)?");
+    QRegExp sshPattern(sshPatternSrc);
+    QRegExp httpsPattern(httpsPatternSrc);
     QStringList result;
     if (sshPattern.indexIn(url) != -1) {
         result.append(sshPattern.cap(1));

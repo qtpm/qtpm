@@ -30,6 +30,8 @@ public:
     void setPackageType(const QString &type);
     QString name() const;
     void setName(const QString &name);
+    QString version() const;
+    void setVersion(const QString &version);
     QString libType() const;
     void setLibType(const QString &type);
     QString buildType() const;

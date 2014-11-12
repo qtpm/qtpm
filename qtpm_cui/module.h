@@ -16,7 +16,8 @@ public:
         NewInstall,
         LocalFileModule,
         LocalDirModule,
-        RemoteModule,
+        RemoteVersionModule,
+        RemoteBranchModule,
         IndexedModule
     };
 
@@ -24,7 +25,7 @@ public:
     ~Module();
 
     bool findValidVersion();
-    bool addDependent(const QString& name, const QString& range);
+    bool addDependent(const QString& name, const QString& range, bool force=false);
 
     QString name() const;
     QMap<QString, QString> dependents() const;
@@ -48,6 +49,10 @@ public:
     void setLongPath(const QString &longPath);
 
     static bool isLocal(Module::ModuleStatus status);
+    bool isLocal() const;
+
+    QString branch() const;
+    void setBranch(const QString &branch);
 
 private:
     QString _name;
@@ -55,6 +60,7 @@ private:
     QString _longPath;
     QMap<QString, QString> _dependents;
     QStringList _availableVersions;
+    QString _branch;
     QString _finalVersion;
     ModuleStatus _status;
     bool _fix;

@@ -14,6 +14,13 @@ private Q_SLOTS:
     void initialDepthTest();
     void secondDepthTest1();
     void secondDepthTest2();
+
+    void initialDepthBranchTest();
+    void secondDepthBranchTest1();
+    void secondDepthBranchTest2();
+    void conflictRemoteModuleTest1();
+    void conflictRemoteModuleTest2();
+
     void versionConflictAtFirstDepthTest();
     void versionConflictAtSecondDepthTest1();
     void versionConflictAtSecondDepthTest2();

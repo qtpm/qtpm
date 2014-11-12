@@ -103,7 +103,7 @@ void BuildTask::run()
     }
 
     if (!QpmPackage::hasQtPackageIni(this->_packageDir)) {
-        std::cerr << "qtpackage.ini doesn't exist in " << this->_packageDir.path().toStdString() << std::endl;
+        std::cerr << "qtpackage.ini doesn't exist in " << this->_packageDir.absolutePath().toStdString() << std::endl;
         app->exit(1);
         return;
     }
@@ -265,34 +265,13 @@ bool BuildTask::_buildByConfigure(const QDir& srcDir, const QString& buildOption
 
 void BuildTask::_copyPriFile(QpmPackage* package)
 {
-    QFileInfo bestMatch;
-    QFileInfo secondMatch;
-    QStringList matchPlatforms;
-    QString osName = this->_database->currentPlatform();
-    if (this->_database) {
-        matchPlatforms = this->_database->searchRelatedPlatforms(osName);
-    }
-    auto prifiles = this->_packageDir.entryInfoList(QStringList() << "*.pri", QDir::Files, QDir::Name);
-    for (const QFileInfo& priinfo : prifiles) {
-        // todo fix scoring logic
-        auto baseName = priinfo.baseName();
-        if (osName == baseName) {
-            bestMatch = priinfo;
-        } else if (matchPlatforms.contains(baseName)) {
-            secondMatch = priinfo;
-        }
-    }
-
     QString priName = QString("%1.pri").arg(package->name());
-    if (bestMatch.isFile()) {
-        QFile::copy(bestMatch.absoluteFilePath(), this->_destinationDir->filePath(priName));
+    if (this->_packageDir.exists(priName)) {
         if (this->_verbose) {
-            std::cout << "copying " << bestMatch.fileName().toStdString() << " as " << priName.toStdString() << std::endl;
+            std::cout << "copying " << priName.toStdString() << std::endl;
         }
-    } else if (secondMatch.isFile()) {
-        QFile::copy(secondMatch.absoluteFilePath(), this->_destinationDir->filePath(priName));
-        if (this->_verbose) {
-            std::cout << "copying " << secondMatch.fileName().toStdString() << " as " << priName.toStdString() << std::endl;
-        }
+        QFile::copy(this->_packageDir.filePath(priName), this->_destinationDir->filePath(priName));
+    } else {
+        std::cout << "error: can't find " << priName.toStdString() << " in " << this->_packageDir.path().toStdString() << std::endl;
     }
 }

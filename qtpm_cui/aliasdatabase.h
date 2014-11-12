@@ -28,6 +28,7 @@ class AliasDatabase : public QObject
 {
     Q_OBJECT
 public:
+    explicit AliasDatabase(QObject *parent = 0);
     explicit AliasDatabase(const QDir& dir, QObject *parent = 0);
     ~AliasDatabase();
 
@@ -37,12 +38,13 @@ public:
     int count() const;
     bool contains(const QString& key) const;
     DatabaseEntry find(const QString& key) const;
+
     QList<DatabaseEntry> search(const QString& key) const;
     QList<DatabaseEntry> search_near_title(const QString& key, int distance=4) const;
 
-signals:
+    bool isUrl(const QString& text) const;
+    QString toUrl(const QString moduleIdentifier) const;
 
-public slots:
 private:
     QSettings* _settings;
 

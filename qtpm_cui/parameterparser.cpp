@@ -350,7 +350,7 @@ void ParameterParser::showCommandHelp() const
 {
     std::cout << "qtpm: C++ Package Manager for Qt projects - Yoshiki Shibukawa, 2014" << std::endl
               << std::endl
-              << "Usage: qtpm <command>" << std::endl
+              << "Usage: qtpm <command> <command option>" << std::endl
               << std::endl
               << "where <command> is one of:" << std::endl
               << "    build     : build module" << std::endl
@@ -361,6 +361,7 @@ void ParameterParser::showCommandHelp() const
               << "    refresh   : refresh module alias information" << std::endl
               << "    search    : search module alias" << std::endl
               << "    config    : set/get qtpm configuration" << std::endl
+              << "    clean     : clean work folders and build result" << std::endl
               << std::endl
               << "qtpm <cmd> -h     quick help on <cmd>" << std::endl;
 }

@@ -54,6 +54,16 @@ void QpmPackage::setName(const QString &title)
     this->_setting->setValue("package/name", title);
 }
 
+QString QpmPackage::version() const
+{
+    return this->_setting->value("package/version").toString();
+}
+
+void QpmPackage::setVersion(const QString &version)
+{
+    this->_setting->setValue("package/version", version);
+}
+
 QString QpmPackage::libType() const
 {
     return this->_setting->value("package/libtype").toString();
