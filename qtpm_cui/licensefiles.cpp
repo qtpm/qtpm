@@ -11,7 +11,6 @@ public:
     {
         QFile infile(QString::fromStdString(name));
         if (!infile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            //qDebug() << __FILE__ << __LINE__;
             return { false, nullptr, "Could not open file " + name };
         }
         QTextStream instream(&infile);
@@ -99,6 +98,7 @@ bool LicenseFiles::findLicense(const QString &searchKey)
 
     foreach (const QString& key, this->_licenseNames.keys()) {
         if (key.contains(lowerKey)) {
+            this->_license = key;
             return true;
         }
     }
@@ -106,7 +106,7 @@ bool LicenseFiles::findLicense(const QString &searchKey)
     return false;
 }
 
-QString LicenseFiles::writeLicense(const QDir &dir, const QString &author, const QString &name) const
+void LicenseFiles::writeLicense(const QDir &dir, const QString &author, const QString &name) const
 {
     LoaderQFile loader;
     NL::Template::Template t(loader);
@@ -121,8 +121,9 @@ QString LicenseFiles::writeLicense(const QDir &dir, const QString &author, const
         QTextStream outstream(&outfile);
         outstream << QString::fromStdString(out.str());
     }
-
+    outfile.close();
 }
+
 QString LicenseFiles::license() const
 {
     return _license;

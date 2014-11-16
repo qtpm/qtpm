@@ -61,6 +61,12 @@ void InitLibTask::run()
         package->setName(param->param("name"));
     }
 
+    if (package->version().isEmpty() && param->param("version").isEmpty()) {
+        package->setVersion("1.0.0");
+    } else if (!param->param("version").isEmpty()) {
+        package->setVersion(param->param("version"));
+    }
+
     if (initialRun && type.isEmpty()) {
         package->setLibType("bundle");
     } else if (!type.isEmpty()) {

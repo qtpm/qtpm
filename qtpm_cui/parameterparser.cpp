@@ -194,6 +194,8 @@ ParameterParser::SubCommand ParameterParser::parse(const QStringList &params, co
         parser.addPositionalArgument("init-lib", "Initlize library project.", "init-lib [initlib_options]");
         const QCommandLineOption nameOption("name", "Package name. It will be identity of package", "name");
         parser.addOption(nameOption);
+        const QCommandLineOption versionOption("version", "Semver style package version. Default value is 1.0.0.", "version");
+        parser.addOption(versionOption);
         const QCommandLineOption typeOption("type", "Library type: bundle, dev.", "type");
         parser.addOption(typeOption);
         const QCommandLineOption buildTypeOption(QStringList() << "build" << "b", "Build type: source, configure, cmake.", "build");
@@ -209,6 +211,7 @@ ParameterParser::SubCommand ParameterParser::parse(const QStringList &params, co
         this->_getModuleOptions(parser);
         this->_args = parser.positionalArguments().mid(1);
         this->_params.insert("name", parser.value(nameOption));
+        this->_params.insert("version", parser.value(versionOption));
         this->_params.insert("type", parser.value(typeOption));
         this->_params.insert("buildType", parser.value(buildTypeOption));
         this->_params.insert("buildOption", parser.value(buildOptionOption));

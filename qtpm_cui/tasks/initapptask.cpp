@@ -68,13 +68,14 @@ void InitAppTask::run()
     if (!param->param("license").isEmpty()) {
         LicenseFiles licenses;
         if (licenses.findLicense(param->param("license"))) {
-            licenses.writeLicense(currentDir, authors[0], package->name());
+            QString packageName = package->name();
+            QString author = authors[0];
+            licenses.writeLicense(currentDir, author, packageName);
             package->setLicense(licenses.displayName());
         } else {
             package->setLicense(param->param("license"));
         }
     }
-
     delete package;
     app->exit(0);
 }

@@ -15,7 +15,7 @@ public:
     QString findKey(const QString& displayName) const;
     QString displayName() const;
     bool findLicense(const QString& searchKey);
-    QString writeLicense(const QDir& dir, const QString& author, const QString& name) const;
+    void writeLicense(const QDir& dir, const QString& author, const QString& name) const;
     QString license() const;
     void setLicense(const QString& license);
 

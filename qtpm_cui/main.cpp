@@ -26,37 +26,45 @@ int main(int argc, char *argv[])
     auto subcommand = parser.parse(a.arguments(), &a);
     bool launch = false;
     int returnCode = 0;
-
+    QObject* basecommand = nullptr;
     if (subcommand == ParameterParser::BuildAction) {
         auto command = new BuildTask(QDir::current(), parser.flag("verbose"), &parser, nullptr, nullptr, &a);
+        basecommand = command;
         launch = true;
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::InstallAction) {
         auto command = new InstallTask(&parser, &a);
+        basecommand = command;
         launch = true;
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::InitAppAction) {
         auto command = new InitAppTask(&parser, &a);
+        basecommand = command;
         launch = true;
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::InitLibAction) {
         auto command = new InitLibTask(&parser, &a);
+        basecommand = command;
         launch = true;
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::RefreshAction) {
         auto command = new RefreshAliasTask(&parser, &a);
+        basecommand = command;
         launch = true;
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::SearchAction) {
         auto command = new SearchTask(&parser, &a);
+        basecommand = command;
         launch = true;
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::ConfigAction) {
         auto command = new ConfigTask(&parser, &a);
+        basecommand = command;
         launch = true;
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::CleanAction) {
         auto command = new CleanTask(QDir::current(), parser.flag("verbose"), &a);
+        basecommand = command;
         launch = true;
         QTimer::singleShot(0, command, SLOT(run()));
     } else if (subcommand == ParameterParser::CommandListAction) {
@@ -65,8 +73,10 @@ int main(int argc, char *argv[])
         parser.showCommandHelp();
     }
     if (launch) {
-        return a.exec();
-    } else {
-        return returnCode;
+        returnCode = a.exec();
     }
+    if (basecommand) {
+        delete basecommand;
+    }
+    return returnCode;
 }

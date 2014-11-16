@@ -131,6 +131,7 @@ void ParameterParserTest::initAppActionTest3()
 void ParameterParserTest::initLibActionWithSrcTypeTest() {
     auto cmd = QStringList() << "qtpm" << "init-lib" << "openssl"
             << "--type" << "dev"
+            << "--version" << "1.2.8"
             << "--build" << "source"
             << "--author" << "yoshiki shibukawa <yoshiki@shibu.jp> (http://www.shibu.jp)"
             << "--committer" << "yoshiki shibukawa <yoshiki@shibu.jp> (http://www.shibu.jp)"

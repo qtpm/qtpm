@@ -6,7 +6,6 @@ static const char* filename = "qtpackage.ini";
 QpmPackage::QpmPackage(const QDir& dir, QObject *parent) :
     QObject(parent)
 {
-    //qDebug() << dir.path();
     auto filepath = dir.filePath(filename);
     this->_setting = new QSettings(filepath, QSettings::IniFormat);
     this->_init();

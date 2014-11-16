@@ -45,14 +45,20 @@ void ModuleManager::addModuleDependent(const QString &dependentName, const QStri
             this->_errorMessages.append(error.arg(this->supportedSuffixes().join(", "), moduleIdentifier));
         }
     } else {
-        if (this->_verbose) {
-            std::cout << "    module is git package" << std::endl;
-        }
         if (branchPattern.indexIn(moduleIdentifier) != -1) {
+            if (this->_verbose) {
+                std::cout << "    module is a git package that is selected by branch" << std::endl;
+            }
             this->_prepareBranchGitModule(dependentName, branchPattern, destDir);
         } else if (versionPattern.indexIn(moduleIdentifier) != -1) {
-            this->_prepareBranchGitModule(dependentName, versionPattern, destDir);
+            if (this->_verbose) {
+                std::cout << "    module is a git package that is selected by version" << std::endl;
+            }
+            this->_prepareVersionGitModule(dependentName, versionPattern, destDir);
         } else {
+            if (this->_verbose) {
+                std::cout << "    module is a git package that is selected by default checkout" << std::endl;
+            }
             this->_prepareDefaultGitModule(dependentName, moduleIdentifier, destDir);
         }
     }
@@ -232,7 +238,7 @@ void ModuleManager::_prepareLocalArchiveFileModule(const QString &dependentName,
 void ModuleManager::_prepareDefaultGitModule(const QString &dependentName, const QString &moduleIdentifier, const QDir& destDir)
 {
     if (this->_verbose) {
-        std::cout << "    module is git repository" << std::endl;
+        std::cout << "    module is git repository (default)" << std::endl;
     }
     AliasDatabase database;
     auto url = database.toUrl(moduleIdentifier);
@@ -241,7 +247,9 @@ void ModuleManager::_prepareDefaultGitModule(const QString &dependentName, const
         QDir moduleDir = this->_gitCheckout(url, destDir, result);
         if (result == 0) {
             QpmPackage* package = new QpmPackage(moduleDir);
-            this->_addRemoteModuleDependent(dependentName, package->name(), Module::RemoteVersionModule, QString("^") + package->version(), package);
+            Module* module = this->_addRemoteModuleDependent(dependentName, package->name(), Module::RemoteVersionModule, QString("^") + package->version(), package);
+            module->setAvailableVersions(QStringList() << package->version());
+            module->setLongPath(moduleDir.absolutePath());
         } else {
             std::cerr << "    git fails: " << result << std::endl;
         }
@@ -251,7 +259,7 @@ void ModuleManager::_prepareDefaultGitModule(const QString &dependentName, const
 void ModuleManager::_prepareVersionGitModule(const QString &dependentName, const QRegExp &moduleIdentifier, const QDir &destDir)
 {
     if (this->_verbose) {
-        std::cout << "    module is git repository" << std::endl;
+        std::cout << "    module is git repository (version)" << std::endl;
     }
     AliasDatabase database;
     auto url = database.toUrl(moduleIdentifier.cap(1));
@@ -260,7 +268,8 @@ void ModuleManager::_prepareVersionGitModule(const QString &dependentName, const
         QDir moduleDir = this->_gitCheckout(url, destDir, result, moduleIdentifier.cap(2).mid(1), true);
         if (result == 0) {
             QpmPackage* package = new QpmPackage(moduleDir);
-            this->_addRemoteModuleDependent(dependentName, package->name(), Module::RemoteVersionModule, QString("^") + package->version(), package);
+            Module* module = this->_addRemoteModuleDependent(dependentName, package->name(), Module::RemoteVersionModule, QString("^") + package->version(), package);
+            module->setLongPath(moduleDir.absolutePath());
         } else {
             std::cerr << "    git fails: " << result << std::endl;
         }
@@ -270,7 +279,7 @@ void ModuleManager::_prepareVersionGitModule(const QString &dependentName, const
 void ModuleManager::_prepareBranchGitModule(const QString &dependentName, const QRegExp &moduleIdentifier, const QDir &destDir)
 {
     if (this->_verbose) {
-        std::cout << "    module is git repository" << std::endl;
+        std::cout << "    module is git repository (branch)" << std::endl;
     }
     AliasDatabase database;
     auto url = database.toUrl(moduleIdentifier.cap(1));
@@ -282,6 +291,7 @@ void ModuleManager::_prepareBranchGitModule(const QString &dependentName, const 
             QpmPackage* package = new QpmPackage(moduleDir);
             auto module = this->_addRemoteModuleDependent(dependentName, package->name(), Module::RemoteBranchModule, QString("^") + package->version(), package);
             module->setBranch(branchName);
+            module->setLongPath(moduleDir.absolutePath());
         } else {
             std::cerr << "    git fails: " << result << std::endl;
         }
@@ -301,13 +311,23 @@ QDir ModuleManager::_gitCheckout(const QString &url, const QDir &destDir, int &r
     }
     QStringList args;
     QDir workDir;
-    QDir moduleDir(destDir);
-    moduleDir.cd(dirName);
+    QDir moduleDir(destDir.filePath(dirName));
+    qDebug() << "_gitCheckout";
+    if (this->_verbose) {
+        std::cout << "    remote url:" << url.toStdString() << std::endl;
+        std::cout << "    moduleDir:" << moduleDir.absolutePath().toStdString() << std::endl;
+    }
     bool exist = destDir.exists(dirName + "/.git");
     if (exist && isTag) {
+        if (this->_verbose) {
+            std::cout << "    Skip cloning because target directory already exists and specified by tag." << std::endl;
+        }
         return moduleDir; // skip running
     }
     if (exist) {
+        if (this->_verbose) {
+            std::cout << "    Updating git repository." << std::endl;
+        }
         workDir = moduleDir;
         if (reference.isEmpty()) {
             args << "pull" << "--depth" << "1";
@@ -315,6 +335,9 @@ QDir ModuleManager::_gitCheckout(const QString &url, const QDir &destDir, int &r
             args << "pull" << "--depth" << "1" << "origin" << reference;
         }
     } else {
+        if (this->_verbose) {
+            std::cout << "    Cloning git repository." << std::endl;
+        }
         workDir = destDir;
         if (destDir.exists(dirName)) {
             QDir dir(destDir.filePath(dirName));

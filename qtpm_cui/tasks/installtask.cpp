@@ -123,8 +123,13 @@ void InstallTask::run()
                 task.run();
             } else if (module->status() == Module::RemoteBranchModule) {
                 qDebug() << "remote name:" << module->name();
+                qDebug() << module->longPath();
+                qDebug() << module->package()->filePath();
             } else if (module->status() == Module::RemoteVersionModule) {
                 qDebug() << "remote name:" << module->name();
+                QDir moduleDir(module->longPath());
+                BuildTask task(moduleDir, this->_param->flag("verbose"), nullptr, &database, &installDir);
+                task.run();
             } else {
                 qDebug() << "other:" << module->status() << module->name();
             }
