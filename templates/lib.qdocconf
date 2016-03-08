@@ -1,0 +1,10 @@
+# configuration file for qdoc
+
+outputdir   = ../html
+headerdirs  = ../src
+sourcedirs  = ../src
+excludedirs = ../src/private
+exampledirs = ../examples
+imagedirs   = .
+
+Cpp.ignoretokens = [[.TargetLarge]]_EXPORT
