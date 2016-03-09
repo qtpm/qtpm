@@ -1,0 +1,2 @@
+# Additional configuration
+# This file is included from auto generated CMakeLists.txt

@@ -61,3 +61,14 @@ cp ../test/package7.cpp src/main.cpp
 ../qtpm get github.com/shibukawa/package2  # pakcage2 depends on package1
 ../qtpm build
 popd
+
+echo "conditional build test"
+mkdir workbench8
+pushd workbench8
+../qtpm init app
+cp ../test/package8_windows.cpp src
+cp ../test/package8_linux.cpp src
+cp ../test/package8_darwin.cpp src
+cp ../test/package8_main.cpp src/main.cpp
+../qtpm build
+popd

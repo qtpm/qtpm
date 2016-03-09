@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,6 +12,85 @@ import (
 	"strings"
 	"text/template"
 )
+
+type SourceBundle struct {
+	Name                  string
+	Files                 []string
+	Test                  bool
+	PlatformSpecificFiles map[string][]string
+}
+
+func NewSourceBundle(name string, test bool) *SourceBundle {
+	return &SourceBundle{
+		Name: name,
+		Test: test,
+		PlatformSpecificFiles: make(map[string][]string),
+	}
+}
+
+func (s SourceBundle) HasItem() bool {
+	return len(s.Files) > 0 || len(s.PlatformSpecificFiles) > 0
+}
+
+func (s SourceBundle) DefineList() string {
+	if !s.HasItem() {
+		return ""
+	}
+	var buffer bytes.Buffer
+	sort.Strings(s.Files)
+	fmt.Fprintf(&buffer, "set(%s %s)\n", s.Name, strings.Join(s.Files, " "))
+	var keys []string
+	for key := range s.PlatformSpecificFiles {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		files := s.PlatformSpecificFiles[key]
+		sort.Strings(files)
+		fmt.Fprintf(&buffer, "if(%s)\n", key)
+		fmt.Fprintf(&buffer, "  list(APPEND %s %s)\n", s.Name, strings.Join(files, " "))
+		fmt.Fprintf(&buffer, "endif(%s)\n", key)
+	}
+	return buffer.String()
+}
+
+func (s SourceBundle) StartLoop() string {
+	return fmt.Sprintf("%s\nforeach(file IN LISTS %s)\n", s.DefineList(), s.Name)
+}
+
+func (s SourceBundle) EndLoop() string {
+	return "endforeach()\n"
+}
+
+var platformNames = map[string]string{
+	"windows": "WIN32",
+	"darwin":  "APPLE",
+	"unix":    "UNIX",
+	"linux":   "UNIX AND NOT APPLE AND NOT CYGWIN",
+	"mingw":   "MINGW",
+	"msys":    "MSYS",
+	"cygwin":  "CYGWIN",
+	"msvc":    "MSVC",
+}
+
+func (s *SourceBundle) addfile(path string) {
+	_, name := filepath.Split(path)
+	basename := name[:len(name)-len(filepath.Ext(name))]
+	var registerName string
+	if s.Test {
+		registerName = basename
+		basename = basename[:len(name)-5]
+	} else {
+		registerName = path
+	}
+	fragments := strings.Split(basename, "_")
+	last := fragments[len(fragments)-1]
+	if platform, ok := platformNames[last]; ok {
+		s.PlatformSpecificFiles[platform] = append(s.PlatformSpecificFiles[platform], registerName)
+	} else {
+		s.Files = append(s.Files, registerName)
+	}
+}
 
 type SourceVariable struct {
 	Target           string
@@ -24,13 +104,11 @@ type SourceVariable struct {
 	VersionPatch     int
 	Requires         []string
 	QtModules        []string
-	Sources          []string
-	Headers          []string
-	Examples         []string
-	InstallHeaders   []string
-	Resources        []string
-	Tests            []string
-	ExtraTestSources []string
+	Sources          *SourceBundle
+	InstallHeaders   *SourceBundle
+	Resources        *SourceBundle
+	Tests            *SourceBundle
+	ExtraTestSources *SourceBundle
 	Library          bool
 }
 
@@ -47,46 +125,29 @@ var supportedHeaderExtensions = map[string]bool{
 }
 
 func (sv *SourceVariable) SearchFiles(dir string) {
+	sv.Sources = NewSourceBundle("sources", false)
+	sv.InstallHeaders = NewSourceBundle("public_headers", false)
+	sv.Resources = NewSourceBundle("resources", false)
+	sv.Tests = NewSourceBundle("tests", true)
+	sv.ExtraTestSources = NewSourceBundle("extra_test_sources", false)
+
 	srcDir := filepath.Join(dir, "src")
 	err := filepath.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
 		path = path[len(srcDir)+1:]
-		outputPath := "${PROJECT_SOURCE_DIR}/src/" + path
+		outputPath := "src/" + path
 		if supportedSourceExtensions[filepath.Ext(path)] && path != "main.cpp" {
-			sv.Sources = append(sv.Sources, outputPath)
+			sv.Sources.addfile(outputPath)
 		} else if supportedHeaderExtensions[filepath.Ext(path)] {
-			sv.Headers = append(sv.Headers, outputPath)
-			// in top src folder
 			if path == info.Name() {
-				sv.InstallHeaders = append(sv.InstallHeaders, outputPath)
+				sv.InstallHeaders.addfile(outputPath)
 			}
 		}
 
 		return nil
 	})
-
-	resources, err := ioutil.ReadDir(filepath.Join(dir, "resource"))
-	if err == nil {
-		for _, resource := range resources {
-			name := resource.Name()
-			if strings.HasSuffix(name, ".qrc") {
-				sv.Resources = append(sv.Resources, name)
-			}
-		}
-	}
-
-	examples, err := ioutil.ReadDir(filepath.Join(dir, "examples"))
-	if err == nil {
-		for _, example := range examples {
-			name := example.Name()
-			if !supportedSourceExtensions[filepath.Ext(name)] {
-				continue
-			}
-			sv.Examples = append(sv.Examples, name[:len(name)-4])
-		}
-	}
 
 	tests, err := ioutil.ReadDir(filepath.Join(dir, "test"))
 	if err == nil {
@@ -96,20 +157,22 @@ func (sv *SourceVariable) SearchFiles(dir string) {
 				continue
 			}
 			if strings.HasSuffix(name, "_test.cpp") {
-				sv.Tests = append(sv.Tests, name[:len(name)-4])
+				sv.Tests.addfile(name)
 			} else {
-				sv.ExtraTestSources = append(sv.ExtraTestSources, name)
+				sv.ExtraTestSources.addfile("test/" + name)
 			}
 		}
 	}
 
-	sort.Strings(sv.Sources)
-	sort.Strings(sv.Headers)
-	sort.Strings(sv.Examples)
-	sort.Strings(sv.InstallHeaders)
-	sort.Strings(sv.Resources)
-	sort.Strings(sv.Tests)
-	sort.Strings(sv.ExtraTestSources)
+	resources, err := ioutil.ReadDir(filepath.Join(dir, "resource"))
+	if err == nil {
+		for _, resource := range resources {
+			name := resource.Name()
+			if strings.HasSuffix(name, ".qrc") {
+				sv.Resources.addfile("resource/" + name)
+			}
+		}
+	}
 }
 
 func AddTest(basePath, name string) {

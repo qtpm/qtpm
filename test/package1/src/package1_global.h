@@ -1,0 +1,13 @@
+#ifndef PACKAGE1_GLOBAL_H
+#define PACKAGE1_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(PACKAGE1_LIBRARY)
+#  define PACKAGE1SHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define PACKAGE1SHARED_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // PACKAGE1_GLOBAL_H
+

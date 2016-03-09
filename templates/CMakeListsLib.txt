@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.0)[[$root := .]]
+cmake_minimum_required(VERSION 3.1.0)
 
 # project global setting
 
@@ -49,35 +49,37 @@ include("CMakeExtra.txt")
 
 # build setting
 
-include_directories("${PROJECT_SOURCE_DIR}/src")
-[[if gt (len .Resources) 0]]qt5_add_resources(QRC[[range .Resources]] ${PROJECT_SOURCE_DIR}/resource/[[.]][[end]])[[end]]
-[[if gt (len .Requires) 0]]link_libraries([[range .Requires]] [[.]][[end]])[[end]]
-add_library([[.TargetSmall]] SHARED [[range $source := .Sources]] [[$source]][[end]][[if gt (len .Resources) 0]] ${QRC}[[end]])
+include_directories(src)
+[[.Sources.DefineList]][[if .Resources.HasItem]][[.Resources.DefineList]]qt5_add_resources(QRC ${[[.Resources.Name]]})
+[[end]][[if gt (len .Requires) 0]]
+link_libraries([[range .Requires]] [[.]][[end]])[[end]]
+add_library([[.TargetSmall]] SHARED ${[[.Sources.Name]]}[[if.Resources.HasItem]] ${QRC}[[end]])
 SET_TARGET_PROPERTIES([[.TargetSmall]] PROPERTIES VERSION ${[[.TargetLarge]]_VERSION} SOVERSION ${[[.TargetLarge]]_MAJOR_VERSION})
-qt5_use_modules([[.TargetSmall]][[range $module := $root.QtModules]] [[$module]][[end]])
+qt5_use_modules([[.TargetSmall]][[range $module := .QtModules]] [[$module]][[end]])
 
-[[if gt (len .Examples) 0]]
 # build examples
 
-[[range $example := .Examples]]
-add_executable([[$example]] ${PROJECT_SOURCE_DIR}/examples/[[$example]].cpp[[if gt (len $root.Resources) 0]] ${QRC}[[end]])
-qt5_use_modules([[$example]][[range $module := $root.QtModules]] [[$module]][[end]])
-target_link_libraries([[$example]] [[$root.TargetSmall]])
-[[end]]
-[[end]]
-
-[[if gt (len .Tests) 0]]
+file(GLOB sources RELATIVE examples *.cpp)
+foreach(path IN LISTS sources)
+  get_filename_component(target ${path} NAME_WE)
+  add_executable(${target} ${path}[[if .Resources.HasItem]] ${QRC}[[end]])
+  qt5_use_modules(${target}[[range $module := .QtModules]] [[$module]][[end]])
+  target_link_libraries(${target} [[.TargetSmall]])
+endforeach()
+[[if .Tests.HasItem]]
 # enable tests
 
 enable_testing()
 find_package(Qt5Test REQUIRED)
-[[range $test := .Tests]]
-add_executable([[$test]] ${PROJECT_SOURCE_DIR}/test/[[$test]].cpp[[range $source := $root.Sources]] [[$source]][[end]][[range $source := $root.ExtraTestSources]] {PROJECT_SOURCE_DIR}/test/[[$source]][[end]][[if gt (len $root.Resources) 0]] ${QRC}[[end]])
-add_test(NAME [[$test]] COMMAND [[$test]] WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/build)
-qt5_use_modules([[$test]] Test[[range $module := $root.QtModules]] [[$module]][[end]])
-[[end]]
+[[.ExtraTestSources.DefineList]]
+[[.Tests.StartLoop]]
+  add_executable(${file} test/${file}.cpp ${[[.Sources.Name]]} ${[[.ExtraTestSources.Name]]}[[if .Resources.HasItem]] ${QRC}[[end]])
+  add_test(NAME ${file} COMMAND ${file} WORKING_DIRECTORY $build)
+  qt5_use_modules(${file} Test[[range $module := .QtModules]] [[$module]][[end]])
+[[.Tests.EndLoop]]
 [[end]]
 # install setting
 
-INSTALL(TARGETS [[.TargetSmall]] LIBRARY DESTINATION lib)
-[[if gt (len .InstallHeaders) 0]]INSTALL(FILES[[range $header := .InstallHeaders]] [[$header]][[end]] DESTINATION include/[[.TargetSmall]])[[end]]
+install(TARGETS [[.TargetSmall]] LIBRARY DESTINATION lib)
+[[.InstallHeaders.DefineList]]
+[[if .InstallHeaders.HasItem]]install(FILES ${[[.InstallHeaders.Name]]} DESTINATION include/[[.TargetSmall]])[[end]]
