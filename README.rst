@@ -78,6 +78,15 @@ This tool behaves according to the convention over any configuration.
 * If there is ``src/main.cpp``, qtpm generates executable, otherwise shared library
 * Each test classes are implemented in ``test/*_test.cpp`` files (no header files) and compiled into executable.
 * Other ``.cpp`` files in ``test`` are treated test utility. They are linked with each test executables.
+* Each source file's suffix is used for conditional compile now. For example, ``sample_windows.cpp`` is built only on Windows platform.
+
+  * ``_windows``: Windows (Cygwin is not included)
+  * ``_darwin``: MacOS X
+  * ``_unix``: Unix-like OS including MacOS X and Cygwin
+  * ``_linux``: Unix-like OS (Mac OS X and Cygwin are not included)
+  * ``_mingw``: MinGW
+  * ``_cygwin``: Cygwin
+  * ``_msvc``: Microsoft Visual C++
 
 Project File
 -----------------
