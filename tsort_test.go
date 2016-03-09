@@ -1,9 +1,9 @@
 package main
 
 import (
-    "testing"
-	"reflect"
 	"github.com/k0kubun/pp"
+	"reflect"
+	"testing"
 )
 
 type TSortTest struct{}

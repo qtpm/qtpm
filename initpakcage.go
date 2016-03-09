@@ -19,10 +19,12 @@ func prepareProject(name, license string) (*PackageConfig, string) {
 	}
 
 	config := &PackageConfig{
-		Name:    name,
-		Author:  UserName(),
-		License: licenseName,
-		Dir:     dir,
+		Name:      name,
+		Author:    UserName(),
+		License:   licenseName,
+		Requires:  make([]string, 0),
+		QtModules: []string{"Gui", "Widgets"},
+		Dir:       dir,
 	}
 	WriteLicense(dir, licenseKey)
 	return config, dir
@@ -39,32 +41,38 @@ func initDirs(workDir string, extraDirs ...string) {
 func InitLibrary(name, license string) {
 	packageName, parentName := ParseName(name)
 	config, dir := prepareProject(packageName, license)
-	initDirs(dir)
+	initDirs(dir, "examples")
 	config.Save()
 	variable := &SourceVariable{
-		Target: packageName,
-		Parent: parentName,
+		Target:      packageName,
+		Parent:      parentName,
+		LicenseName: config.License,
+		AuthorName:  config.Author,
 	}
 	AddClass(".", packageName, true)
 	AddTest(".", packageName)
 	WriteTemplate(".", "src", strings.ToLower(packageName)+"_global.h", "libglobal.h", variable, false)
+	WriteTemplate(".", "examples", "example.cpp", "main.cpp", variable, false)
 	WriteTemplate(".", "", ".gitignore", "dotgitignore", variable, false)
 	WriteTemplate(".", "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
 	WriteTemplate(".", "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
+	WriteTemplate(".", "", "README.rst", "READMELib.rst", variable, false)
 }
 
 func InitApplication(name, license string) {
 	packageName, _ := ParseName(name)
 	config, dir := prepareProject(packageName, license)
-	initDirs(dir, "resource")
-	config.QtModules = []string{"Widgets"}
+	initDirs(dir)
 	config.Save()
 
 	variable := &SourceVariable{
-		Target:    packageName,
-		QtModules: []string{"Widgets"},
+		Target:      packageName,
+		QtModules:   []string{"Widgets"},
+		LicenseName: config.License,
+		AuthorName:  config.Author,
 	}
 	WriteTemplate(".", "src", "main.cpp", "main.cpp", variable, false)
 	WriteTemplate(".", "", ".gitignore", "dotgitignore", variable, false)
 	WriteTemplate(".", "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
+	WriteTemplate(".", "", "README.rst", "READMEApp.rst", variable, false)
 }

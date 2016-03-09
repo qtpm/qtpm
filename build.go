@@ -15,7 +15,10 @@ func Build(refresh bool) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	BuildPackage(config.Dir, config, refresh, !config.IsApplication)
+	err = BuildPackage(config.Dir, config, refresh, !config.IsApplication)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func Test(refresh bool) {
@@ -28,7 +31,6 @@ func Test(refresh bool) {
 	buildPath := filepath.Join(config.Dir, "build")
 	makeCmd.Dir = buildPath
 	makeCmd.Env = append(makeCmd.Env, "CTEST_OUTPUT_ON_FAILURE=1")
-
 	out, err := makeCmd.CombinedOutput()
 	log.Println(string(out))
 	if err != nil {
@@ -36,21 +38,7 @@ func Test(refresh bool) {
 	}
 }
 
-func BuildChildPackage(rootPackageDir, childPackageDir string, refresh, install bool) {
-	childConfig, err := LoadConfig(childPackageDir, false)
-	if err != nil {
-		_, err := os.Stat(filepath.Join(childPackageDir, "CMakeLists.txt"))
-		if os.IsNotExist(err) {
-			return // nothing to do
-		}
-		// launch regular CMake
-		RunCMake(rootPackageDir, childPackageDir, filepath.Join(rootPackageDir, "vendor"), true, true)
-	} else {
-		BuildPackage(rootPackageDir, childConfig, true, true)
-	}
-}
-
-func BuildPackage(rootPackageDir string, config *PackageConfig, refresh, install bool) {
+func BuildPackage(rootPackageDir string, config *PackageConfig, refresh, install bool) error {
 	var vendorPath string
 	var changed bool
 	var err error
@@ -61,12 +49,12 @@ func BuildPackage(rootPackageDir string, config *PackageConfig, refresh, install
 		vendorPath = filepath.Join(rootPackageDir, "vendor")
 	}
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
-	RunCMake(rootPackageDir, config.Dir, vendorPath, changed, install)
+	return RunCMakeAndBuild(rootPackageDir, config.Dir, vendorPath, changed, install)
 }
 
-func RunCMake(rootPackageDir, packageDir, vendorPath string, update, install bool) {
+func RunCMakeAndBuild(rootPackageDir, packageDir, vendorPath string, update, install bool) error {
 	buildPath := filepath.Join(packageDir, "build")
 	if update {
 		os.MkdirAll(buildPath, 0744)
@@ -78,13 +66,17 @@ func RunCMake(rootPackageDir, packageDir, vendorPath string, update, install boo
 		}
 		cmd.Dir = buildPath
 		qtDir := FindQt(rootPackageDir)
+		cmd.Env = append(cmd.Env,
+			"QTPM_INCLUDE_PATH="+filepath.Join(rootPackageDir, "vendor", "include"),
+			"QTPM_LIBRARY_PATH="+filepath.Join(rootPackageDir, "vendor", "lib"),
+		)
 		if qtDir != "" {
 			cmd.Env = append(cmd.Env, "QTDIR="+qtDir)
 		}
 		out, err := cmd.CombinedOutput()
 		log.Println(string(out))
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 	}
 	makeCmd := exec.Command("make")
@@ -92,17 +84,16 @@ func RunCMake(rootPackageDir, packageDir, vendorPath string, update, install boo
 	out, err := makeCmd.CombinedOutput()
 	log.Println(string(out))
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	if install {
 		makeCmd := exec.Command("make", "install")
 		makeCmd.Dir = buildPath
-		out, err := makeCmd.CombinedOutput()
+		out, err = makeCmd.CombinedOutput()
 		log.Println(string(out))
-		if err != nil {
-			log.Fatal(err)
-		}
+		return err
 	}
+	return nil
 }
 
 func FindQt(dir string) string {

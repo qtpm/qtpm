@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-go-bindata templates licenses
+go-bindata -nometadata templates licenses
 go build -ldflags="-w -s"
 go fmt
 
@@ -50,4 +50,14 @@ popd
 #echo "force install"
 #../qtpm get -f github.com/qtpm/QtCBOR
 #popd
-#
+
+echo "nested required modules"
+mkdir -p workbench7/vendor/github.com/shibukawa
+cp -r test/package1 workbench7/vendor/github.com/shibukawa
+cp -r test/package2 workbench7/vendor/github.com/shibukawa
+pushd workbench7
+../qtpm init app
+cp ../test/package7.cpp src/main.cpp
+../qtpm get github.com/shibukawa/package2  # pakcage2 depends on package1
+../qtpm build
+popd

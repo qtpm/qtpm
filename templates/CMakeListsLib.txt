@@ -34,6 +34,12 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 if(DEFINED ENV{QTDIR})
     set(CMAKE_PREFIX_PATH "$ENV{QTDIR}")
 endif()
+if(DEFINED ENV{QTPM_INCLUDE_PATH})
+    include_directories("$ENV{QTPM_INCLUDE_PATH}")
+endif()
+if(DEFINED ENV{QTPM_LIBRARY_PATH})
+    link_directories("$ENV{QTPM_LIBRARY_PATH}")
+endif()
 [[range $index, $qtmodule := .QtModules]]find_package(Qt5[[$qtmodule]] REQUIRED)
 [[end]]
 
@@ -45,9 +51,20 @@ include("CMakeExtra.txt")
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 [[if gt (len .Resources) 0]]qt5_add_resources(QRC[[range .Resources]] ${PROJECT_SOURCE_DIR}/resource/[[.]][[end]])[[end]]
+[[if gt (len .Requires) 0]]link_libraries([[range .Requires]] [[.]][[end]])[[end]]
 add_library([[.TargetSmall]] SHARED [[range $source := .Sources]] [[$source]][[end]][[if gt (len .Resources) 0]] ${QRC}[[end]])
 SET_TARGET_PROPERTIES([[.TargetSmall]] PROPERTIES VERSION ${[[.TargetLarge]]_VERSION} SOVERSION ${[[.TargetLarge]]_MAJOR_VERSION})
 qt5_use_modules([[.TargetSmall]][[range $module := $root.QtModules]] [[$module]][[end]])
+
+[[if gt (len .Examples) 0]]
+# build examples
+
+[[range $example := .Examples]]
+add_executable([[$example]] ${PROJECT_SOURCE_DIR}/examples/[[$example]].cpp[[if gt (len $root.Resources) 0]] ${QRC}[[end]])
+qt5_use_modules([[$example]][[range $module := $root.QtModules]] [[$module]][[end]])
+target_link_libraries([[$example]] [[$root.TargetSmall]])
+[[end]]
+[[end]]
 
 [[if gt (len .Tests) 0]]
 # enable tests

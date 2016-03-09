@@ -14,6 +14,7 @@ var (
 	cleanCommand      = app.Command("clean", "Clean temp files")
 	getCommand        = app.Command("get", "Get package")
 	getUpdateFlag     = getCommand.Flag("update", "Update package to the latest").Short('f').Bool()
+	getUseGitFlag     = getCommand.Flag("git", "Use git instead of zip archive file").Bool()
 	getPackageName    = getCommand.Arg("package", "Package name on git repository").String()
 	installCommand    = app.Command("install", "Install program")
 	testCommand       = app.Command("test", "Test package")
@@ -41,7 +42,7 @@ func main() {
 	case cleanCommand.FullCommand():
 		panic("not implemented yet")
 	case getCommand.FullCommand():
-		Get(*getPackageName, *getUpdateFlag)
+		Get(*getPackageName, *getUpdateFlag, *getUseGitFlag)
 	case installCommand.FullCommand():
 		panic("not implemented yet")
 	case testCommand.FullCommand():

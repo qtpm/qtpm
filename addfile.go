@@ -17,7 +17,8 @@ type SourceVariable struct {
 	TargetSmall      string
 	TargetLarge      string
 	Parent           string
-	Library          bool
+	AuthorName       string
+	LicenseName      string
 	VersionMinor     int
 	VersionMajor     int
 	VersionPatch     int
@@ -25,10 +26,24 @@ type SourceVariable struct {
 	QtModules        []string
 	Sources          []string
 	Headers          []string
+	Examples         []string
 	InstallHeaders   []string
 	Resources        []string
 	Tests            []string
 	ExtraTestSources []string
+	Library          bool
+}
+
+var supportedSourceExtensions = map[string]bool{
+	".cpp": true,
+	".c":   true,
+	".cxx": true,
+}
+
+var supportedHeaderExtensions = map[string]bool{
+	".h":   true,
+	".hpp": true,
+	".h++": true,
 }
 
 func (sv *SourceVariable) SearchFiles(dir string) {
@@ -39,9 +54,9 @@ func (sv *SourceVariable) SearchFiles(dir string) {
 		}
 		path = path[len(srcDir)+1:]
 		outputPath := "${PROJECT_SOURCE_DIR}/src/" + path
-		if strings.HasSuffix(path, ".cpp") && path != "main.cpp" {
+		if supportedSourceExtensions[filepath.Ext(path)] && path != "main.cpp" {
 			sv.Sources = append(sv.Sources, outputPath)
-		} else if strings.HasSuffix(path, ".h") {
+		} else if supportedHeaderExtensions[filepath.Ext(path)] {
 			sv.Headers = append(sv.Headers, outputPath)
 			// in top src folder
 			if path == info.Name() {
@@ -61,11 +76,23 @@ func (sv *SourceVariable) SearchFiles(dir string) {
 			}
 		}
 	}
+
+	examples, err := ioutil.ReadDir(filepath.Join(dir, "examples"))
+	if err == nil {
+		for _, example := range examples {
+			name := example.Name()
+			if !supportedSourceExtensions[filepath.Ext(name)] {
+				continue
+			}
+			sv.Examples = append(sv.Examples, name[:len(name)-4])
+		}
+	}
+
 	tests, err := ioutil.ReadDir(filepath.Join(dir, "test"))
 	if err == nil {
 		for _, test := range tests {
 			name := test.Name()
-			if !strings.HasSuffix(name, ".cpp") {
+			if !supportedSourceExtensions[filepath.Ext(name)] {
 				continue
 			}
 			if strings.HasSuffix(name, "_test.cpp") {
@@ -75,8 +102,10 @@ func (sv *SourceVariable) SearchFiles(dir string) {
 			}
 		}
 	}
+
 	sort.Strings(sv.Sources)
 	sort.Strings(sv.Headers)
+	sort.Strings(sv.Examples)
 	sort.Strings(sv.InstallHeaders)
 	sort.Strings(sv.Resources)
 	sort.Strings(sv.Tests)
@@ -116,7 +145,13 @@ func AddCMakeForApp(config *PackageConfig, refresh bool) (bool, error) {
 	variable := &SourceVariable{
 		Target:    CleanName(config.Name),
 		QtModules: InsertCore(config.QtModules),
-		Library:   true,
+	}
+	for _, require := range config.Requires {
+		packageNames := strings.Split(require, "/")
+		if len(packageNames) != 3 {
+			continue
+		}
+		variable.Requires = append(variable.Requires, packageNames[2])
 	}
 	variable.SearchFiles(config.Dir)
 	sort.Strings(variable.QtModules)
@@ -128,7 +163,13 @@ func AddCMakeForLib(config *PackageConfig, refresh bool) (bool, error) {
 	variable := &SourceVariable{
 		Target:    CleanName(config.Name),
 		QtModules: InsertCore(config.QtModules),
-		Library:   true,
+	}
+	for _, require := range config.Requires {
+		packageNames := strings.Split(require, "/")
+		if len(packageNames) != 3 {
+			continue
+		}
+		variable.Requires = append(variable.Requires, packageNames[2])
 	}
 	variable.VersionMajor = config.Version[0]
 	variable.VersionMinor = config.Version[1]

@@ -12,14 +12,15 @@ const packageFileName = "qtpackage.toml"
 const userPackageFileName = "qtpackage.user.toml"
 
 type PackageConfig struct {
-	Name          string   `toml:"name"`
-	Author        string   `toml:"author"`
-	License       string   `toml:"license"`
-	Requires      []string `toml:"requires"`
-	QtModules     []string `toml:"qtmodules"`
-	Version       []int    `toml:"version"`
-	IsApplication bool     `toml:"-"`
-	Dir           string   `toml:"-"`
+	Name          string                    `toml:"name"`
+	Author        string                    `toml:"author"`
+	License       string                    `toml:"license"`
+	Requires      []string                  `toml:"requires"`
+	QtModules     []string                  `toml:"qtmodules"`
+	Version       []int                     `toml:"version"`
+	IsApplication bool                      `toml:"-"`
+	Dir           string                    `toml:"-"`
+	Children      map[string]*PackageConfig `toml:"-"`
 }
 
 type PackageUserConfig struct {

@@ -16,6 +16,12 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 if(DEFINED ENV{QTDIR})
     set(CMAKE_PREFIX_PATH "$ENV{QTDIR}")
 endif()
+if(DEFINED ENV{QTPM_INCLUDE_PATH})
+    include_directories("$ENV{QTPM_INCLUDE_PATH}")
+endif()
+if(DEFINED ENV{QTPM_LIBRARY_PATH})
+    link_directories("$ENV{QTPM_LIBRARY_PATH}")
+endif()
 
 [[range $module := .QtModules]]find_package(Qt5[[$module]] REQUIRED)
 [[end]]
@@ -26,8 +32,9 @@ include("CMakeExtra.txt" OPTIONAL)
 
 # build setting
 
-include_directories("${PROJECT_SOURCE_DIR}/src")
-[[if gt (len .Resources) 0]]qt5_add_resources(QRC[[range .Resources]] ${PROJECT_SOURCE_DIR}/resource/[[.]][[end]])[[end]]
+include_directories("${PROJECT_SOURCE_DIR}/src")[[if gt (len .Resources) 0]]
+qt5_add_resources(QRC[[range .Resources]] ${PROJECT_SOURCE_DIR}/resource/[[.]][[end]])[[end]][[if gt (len .Requires) 0]]
+link_libraries([[range .Requires]] [[.]][[end]])[[end]]
 add_executable([[.TargetSmall]] ${PROJECT_SOURCE_DIR}/src/main.cpp [[range .Sources]] [[.]][[end]][[if gt (len .Resources) 0]] ${QRC}[[end]])
 qt5_use_modules([[.TargetSmall]][[range $module := .QtModules]] [[$module]][[end]])
 
