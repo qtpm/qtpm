@@ -24,7 +24,7 @@ func prepareProject(name, license string) (*PackageConfig, string) {
 		Author:           UserName(),
 		License:          licenseName,
 		Requires:         make([]string, 0),
-		QtModules:        []string{"Gui", "Widgets"},
+		QtModules:        []string{"Core", "Gui", "Widgets"},
 		Dir:              dir,
 		Version:          []int{0, 1, 0},
 		ProjectStartYear: time.Now().Year(),

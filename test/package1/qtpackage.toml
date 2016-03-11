@@ -1,3 +1,4 @@
 name = "Package1"
 author = "shibukawa.yoshiki"
 license = "The MIT License (MIT)"
+qtmodules = ["Core"]

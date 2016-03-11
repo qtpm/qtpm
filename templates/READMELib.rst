@@ -19,7 +19,7 @@ Example
 
 .. code-block:: cpp
 
-   #include <iostream>;
+   #include <iostream>
    #include <[[.TargetSmall]]/[[.TargetSmall]].h>
 
    int main() {

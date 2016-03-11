@@ -65,7 +65,7 @@ include_directories(src)
 link_libraries([[range .Requires]] [[.]][[end]])[[end]]
 add_library([[.TargetSmall]] SHARED ${[[.Sources.Name]]}[[if.Resources.HasItem]] ${QRC}[[end]])
 SET_TARGET_PROPERTIES([[.TargetSmall]] PROPERTIES VERSION ${[[.TargetLarge]]_VERSION} SOVERSION ${[[.TargetLarge]]_MAJOR_VERSION})
-qt5_use_modules([[.TargetSmall]][[range $module := .QtModules]] [[$module]][[end]])
+[[if gt (len .QtModules) 0]]qt5_use_modules([[.TargetSmall]][[range $module := .QtModules]] [[$module]][[end]])[[end]]
 [[if .ExtraInstallDir.HasItem]][[.ExtraInstallDir.DefineList]]
 [[end]]
 # build examples
@@ -87,7 +87,7 @@ find_package(Qt5Test REQUIRED)
 [[.Tests.StartLoop]]
   add_executable(${file} test/${file}.cpp ${[[.Sources.Name]]} ${[[.ExtraTestSources.Name]]}[[if .Resources.HasItem]] ${QRC}[[end]])
   add_test(NAME ${file} COMMAND ${file})
-  qt5_use_modules(${file} Test[[range $module := .QtModules]] [[$module]][[end]])
+  [[if gt (len .QtModules) 0]]qt5_use_modules(${file} Test[[range $module := .QtModules]] [[$module]][[end]])[[end]]
 [[.Tests.EndLoop]]
 [[end]]
 # install setting

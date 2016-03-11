@@ -82,4 +82,4 @@ elseif(WIN32)
 else()
   add_executable([[.TargetSmall]] src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .Resources.HasItem]] ${QRC}[[end]])
 endif()
-qt5_use_modules([[.TargetSmall]][[range $module := .QtModules]] [[$module]][[end]])
+[[if gt (len .QtModules) 0]]qt5_use_modules([[.TargetSmall]][[range $module := .QtModules]] [[$module]][[end]])[[end]]

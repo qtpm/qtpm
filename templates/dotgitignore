@@ -41,6 +41,7 @@ build-debug
 build-release
 vendor
 qtpackage.user.toml
+CMakeLists.txt
 
 # OS specific
 .DS_Store

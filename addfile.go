@@ -190,7 +190,7 @@ func (sv *SourceVariable) SearchFiles(dir string) {
 
 	srcDir := filepath.Join(dir, "src")
 	err := filepath.Walk(srcDir, func(fullPath string, info os.FileInfo, err error) error {
-		if info.IsDir() {
+		if info.IsDir() || strings.HasPrefix(info.Name(), "_") {
 			return nil
 		}
 		path := fullPath[len(srcDir)+1:]
@@ -209,7 +209,7 @@ func (sv *SourceVariable) SearchFiles(dir string) {
 	if err == nil {
 		for _, test := range tests {
 			name := test.Name()
-			if !supportedSourceExtensions[filepath.Ext(name)] {
+			if strings.HasPrefix(name, "_") || !supportedSourceExtensions[filepath.Ext(name)] {
 				continue
 			}
 			if strings.HasSuffix(name, "_test.cpp") {
@@ -224,6 +224,9 @@ func (sv *SourceVariable) SearchFiles(dir string) {
 	if err == nil {
 		for _, resource := range resources {
 			name := resource.Name()
+			if strings.HasPrefix(name, "_") {
+				continue
+			}
 			if strings.HasSuffix(name, ".qrc") {
 				sv.Resources.addfile("resource/" + name)
 			}
@@ -267,7 +270,7 @@ func AddCMakeForApp(config *PackageConfig, refresh, debugBuild bool) (bool, erro
 	variable := &SourceVariable{
 		config:    config,
 		Target:    CleanName(config.Name),
-		QtModules: InsertCore(config.QtModules),
+		QtModules: CleanList(config.QtModules),
 		Debug:     debugBuild,
 	}
 	for _, require := range config.Requires {
@@ -281,14 +284,16 @@ func AddCMakeForApp(config *PackageConfig, refresh, debugBuild bool) (bool, erro
 	sort.Strings(variable.QtModules)
 	sort.Strings(variable.Requires)
 	WriteTemplate(config.Dir, BuildFolder(debugBuild), "windows.rc", "windows.rc", variable, !refresh)
-	return WriteTemplate(config.Dir, "", "CMakeLists.txt", "CMakeListsApp.txt", variable, !refresh)
+	_, err := os.Stat(filepath.Join(config.Dir, BuildFolder(debugBuild)))
+	changed, err2 := WriteTemplate(config.Dir, "", "CMakeLists.txt", "CMakeListsApp.txt", variable, !refresh)
+	return changed || os.IsNotExist(err), err2
 }
 
 func AddCMakeForLib(config *PackageConfig, refresh, debugBuild bool) (bool, error) {
 	variable := &SourceVariable{
 		config:    config,
 		Target:    CleanName(config.Name),
-		QtModules: InsertCore(config.QtModules),
+		QtModules: CleanList(config.QtModules),
 		Debug:     debugBuild,
 	}
 	for _, require := range config.Requires {
@@ -302,7 +307,9 @@ func AddCMakeForLib(config *PackageConfig, refresh, debugBuild bool) (bool, erro
 	sort.Strings(variable.QtModules)
 	sort.Strings(variable.Requires)
 
-	return WriteTemplate(config.Dir, "", "CMakeLists.txt", "CMakeListsLib.txt", variable, !refresh)
+	_, err := os.Stat(filepath.Join(config.Dir, BuildFolder(debugBuild)))
+	changed, err2 := WriteTemplate(config.Dir, "", "CMakeLists.txt", "CMakeListsLib.txt", variable, !refresh)
+	return changed || os.IsNotExist(err), err2
 }
 
 func WriteTemplate(basePath, dir, fileName, templateName string, variable *SourceVariable, checkFileChange bool) (bool, error) {
@@ -365,15 +372,14 @@ func CleanName(name string) string {
 	return re2.ReplaceAllString(re1.ReplaceAllString(name, ""), "_")
 }
 
-func InsertCore(modules []string) []string {
-	found := false
+func CleanList(modules []string) []string {
+	used := make(map[string]bool)
+	var result []string
 	for _, module := range modules {
-		if module == "Core" {
-			found = true
+		if !used[module] {
+			result = append(result, module)
+			used[module] = true
 		}
 	}
-	if !found {
-		modules = append(modules, "Core")
-	}
-	return modules
+	return result
 }

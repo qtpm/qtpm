@@ -2,3 +2,4 @@ name = "Package2"
 author = "shibukawa.yoshiki"
 license = "The MIT License (MIT)"
 requires = ["github.com/shibukawa/package1"]
+qtmodules = ["Core"]
