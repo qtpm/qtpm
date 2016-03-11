@@ -37,10 +37,11 @@ Makefile*
 CMakeLists.txt.user
 
 #qtpm
-build
+build-debug
+build-release
 vendor
 qtpackage.user.toml
 
-# standard
+# OS specific
 .DS_Store
 Thumbs.db

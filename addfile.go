@@ -11,19 +11,22 @@ import (
 	"sort"
 	"strings"
 	"text/template"
+	"time"
 )
 
 type SourceBundle struct {
 	Name                  string
+	EntryName             string
 	Files                 []string
 	Test                  bool
 	PlatformSpecificFiles map[string][]string
 }
 
-func NewSourceBundle(name string, test bool) *SourceBundle {
+func NewSourceBundle(name, entryName string, test bool) *SourceBundle {
 	return &SourceBundle{
-		Name: name,
-		Test: test,
+		Name:      name,
+		EntryName: entryName,
+		Test:      test,
 		PlatformSpecificFiles: make(map[string][]string),
 	}
 }
@@ -55,7 +58,7 @@ func (s SourceBundle) DefineList() string {
 }
 
 func (s SourceBundle) StartLoop() string {
-	return fmt.Sprintf("%s\nforeach(file IN LISTS %s)\n", s.DefineList(), s.Name)
+	return fmt.Sprintf("foreach(%s IN LISTS %s)\n", s.EntryName, s.Name)
 }
 
 func (s SourceBundle) EndLoop() string {
@@ -97,19 +100,72 @@ type SourceVariable struct {
 	TargetSmall      string
 	TargetLarge      string
 	Parent           string
-	AuthorName       string
-	LicenseName      string
-	VersionMinor     int
-	VersionMajor     int
-	VersionPatch     int
 	Requires         []string
 	QtModules        []string
 	Sources          *SourceBundle
 	InstallHeaders   *SourceBundle
+	ExtraInstallDir  *SourceBundle
 	Resources        *SourceBundle
 	Tests            *SourceBundle
 	ExtraTestSources *SourceBundle
 	Library          bool
+	Debug            bool
+	BuildNumber      int
+	config           *PackageConfig
+}
+
+func (sv SourceVariable) AuthorName() string {
+	if sv.config.Author == "" {
+		return sv.config.Organization
+	}
+	return sv.config.Author
+}
+
+func (sv SourceVariable) LicenseName() string {
+	return sv.config.License
+}
+
+func (sv SourceVariable) Organization() string {
+	return sv.config.Organization
+}
+
+func (sv SourceVariable) CopyRight() string {
+	year := time.Now().Year()
+	startYear := sv.config.ProjectStartYear
+	if startYear == 0 {
+		panic("start year is empty")
+	}
+	var names []string
+	if sv.config.Organization != "" {
+		names = append(names, sv.config.Organization)
+	}
+	if sv.config.Author != "" {
+		names = append(names, sv.config.Author)
+	}
+	if year == startYear {
+		return fmt.Sprintf("%d %s", year, strings.Join(names, " "))
+	}
+	return fmt.Sprintf("%d-%d %s", startYear, year, strings.Join(names, " "))
+}
+
+func (sv SourceVariable) VersionMajor() int {
+	return sv.config.Version[0]
+}
+
+func (sv SourceVariable) VersionMinor() int {
+	return sv.config.Version[1]
+}
+
+func (sv SourceVariable) VersionPatch() int {
+	return sv.config.Version[2]
+}
+
+func (sv SourceVariable) Version() string {
+	return fmt.Sprintf("%d.%d.%d", sv.VersionMajor(), sv.VersionMinor(), sv.VersionPatch())
+}
+
+func (sv SourceVariable) ShortVersion() string {
+	return fmt.Sprintf("%d.%d", sv.VersionMajor(), sv.VersionMinor())
 }
 
 var supportedSourceExtensions = map[string]bool{
@@ -125,18 +181,19 @@ var supportedHeaderExtensions = map[string]bool{
 }
 
 func (sv *SourceVariable) SearchFiles(dir string) {
-	sv.Sources = NewSourceBundle("sources", false)
-	sv.InstallHeaders = NewSourceBundle("public_headers", false)
-	sv.Resources = NewSourceBundle("resources", false)
-	sv.Tests = NewSourceBundle("tests", true)
-	sv.ExtraTestSources = NewSourceBundle("extra_test_sources", false)
+	sv.Sources = NewSourceBundle("sources", "file", false)
+	sv.ExtraInstallDir = NewSourceBundle("extra_install_dirs", "dir", false)
+	sv.InstallHeaders = NewSourceBundle("public_headers", "file", false)
+	sv.Resources = NewSourceBundle("resources", "file", false)
+	sv.Tests = NewSourceBundle("tests", "file", true)
+	sv.ExtraTestSources = NewSourceBundle("extra_test_sources", "file", false)
 
 	srcDir := filepath.Join(dir, "src")
-	err := filepath.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(srcDir, func(fullPath string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
-		path = path[len(srcDir)+1:]
+		path := fullPath[len(srcDir)+1:]
 		outputPath := "src/" + path
 		if supportedSourceExtensions[filepath.Ext(path)] && path != "main.cpp" {
 			sv.Sources.addfile(outputPath)
@@ -145,7 +202,6 @@ func (sv *SourceVariable) SearchFiles(dir string) {
 				sv.InstallHeaders.addfile(outputPath)
 			}
 		}
-
 		return nil
 	})
 
@@ -172,6 +228,9 @@ func (sv *SourceVariable) SearchFiles(dir string) {
 				sv.Resources.addfile("resource/" + name)
 			}
 		}
+	}
+	for _, extraDir := range sv.config.ExtraInstallDirs {
+		sv.ExtraInstallDir.addfile(extraDir)
 	}
 }
 
@@ -204,10 +263,12 @@ func AddLicense(config *PackageConfig, name string) {
 	config.Save()
 }
 
-func AddCMakeForApp(config *PackageConfig, refresh bool) (bool, error) {
+func AddCMakeForApp(config *PackageConfig, refresh, debugBuild bool) (bool, error) {
 	variable := &SourceVariable{
+		config:    config,
 		Target:    CleanName(config.Name),
 		QtModules: InsertCore(config.QtModules),
+		Debug:     debugBuild,
 	}
 	for _, require := range config.Requires {
 		packageNames := strings.Split(require, "/")
@@ -219,13 +280,16 @@ func AddCMakeForApp(config *PackageConfig, refresh bool) (bool, error) {
 	variable.SearchFiles(config.Dir)
 	sort.Strings(variable.QtModules)
 	sort.Strings(variable.Requires)
+	WriteTemplate(config.Dir, BuildFolder(debugBuild), "windows.rc", "windows.rc", variable, !refresh)
 	return WriteTemplate(config.Dir, "", "CMakeLists.txt", "CMakeListsApp.txt", variable, !refresh)
 }
 
-func AddCMakeForLib(config *PackageConfig, refresh bool) (bool, error) {
+func AddCMakeForLib(config *PackageConfig, refresh, debugBuild bool) (bool, error) {
 	variable := &SourceVariable{
+		config:    config,
 		Target:    CleanName(config.Name),
 		QtModules: InsertCore(config.QtModules),
+		Debug:     debugBuild,
 	}
 	for _, require := range config.Requires {
 		packageNames := strings.Split(require, "/")
@@ -234,14 +298,10 @@ func AddCMakeForLib(config *PackageConfig, refresh bool) (bool, error) {
 		}
 		variable.Requires = append(variable.Requires, packageNames[2])
 	}
-	variable.VersionMajor = config.Version[0]
-	variable.VersionMinor = config.Version[1]
-	variable.VersionPatch = config.Version[2]
 	variable.SearchFiles(config.Dir)
 	sort.Strings(variable.QtModules)
 	sort.Strings(variable.Requires)
 
-	WriteTemplate(config.Dir, "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
 	return WriteTemplate(config.Dir, "", "CMakeLists.txt", "CMakeListsLib.txt", variable, !refresh)
 }
 
@@ -261,7 +321,7 @@ func WriteTemplate(basePath, dir, fileName, templateName string, variable *Sourc
 	if err != nil {
 		return false, err
 	}
-	os.MkdirAll(filepath.Dir(filePath), 0744)
+	os.MkdirAll(filepath.Dir(filePath), 0755)
 	var buffer bytes.Buffer
 	src := MustAsset("templates/" + templateName)
 	tmp := template.Must(template.New(templateName).Delims("[[", "]]").Parse(string(src)))

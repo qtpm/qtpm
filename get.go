@@ -38,7 +38,8 @@ func Get(packageName string, update, useGit bool) {
 		dir, _ = filepath.Abs(".")
 	}
 	for _, packageConfig := range packages {
-		BuildPackage(dir, packageConfig, update, parentConfig != packageConfig)
+		BuildPackage(dir, packageConfig, update, false, parentConfig != packageConfig)
+		BuildPackage(dir, packageConfig, update, true, parentConfig != packageConfig)
 	}
 }
 

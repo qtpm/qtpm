@@ -10,7 +10,10 @@ var (
 	app               = kingpin.New("qtpm", "Package Manager fot Qt")
 	verbose           = app.Flag("verbose", "Set verbose mode").Short('v').Bool()
 	buildCommand      = app.Command("build", "Build program")
+	buildTypeFlag     = buildCommand.Arg("build type", "release/debug").Default("debug").Enum("debug", "release")
 	refreshBuildFlag  = buildCommand.Flag("refresh", "Refresh cache").Short('r').Bool()
+	packCommand       = app.Command("pack", "Create installer")
+	packTypeFlag      = packCommand.Arg("build type", "release/debug").Default("release").Enum("debug", "release")
 	cleanCommand      = app.Command("clean", "Clean temp files")
 	getCommand        = app.Command("get", "Get package")
 	getUpdateFlag     = getCommand.Flag("update", "Update package to the latest").Short('f').Bool()
@@ -38,7 +41,9 @@ var (
 func main() {
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	case buildCommand.FullCommand():
-		Build(*refreshBuildFlag)
+		Build(*refreshBuildFlag, *buildTypeFlag == "debug")
+	case packCommand.FullCommand():
+		Pack(*packTypeFlag == "debug")
 	case cleanCommand.FullCommand():
 		panic("not implemented yet")
 	case getCommand.FullCommand():

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 func prepareProject(name, license string) (*PackageConfig, string) {
@@ -19,22 +20,24 @@ func prepareProject(name, license string) (*PackageConfig, string) {
 	}
 
 	config := &PackageConfig{
-		Name:      name,
-		Author:    UserName(),
-		License:   licenseName,
-		Requires:  make([]string, 0),
-		QtModules: []string{"Gui", "Widgets"},
-		Dir:       dir,
+		Name:             name,
+		Author:           UserName(),
+		License:          licenseName,
+		Requires:         make([]string, 0),
+		QtModules:        []string{"Gui", "Widgets"},
+		Dir:              dir,
+		Version:          []int{0, 1, 0},
+		ProjectStartYear: time.Now().Year(),
 	}
 	WriteLicense(dir, licenseKey)
 	return config, dir
 }
 
 func initDirs(workDir string, extraDirs ...string) {
-	dirs := []string{"src", "src/private", "resource", "test", "build", "vendor", "doc", "html"}
+	dirs := []string{"src", "src/private", "resource", "test", "vendor", "doc", "html"}
 	dirs = append(dirs, extraDirs...)
 	for _, dir := range dirs {
-		os.MkdirAll(filepath.Join(workDir, dir), 0744)
+		os.MkdirAll(filepath.Join(workDir, dir), 0755)
 	}
 }
 
@@ -44,10 +47,9 @@ func InitLibrary(name, license string) {
 	initDirs(dir, "examples")
 	config.Save()
 	variable := &SourceVariable{
-		Target:      packageName,
-		Parent:      parentName,
-		LicenseName: config.License,
-		AuthorName:  config.Author,
+		config: config,
+		Target: packageName,
+		Parent: parentName,
 	}
 	AddClass(".", packageName, true)
 	AddTest(".", packageName)
@@ -66,10 +68,9 @@ func InitApplication(name, license string) {
 	config.Save()
 
 	variable := &SourceVariable{
-		Target:      packageName,
-		QtModules:   []string{"Widgets"},
-		LicenseName: config.License,
-		AuthorName:  config.Author,
+		config:    config,
+		Target:    packageName,
+		QtModules: []string{"Widgets"},
 	}
 	WriteTemplate(".", "src", "main.cpp", "main.cpp", variable, false)
 	WriteTemplate(".", "", ".gitignore", "dotgitignore", variable, false)

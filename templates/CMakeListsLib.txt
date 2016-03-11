@@ -9,10 +9,20 @@ set([[.TargetLarge]]_MINOR_VERSION [[.VersionMinor]])
 set([[.TargetLarge]]_PATCH_VERSION [[.VersionPatch]])
 set([[.TargetLarge]]_VERSION
  ${[[.TargetLarge]]_MAJOR_VERSION}.${[[.TargetLarge]]_MINOR_VERSION}.${[[.TargetLarge]]_PATCH_VERSION})
+[[if .Debug]]set(CMAKE_BUILD_TYPE Debug)
+set(WORKDIR "build-debug")
+[[else]]set(CMAKE_BUILD_TYPE Release)
+set(WORKDIR "build-release")
+[[end]]
 
 # compiler setting
 
 set(CMAKE_CXX_STANDARD 11)
+if(MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+endif()
 
 if(APPLE)
     set(CMAKE_MACOSX_RPATH ON)
@@ -56,11 +66,12 @@ link_libraries([[range .Requires]] [[.]][[end]])[[end]]
 add_library([[.TargetSmall]] SHARED ${[[.Sources.Name]]}[[if.Resources.HasItem]] ${QRC}[[end]])
 SET_TARGET_PROPERTIES([[.TargetSmall]] PROPERTIES VERSION ${[[.TargetLarge]]_VERSION} SOVERSION ${[[.TargetLarge]]_MAJOR_VERSION})
 qt5_use_modules([[.TargetSmall]][[range $module := .QtModules]] [[$module]][[end]])
-
+[[if .ExtraInstallDir.HasItem]][[.ExtraInstallDir.DefineList]]
+[[end]]
 # build examples
 
-file(GLOB sources RELATIVE examples *.cpp)
-foreach(path IN LISTS sources)
+file(GLOB examples RELATIVE examples *.cpp)
+foreach(path IN LISTS examples)
   get_filename_component(target ${path} NAME_WE)
   add_executable(${target} ${path}[[if .Resources.HasItem]] ${QRC}[[end]])
   qt5_use_modules(${target}[[range $module := .QtModules]] [[$module]][[end]])
@@ -72,9 +83,10 @@ endforeach()
 enable_testing()
 find_package(Qt5Test REQUIRED)
 [[.ExtraTestSources.DefineList]]
+[[.Tests.DefineList]]
 [[.Tests.StartLoop]]
   add_executable(${file} test/${file}.cpp ${[[.Sources.Name]]} ${[[.ExtraTestSources.Name]]}[[if .Resources.HasItem]] ${QRC}[[end]])
-  add_test(NAME ${file} COMMAND ${file} WORKING_DIRECTORY $build)
+  add_test(NAME ${file} COMMAND ${file})
   qt5_use_modules(${file} Test[[range $module := .QtModules]] [[$module]][[end]])
 [[.Tests.EndLoop]]
 [[end]]
@@ -83,3 +95,6 @@ find_package(Qt5Test REQUIRED)
 install(TARGETS [[.TargetSmall]] LIBRARY DESTINATION lib)
 [[.InstallHeaders.DefineList]]
 [[if .InstallHeaders.HasItem]]install(FILES ${[[.InstallHeaders.Name]]} DESTINATION include/[[.TargetSmall]])[[end]]
+[[.ExtraInstallDir.StartLoop]]
+  install(DIRECTORY ${dir} DESTINATION include/[[.TargetSmall]])
+[[.ExtraInstallDir.EndLoop]]

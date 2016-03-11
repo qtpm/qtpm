@@ -1,0 +1,4 @@
+name = "Package9"
+author = "shibukawa.yoshiki"
+license = "The MIT License (MIT)"
+extra_install_dirs = ["src/extra"]

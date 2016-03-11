@@ -12,19 +12,23 @@ const packageFileName = "qtpackage.toml"
 const userPackageFileName = "qtpackage.user.toml"
 
 type PackageConfig struct {
-	Name          string                    `toml:"name"`
-	Author        string                    `toml:"author"`
-	License       string                    `toml:"license"`
-	Requires      []string                  `toml:"requires"`
-	QtModules     []string                  `toml:"qtmodules"`
-	Version       []int                     `toml:"version"`
-	IsApplication bool                      `toml:"-"`
-	Dir           string                    `toml:"-"`
-	Children      map[string]*PackageConfig `toml:"-"`
+	Name             string                    `toml:"name"`
+	Author           string                    `toml:"author"`
+	Organization     string                    `toml:"organization"`
+	License          string                    `toml:"license"`
+	Requires         []string                  `toml:"requires"`
+	QtModules        []string                  `toml:"qtmodules"`
+	Version          []int                     `toml:"version"`
+	ExtraInstallDirs []string                  `toml:"extra_install_dirs"`
+	ProjectStartYear int                       `toml:"project_start_year"`
+	IsApplication    bool                      `toml:"-"`
+	Dir              string                    `toml:"-"`
+	Children         map[string]*PackageConfig `toml:"-"`
 }
 
 type PackageUserConfig struct {
-	QtDir string `toml:"qtdir"`
+	QtDir       string `toml:"qtdir"`
+	BuildNumber int    `toml:"build_number"`
 }
 
 func LoadConfig(dir string, traverse bool) (*PackageConfig, error) {
