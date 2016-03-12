@@ -37,7 +37,7 @@ func Get(packageName string, update, useGit bool) {
 	} else {
 		dir, _ = filepath.Abs(".")
 	}
-	for _, packageConfig := range packages {
+	for _, packageConfig := range packages[:len(packages)-1] {
 		BuildPackage(dir, packageConfig, update, false, parentConfig != packageConfig)
 		BuildPackage(dir, packageConfig, update, true, parentConfig != packageConfig)
 	}
@@ -179,13 +179,14 @@ func DownloadZip(installDir, orgName, repoName string) error {
 		if err != nil {
 			return err
 		}
-		defer outFile.Close()
 		inFile, err := file.Open()
 		if err != nil {
+			outFile.Close()
 			return err
 		}
-		defer inFile.Close()
 		io.Copy(outFile, inFile)
+		outFile.Close()
+		inFile.Close()
 	}
 	return nil
 }

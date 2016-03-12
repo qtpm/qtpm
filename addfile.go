@@ -97,8 +97,6 @@ func (s *SourceBundle) addfile(path string) {
 
 type SourceVariable struct {
 	Target           string
-	TargetSmall      string
-	TargetLarge      string
 	Parent           string
 	Requires         []string
 	QtModules        []string
@@ -112,6 +110,27 @@ type SourceVariable struct {
 	Debug            bool
 	BuildNumber      int
 	config           *PackageConfig
+}
+
+func (sv SourceVariable) TargetSmall() string {
+	return strings.ToLower(sv.Target)
+}
+
+func (sv SourceVariable) TargetLarge() string {
+	return strings.ToUpper(sv.Target)
+}
+
+func (sv SourceVariable) TargetLibName() string {
+	name := strings.ToLower(sv.Target)
+	return strings.TrimPrefix(strings.TrimSuffix(name, "lib"), "lib")
+}
+
+func (sv SourceVariable) RequireLibs() []string {
+	result := make([]string, len(sv.Requires))
+	for i, require := range sv.Requires {
+		result[i] = strings.TrimPrefix(strings.TrimSuffix(require, "lib"), "lib")
+	}
+	return result
 }
 
 func (sv SourceVariable) AuthorName() string {
@@ -313,8 +332,6 @@ func AddCMakeForLib(config *PackageConfig, refresh, debugBuild bool) (bool, erro
 }
 
 func WriteTemplate(basePath, dir, fileName, templateName string, variable *SourceVariable, checkFileChange bool) (bool, error) {
-	variable.TargetSmall = strings.ToLower(variable.Target)
-	variable.TargetLarge = strings.ToUpper(variable.Target)
 	if variable.Parent == "" {
 		variable.Parent = "QObject"
 	}

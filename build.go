@@ -187,6 +187,11 @@ func RunCMakeAndBuild(rootPackageDir, packageDir, vendorPath string, update, deb
 	}
 	makeCmd := exec.Command("make")
 	makeCmd.Dir = buildPath
+	makeCmd.Env = append(makeCmd.Env,
+		"QTPM_INCLUDE_PATH="+filepath.Join(VendorFolder(rootPackageDir, debugBuild), "include"),
+		"QTPM_LIBRARY_PATH="+filepath.Join(VendorFolder(rootPackageDir, debugBuild), "lib"),
+	)
+
 	out, err := makeCmd.CombinedOutput()
 	log.Println(string(out))
 	if err != nil {

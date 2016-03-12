@@ -61,7 +61,7 @@ find_package(Qt5Test REQUIRED)
 include_directories(src)
 [[.Sources.DefineList]][[if .Resources.HasItem]][[.Resources.DefineList]]qt5_add_resources(QRC ${[[.Resources.Name]]})
 [[end]][[if gt (len .Requires) 0]]
-link_libraries([[range .Requires]] [[.]][[end]])[[end]]
+link_libraries([[range .RequireLibs]] [[.]][[end]])[[end]]
 if(APPLE)
   set(MACOSX_BUNDLE_BUNDLE_NAME [[.Target]])
   set(MACOSX_BUNDLE_GUI_IDENTIFIER "[[.Target]]")

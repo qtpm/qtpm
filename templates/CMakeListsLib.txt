@@ -62,10 +62,10 @@ include("CMakeExtra.txt")
 include_directories(src)
 [[.Sources.DefineList]][[if .Resources.HasItem]][[.Resources.DefineList]]qt5_add_resources(QRC ${[[.Resources.Name]]})
 [[end]][[if gt (len .Requires) 0]]
-link_libraries([[range .Requires]] [[.]][[end]])[[end]]
-add_library([[.TargetSmall]] SHARED ${[[.Sources.Name]]}[[if.Resources.HasItem]] ${QRC}[[end]])
-SET_TARGET_PROPERTIES([[.TargetSmall]] PROPERTIES VERSION ${[[.TargetLarge]]_VERSION} SOVERSION ${[[.TargetLarge]]_MAJOR_VERSION})
-[[if gt (len .QtModules) 0]]qt5_use_modules([[.TargetSmall]][[range $module := .QtModules]] [[$module]][[end]])[[end]]
+link_libraries([[range .RequireLibs]] [[.]][[end]])[[end]]
+add_library([[.TargetLibName]] SHARED ${[[.Sources.Name]]}[[if.Resources.HasItem]] ${QRC}[[end]])
+SET_TARGET_PROPERTIES([[.TargetLibName]] PROPERTIES VERSION ${[[.TargetLarge]]_VERSION} SOVERSION ${[[.TargetLarge]]_MAJOR_VERSION})
+[[if gt (len .QtModules) 0]]qt5_use_modules([[.TargetLibName]][[range $module := .QtModules]] [[$module]][[end]])[[end]]
 [[if .ExtraInstallDir.HasItem]][[.ExtraInstallDir.DefineList]]
 [[end]]
 # build examples
@@ -75,7 +75,7 @@ foreach(path IN LISTS examples)
   get_filename_component(target ${path} NAME_WE)
   add_executable(${target} ${path}[[if .Resources.HasItem]] ${QRC}[[end]])
   qt5_use_modules(${target}[[range $module := .QtModules]] [[$module]][[end]])
-  target_link_libraries(${target} [[.TargetSmall]])
+  target_link_libraries(${target} [[.TargetLibName]])
 endforeach()
 [[if .Tests.HasItem]]
 # enable tests
@@ -92,7 +92,7 @@ find_package(Qt5Test REQUIRED)
 [[end]]
 # install setting
 
-install(TARGETS [[.TargetSmall]] LIBRARY DESTINATION lib)
+install(TARGETS [[.TargetLibName]] LIBRARY DESTINATION lib)
 [[.InstallHeaders.DefineList]]
 [[if .InstallHeaders.HasItem]]install(FILES ${[[.InstallHeaders.Name]]} DESTINATION include/[[.TargetSmall]])[[end]]
 [[.ExtraInstallDir.StartLoop]]
