@@ -162,6 +162,10 @@ func CreateIcon(rootPackageDir string, debugBuild bool) {
 
 func RunCMakeAndBuild(rootPackageDir, packageDir, vendorPath string, update, debugBuild, install bool) error {
 	buildPath := filepath.Join(packageDir, BuildFolder(debugBuild))
+	additionalEnvs := []string{
+		"QTPM_INCLUDE_PATH=" + filepath.Join(VendorFolder(rootPackageDir, debugBuild), "include"),
+		"QTPM_LIBRARY_PATH=" + filepath.Join(VendorFolder(rootPackageDir, debugBuild), "lib"),
+	}
 	if update {
 		os.MkdirAll(buildPath, 0755)
 		var cmd *exec.Cmd
@@ -172,10 +176,7 @@ func RunCMakeAndBuild(rootPackageDir, packageDir, vendorPath string, update, deb
 		}
 		cmd.Dir = buildPath
 		qtDir := FindQt(rootPackageDir)
-		cmd.Env = append(cmd.Env,
-			"QTPM_INCLUDE_PATH="+filepath.Join(VendorFolder(rootPackageDir, debugBuild), "include"),
-			"QTPM_LIBRARY_PATH="+filepath.Join(VendorFolder(rootPackageDir, debugBuild), "lib"),
-		)
+		cmd.Env = append(cmd.Env, additionalEnvs...)
 		if qtDir != "" {
 			cmd.Env = append(cmd.Env, "QTDIR="+qtDir)
 		}
@@ -187,10 +188,7 @@ func RunCMakeAndBuild(rootPackageDir, packageDir, vendorPath string, update, deb
 	}
 	makeCmd := exec.Command("make")
 	makeCmd.Dir = buildPath
-	makeCmd.Env = append(makeCmd.Env,
-		"QTPM_INCLUDE_PATH="+filepath.Join(VendorFolder(rootPackageDir, debugBuild), "include"),
-		"QTPM_LIBRARY_PATH="+filepath.Join(VendorFolder(rootPackageDir, debugBuild), "lib"),
-	)
+	makeCmd.Env = append(makeCmd.Env, additionalEnvs...)
 
 	out, err := makeCmd.CombinedOutput()
 	log.Println(string(out))

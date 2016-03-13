@@ -96,20 +96,19 @@ func (s *SourceBundle) addfile(path string) {
 }
 
 type SourceVariable struct {
-	Target           string
-	Parent           string
-	Requires         []string
-	QtModules        []string
-	Sources          *SourceBundle
-	InstallHeaders   *SourceBundle
-	ExtraInstallDir  *SourceBundle
-	Resources        *SourceBundle
-	Tests            *SourceBundle
-	ExtraTestSources *SourceBundle
-	Library          bool
-	Debug            bool
-	BuildNumber      int
-	config           *PackageConfig
+	Target            string
+	Parent            string
+	Requires          []string
+	QtModules         []string
+	Sources           *SourceBundle
+	InstallHeaderDirs map[string]*SourceBundle
+	Resources         *SourceBundle
+	Tests             *SourceBundle
+	ExtraTestSources  *SourceBundle
+	Library           bool
+	Debug             bool
+	BuildNumber       int
+	config            *PackageConfig
 }
 
 func (sv SourceVariable) TargetSmall() string {
@@ -187,6 +186,27 @@ func (sv SourceVariable) ShortVersion() string {
 	return fmt.Sprintf("%d.%d", sv.VersionMajor(), sv.VersionMinor())
 }
 
+type InstallHeaderDir struct {
+	TargetDir string
+	Files     *SourceBundle
+}
+
+func (sv SourceVariable) InstallHeaders() []*InstallHeaderDir {
+	var keys []string
+	for key := range sv.InstallHeaderDirs {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	var result []*InstallHeaderDir
+	for key, value := range sv.InstallHeaderDirs {
+		result = append(result, &InstallHeaderDir{
+			TargetDir: key,
+			Files:     value,
+		})
+	}
+	return result
+}
+
 var supportedSourceExtensions = map[string]bool{
 	".cpp": true,
 	".c":   true,
@@ -201,8 +221,17 @@ var supportedHeaderExtensions = map[string]bool{
 
 func (sv *SourceVariable) SearchFiles(dir string) {
 	sv.Sources = NewSourceBundle("sources", "file", false)
-	sv.ExtraInstallDir = NewSourceBundle("extra_install_dirs", "dir", false)
-	sv.InstallHeaders = NewSourceBundle("public_headers", "file", false)
+	sv.InstallHeaderDirs = make(map[string]*SourceBundle)
+
+	for _, extraDir := range sv.config.ExtraInstallDirs {
+		dirName := strings.Replace(extraDir, "/", "__", -1)
+		varName := strings.Join([]string{"public_headers", dirName}, "__")
+		sv.InstallHeaderDirs[extraDir] = NewSourceBundle(varName, "file", false)
+	}
+	if _, ok := sv.InstallHeaderDirs[""]; !ok {
+		sv.InstallHeaderDirs[""] = NewSourceBundle("public_headers", "file", false)
+	}
+
 	sv.Resources = NewSourceBundle("resources", "file", false)
 	sv.Tests = NewSourceBundle("tests", "file", true)
 	sv.ExtraTestSources = NewSourceBundle("extra_test_sources", "file", false)
@@ -214,11 +243,16 @@ func (sv *SourceVariable) SearchFiles(dir string) {
 		}
 		path := fullPath[len(srcDir)+1:]
 		outputPath := "src/" + path
+		dir := filepath.Dir(path)
+		if dir == "." {
+			dir = ""
+		}
 		if supportedSourceExtensions[filepath.Ext(path)] && path != "main.cpp" {
 			sv.Sources.addfile(outputPath)
-		} else if supportedHeaderExtensions[filepath.Ext(path)] {
-			if path == info.Name() {
-				sv.InstallHeaders.addfile(outputPath)
+		} else {
+			_, ok := sv.InstallHeaderDirs[dir]
+			if supportedHeaderExtensions[filepath.Ext(path)] && ok {
+				sv.InstallHeaderDirs[dir].addfile(outputPath)
 			}
 		}
 		return nil
@@ -250,9 +284,6 @@ func (sv *SourceVariable) SearchFiles(dir string) {
 				sv.Resources.addfile("resource/" + name)
 			}
 		}
-	}
-	for _, extraDir := range sv.config.ExtraInstallDirs {
-		sv.ExtraInstallDir.addfile(extraDir)
 	}
 }
 

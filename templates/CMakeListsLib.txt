@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required(VERSION 3.1.0)[[$root := .]]
 
 # project global setting
 
@@ -66,8 +66,6 @@ link_libraries([[range .RequireLibs]] [[.]][[end]])[[end]]
 add_library([[.TargetLibName]] SHARED ${[[.Sources.Name]]}[[if.Resources.HasItem]] ${QRC}[[end]])
 SET_TARGET_PROPERTIES([[.TargetLibName]] PROPERTIES VERSION ${[[.TargetLarge]]_VERSION} SOVERSION ${[[.TargetLarge]]_MAJOR_VERSION})
 [[if gt (len .QtModules) 0]]qt5_use_modules([[.TargetLibName]][[range $module := .QtModules]] [[$module]][[end]])[[end]]
-[[if .ExtraInstallDir.HasItem]][[.ExtraInstallDir.DefineList]]
-[[end]]
 # build examples
 
 file(GLOB examples RELATIVE examples *.cpp)
@@ -93,8 +91,7 @@ find_package(Qt5Test REQUIRED)
 # install setting
 
 install(TARGETS [[.TargetLibName]] LIBRARY DESTINATION lib)
-[[.InstallHeaders.DefineList]]
-[[if .InstallHeaders.HasItem]]install(FILES ${[[.InstallHeaders.Name]]} DESTINATION include/[[.TargetSmall]])[[end]]
-[[.ExtraInstallDir.StartLoop]]
-  install(DIRECTORY ${dir} DESTINATION include/[[.TargetSmall]])
-[[.ExtraInstallDir.EndLoop]]
+[[range $installHeaders := .InstallHeaders]]
+[[$installHeaders.Files.DefineList]]
+install(FILES ${[[$installHeaders.Files.Name]]} DESTINATION include/[[$root.TargetSmall]]/[[$installHeaders.TargetDir]])
+[[end]]
