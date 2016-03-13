@@ -45,7 +45,7 @@ func main() {
 	case packCommand.FullCommand():
 		Pack(*packTypeFlag == "debug")
 	case cleanCommand.FullCommand():
-		panic("not implemented yet")
+		Clean()
 	case getCommand.FullCommand():
 		Get(*getPackageName, *getUpdateFlag, *getUseGitFlag)
 	case installCommand.FullCommand():
