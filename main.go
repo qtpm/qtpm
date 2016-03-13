@@ -16,7 +16,7 @@ var (
 	packTypeFlag      = packCommand.Arg("build type", "release/debug").Default("release").Enum("debug", "release")
 	cleanCommand      = app.Command("clean", "Clean temp files")
 	getCommand        = app.Command("get", "Get package")
-	getUpdateFlag     = getCommand.Flag("update", "Update package to the latest").Short('f').Bool()
+	getUpdateFlag     = getCommand.Flag("update", "Update package to the latest").Short('u').Bool()
 	getUseGitFlag     = getCommand.Flag("git", "Use git instead of zip archive file").Bool()
 	getPackageName    = getCommand.Arg("package", "Package name on git repository").String()
 	installCommand    = app.Command("install", "Install program")
