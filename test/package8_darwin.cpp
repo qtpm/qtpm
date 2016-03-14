@@ -1,5 +1,6 @@
 #include <QString>
+#include <QObject>
 
 QString greeting() {
-    return "hello, MacOS X user";
+    return QObject::tr("hello, MacOS X user");
 }

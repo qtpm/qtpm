@@ -1,5 +1,6 @@
 #include <QString>
+#include <QObject>
 
 QString greeting() {
-    return "hello, Windows user";
+    return QObject::tr("hello, Windows user");
 }

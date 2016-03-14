@@ -34,7 +34,7 @@ func prepareProject(name, license string) (*PackageConfig, string) {
 }
 
 func initDirs(workDir string, extraDirs ...string) {
-	dirs := []string{"src", "src/private", "resource", "test", "vendor", "doc", "html"}
+	dirs := []string{"src", "src/private", "translations", "resources", "test", "vendor", "doc", "html"}
 	dirs = append(dirs, extraDirs...)
 	for _, dir := range dirs {
 		os.MkdirAll(filepath.Join(workDir, dir), 0755)

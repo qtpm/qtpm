@@ -64,23 +64,25 @@ cp ../test/package7.cpp src/main.cpp
 ../qtpm build
 popd >> /dev/null
 
-#echo "conditional build test"
-#mkdir workbench8
-#pushd workbench8 >> /dev/null
-#../qtpm init app
-#cp ../test/package8_windows.cpp src
-#cp ../test/package8_linux.cpp src
-#cp ../test/package8_darwin.cpp src
-#cp ../test/package8_main.cpp src/main.cpp
-#../qtpm build
-#popd >> /dev/null
-
 echo "conditional build test"
-mkdir workbench9
-pushd workbench9 >> /dev/null
-../qtpm init lib
-cp ../test/package9.toml qtpackage.toml
-mkdir src/extra
-cp ../test/package9_extra_header.h src/extra
+mkdir workbench8
+pushd workbench8 >> /dev/null
+../qtpm init app
+cp ../test/package8_windows.cpp src
+cp ../test/package8_linux.cpp src
+cp ../test/package8_darwin.cpp src
+cp ../test/package8_main.cpp src/main.cpp
+mkdir -p resources/translations/
+cp ../test/workbench8_ja.ts translations/
 ../qtpm build
 popd >> /dev/null
+
+#echo "conditional build test"
+#mkdir workbench9
+#pushd workbench9 >> /dev/null
+#../qtpm init lib
+#cp ../test/package9.toml qtpackage.toml
+#mkdir src/extra
+#cp ../test/package9_extra_header.h src/extra
+#../qtpm build
+#popd >> /dev/null

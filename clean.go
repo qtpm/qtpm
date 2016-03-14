@@ -34,4 +34,5 @@ func Clean() {
 			fmt.Println("removed")
 		}
 	}
+	fmt.Println("\nRun qtpm get to recover vender header files/libraries.")
 }

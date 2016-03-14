@@ -36,9 +36,16 @@ var (
 	testName          = addTestCommand.Arg("test", "Test class name").Required().String()
 	addLicenseCommand = addCommand.Command("license", "Add license file")
 	licenseName       = addLicenseCommand.Arg("name", "License file name").String()
+	linguistCommand   = app.Command("i18n", "i18n command")
+	linguistAdd       = linguistCommand.Command("add", "Add language")
+	linguistAddLang   = linguistAdd.Arg("lang", "Language (fr, ge, etc...").Required().String()
+	linguistUpdate    = linguistCommand.Command("update", "Update translation source(.ts) file")
+	linguistEdit      = linguistCommand.Command("edit", "Edit language")
+	linguistEditLang  = linguistEdit.Arg("lang", "Language (fr, ge, etc...").String()
 )
 
 func main() {
+	kingpin.CommandLine.HelpFlag.Short('h')
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	case buildCommand.FullCommand():
 		Build(*refreshBuildFlag, *buildTypeFlag == "debug")
@@ -74,5 +81,11 @@ func main() {
 			log.Fatalln(err)
 		}
 		AddLicense(config, *licenseName)
+	case linguistAdd.FullCommand():
+		LinguistAdd(*linguistAddLang)
+	case linguistUpdate.FullCommand():
+		LinguistUpdate()
+	case linguistEdit.FullCommand():
+		LinguistEdit(*linguistEditLang)
 	}
 }

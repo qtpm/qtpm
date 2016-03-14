@@ -59,8 +59,7 @@ find_package(Qt5Test REQUIRED)
 # build setting
 
 include_directories(src)
-[[.Sources.DefineList]][[if .Resources.HasItem]][[.Resources.DefineList]]qt5_add_resources(QRC ${[[.Resources.Name]]})
-[[end]][[if gt (len .Requires) 0]]
+[[.Sources.DefineList]][[if gt (len .Requires) 0]]
 link_libraries([[range .RequireLibs]] [[.]][[end]])[[end]]
 if(APPLE)
   set(MACOSX_BUNDLE_BUNDLE_NAME [[.Target]])
@@ -72,14 +71,14 @@ if(APPLE)
   set(MACOSX_BUNDLE_LONG_VERSION_STRING "${[[.TargetLarge]]_VERSION}")
   set(MACOSX_BUNDLE_BUNDLE_VERSION "${[[.TargetLarge]]_VERSION}")
   set(MACOSX_BUNDLE_COPYRIGHT "(C) [[.CopyRight]]")
-  add_executable([[.TargetSmall]] MACOSX_BUNDLE src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .Resources.HasItem]] ${QRC}[[end]] ${WORKDIR}/MacOSXAppIcon.icns)
+  add_executable([[.TargetSmall]] MACOSX_BUNDLE src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .HasResource]] resources/resource.qrc[[end]] ${WORKDIR}/MacOSXAppIcon.icns)
 elseif(WIN32)
   set(RES_FILES "${WORKDIR}/windows.rc")
   set(CMAKE_RC_COMPILER_INIT windres)
   ENABLE_LANGUAGE(RC)
   SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
-  add_executable([[.TargetSmall]] WIN32 src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .Resources.HasItem]] ${QRC}[[end]] ${RES_FILES})
+  add_executable([[.TargetSmall]] WIN32 src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .HasResource]] resources/resource.qrc[[end]] ${RES_FILES})
 else()
-  add_executable([[.TargetSmall]] src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .Resources.HasItem]] ${QRC}[[end]])
+  add_executable([[.TargetSmall]] src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .HasResource]] resources/resource.qrc[[end]])
 endif()
 [[if gt (len .QtModules) 0]]qt5_use_modules([[.TargetSmall]][[range $module := .QtModules]] [[$module]][[end]])[[end]]

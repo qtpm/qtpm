@@ -37,6 +37,7 @@ func Get(packageName string, update, useGit bool) {
 	} else {
 		dir, _ = filepath.Abs(".")
 	}
+	os.MkdirAll(filepath.Join(dir, "resources", "translations"), 0755)
 	for _, packageConfig := range packages[:len(packages)-1] {
 		BuildPackage(dir, packageConfig, update, false, parentConfig != packageConfig)
 		BuildPackage(dir, packageConfig, update, true, parentConfig != packageConfig)

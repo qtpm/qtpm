@@ -1,0 +1,6 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource>[[range $path := .]]
+        <file>[[$path]]</file>[[end]]
+    </qresource>
+</RCC>

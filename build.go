@@ -19,6 +19,7 @@ func Build(refresh, debugBuild bool) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	os.MkdirAll(filepath.Join(config.Dir, "resources", "translations"), 0755)
 	err = BuildPackage(config.Dir, config, refresh, debugBuild, !config.IsApplication)
 	if err != nil {
 		log.Fatalln(err)
@@ -30,6 +31,7 @@ func Test(refresh bool) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	os.MkdirAll(filepath.Join(config.Dir, "resources", "translations"), 0755)
 	BuildPackage(config.Dir, config, refresh, true, false)
 	buildPath := filepath.Join(config.Dir, BuildFolder(true))
 	makeCmd := exec.Command("make", "test")
@@ -74,7 +76,10 @@ func (s *sequentialRun) Finish() error {
 func BuildPackage(rootPackageDir string, config *PackageConfig, refresh, debugBuild, install bool) error {
 	var vendorPath string
 	var changed bool
-	var err error
+	err := ReleaseTranslation(rootPackageDir, config.Dir)
+	if err != nil {
+		return err
+	}
 	if config.IsApplication {
 		changed, err = AddCMakeForApp(config, refresh, debugBuild)
 		buildPath := filepath.Join(config.Dir, BuildFolder(debugBuild))
@@ -111,7 +116,7 @@ func CreateIcon(rootPackageDir string, debugBuild bool) {
 	buildDir := filepath.Join(rootPackageDir, BuildFolder(debugBuild))
 	resultPath1 := filepath.Join(buildDir, "MacOSXAppIcon.icns")
 	resultPath2 := filepath.Join(buildDir, "WindowsAppIcon.ico")
-	pngPath := filepath.Join(rootPackageDir, "resource", "icon.png")
+	pngPath := filepath.Join(rootPackageDir, "resources", "icon.png")
 	file, err := os.Open(pngPath)
 	if err == nil {
 		outputStat, err := os.Stat(resultPath2)

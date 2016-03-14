@@ -41,7 +41,7 @@ func (s SourceBundle) DefineList() string {
 	}
 	var buffer bytes.Buffer
 	sort.Strings(s.Files)
-	fmt.Fprintf(&buffer, "set(%s %s)\n", s.Name, strings.Join(s.Files, " "))
+	fmt.Fprintf(&buffer, "set(%s %s)", s.Name, strings.Join(s.Files, " "))
 	var keys []string
 	for key := range s.PlatformSpecificFiles {
 		keys = append(keys, key)
@@ -50,15 +50,15 @@ func (s SourceBundle) DefineList() string {
 	for _, key := range keys {
 		files := s.PlatformSpecificFiles[key]
 		sort.Strings(files)
-		fmt.Fprintf(&buffer, "if(%s)\n", key)
+		fmt.Fprintf(&buffer, "\nif(%s)\n", key)
 		fmt.Fprintf(&buffer, "  list(APPEND %s %s)\n", s.Name, strings.Join(files, " "))
-		fmt.Fprintf(&buffer, "endif(%s)\n", key)
+		fmt.Fprintf(&buffer, "endif(%s)", key)
 	}
 	return buffer.String()
 }
 
 func (s SourceBundle) StartLoop() string {
-	return fmt.Sprintf("foreach(%s IN LISTS %s)\n", s.EntryName, s.Name)
+	return fmt.Sprintf("foreach(%s IN LISTS %s)", s.EntryName, s.Name)
 }
 
 func (s SourceBundle) EndLoop() string {
@@ -102,10 +102,10 @@ type SourceVariable struct {
 	QtModules         []string
 	Sources           *SourceBundle
 	InstallHeaderDirs map[string]*SourceBundle
-	Resources         *SourceBundle
 	Tests             *SourceBundle
 	ExtraTestSources  *SourceBundle
-	Library           bool
+	HasResource       bool
+	IsLibrary         bool
 	Debug             bool
 	BuildNumber       int
 	config            *PackageConfig
@@ -222,6 +222,8 @@ var supportedHeaderExtensions = map[string]bool{
 func (sv *SourceVariable) SearchFiles(dir string) {
 	sv.Sources = NewSourceBundle("sources", "file", false)
 	sv.InstallHeaderDirs = make(map[string]*SourceBundle)
+	sv.Tests = NewSourceBundle("tests", "file", true)
+	sv.ExtraTestSources = NewSourceBundle("extra_test_sources", "file", false)
 
 	for _, extraDir := range sv.config.ExtraInstallDirs {
 		dirName := strings.Replace(extraDir, "/", "__", -1)
@@ -232,12 +234,8 @@ func (sv *SourceVariable) SearchFiles(dir string) {
 		sv.InstallHeaderDirs[""] = NewSourceBundle("public_headers", "file", false)
 	}
 
-	sv.Resources = NewSourceBundle("resources", "file", false)
-	sv.Tests = NewSourceBundle("tests", "file", true)
-	sv.ExtraTestSources = NewSourceBundle("extra_test_sources", "file", false)
-
 	srcDir := filepath.Join(dir, "src")
-	err := filepath.Walk(srcDir, func(fullPath string, info os.FileInfo, err error) error {
+	filepath.Walk(srcDir, func(fullPath string, info os.FileInfo, err error) error {
 		if info.IsDir() || strings.HasPrefix(info.Name(), "_") {
 			return nil
 		}
@@ -272,19 +270,6 @@ func (sv *SourceVariable) SearchFiles(dir string) {
 			}
 		}
 	}
-
-	resources, err := ioutil.ReadDir(filepath.Join(dir, "resource"))
-	if err == nil {
-		for _, resource := range resources {
-			name := resource.Name()
-			if strings.HasPrefix(name, "_") {
-				continue
-			}
-			if strings.HasSuffix(name, ".qrc") {
-				sv.Resources.addfile("resource/" + name)
-			}
-		}
-	}
 }
 
 func AddTest(basePath, name string) {
@@ -297,13 +282,36 @@ func AddTest(basePath, name string) {
 
 func AddClass(basePath, name string, isLibrary bool) {
 	className, parent := ParseName(name)
+	if parent == "" {
+		parent = "QObject"
+	}
 	variable := &SourceVariable{
-		Target:  className,
-		Parent:  parent,
-		Library: isLibrary,
+		Target:    className,
+		Parent:    parent,
+		IsLibrary: isLibrary,
 	}
 	WriteTemplate(basePath, "src", strings.ToLower(className)+".h", "classsource.h", variable, false)
 	WriteTemplate(basePath, "src", strings.ToLower(className)+".cpp", "classsource.cpp", variable, false)
+}
+
+func CreateResource(rootPackageDir string) bool {
+	resourceDir := filepath.Join(rootPackageDir, "resources")
+	var result []string
+	filepath.Walk(resourceDir, func(fullPath string, info os.FileInfo, err error) error {
+		if info.IsDir() || strings.HasPrefix(info.Name(), "_") {
+			return nil
+		}
+		path := fullPath[len(resourceDir)+1:]
+		if !strings.HasSuffix(path, ".qrc") && path != "icon.png" && info.Name() != "Thumbs.db" && info.Name() != ".DS_Store" {
+			result = append(result, path)
+		}
+		return nil
+	})
+	if len(result) == 0 {
+		return false
+	}
+	WriteTemplate(rootPackageDir, "resources", "resource.qrc", "resource.qrc", result, false)
+	return true
 }
 
 func AddLicense(config *PackageConfig, name string) {
@@ -331,6 +339,8 @@ func AddCMakeForApp(config *PackageConfig, refresh, debugBuild bool) (bool, erro
 		variable.Requires = append(variable.Requires, packageNames[2])
 	}
 	variable.SearchFiles(config.Dir)
+	variable.HasResource = CreateResource(config.Dir)
+
 	sort.Strings(variable.QtModules)
 	sort.Strings(variable.Requires)
 	WriteTemplate(config.Dir, BuildFolder(debugBuild), "windows.rc", "windows.rc", variable, !refresh)
@@ -362,10 +372,7 @@ func AddCMakeForLib(config *PackageConfig, refresh, debugBuild bool) (bool, erro
 	return changed || os.IsNotExist(err), err2
 }
 
-func WriteTemplate(basePath, dir, fileName, templateName string, variable *SourceVariable, checkFileChange bool) (bool, error) {
-	if variable.Parent == "" {
-		variable.Parent = "QObject"
-	}
+func WriteTemplate(basePath, dir, fileName, templateName string, variable interface{}, checkFileChange bool) (bool, error) {
 	var filePath string
 	var err error
 	if dir == "" {
@@ -381,6 +388,9 @@ func WriteTemplate(basePath, dir, fileName, templateName string, variable *Sourc
 	src := MustAsset("templates/" + templateName)
 	tmp := template.Must(template.New(templateName).Delims("[[", "]]").Parse(string(src)))
 	err = tmp.Execute(&buffer, variable)
+	if err != nil {
+		panic(err)
+	}
 	if err != nil {
 		return false, err
 	}

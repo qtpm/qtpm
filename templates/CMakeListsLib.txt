@@ -40,6 +40,7 @@ endif()
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 if(DEFINED ENV{QTDIR})
     set(CMAKE_PREFIX_PATH "$ENV{QTDIR}")
@@ -60,10 +61,9 @@ include("CMakeExtra.txt")
 # build setting
 
 include_directories(src)
-[[.Sources.DefineList]][[if .Resources.HasItem]][[.Resources.DefineList]]qt5_add_resources(QRC ${[[.Resources.Name]]})
-[[end]][[if gt (len .Requires) 0]]
+[[.Sources.DefineList]][[if gt (len .Requires) 0]]
 link_libraries([[range .RequireLibs]] [[.]][[end]])[[end]]
-add_library([[.TargetLibName]] SHARED ${[[.Sources.Name]]}[[if.Resources.HasItem]] ${QRC}[[end]])
+add_library([[.TargetLibName]] SHARED ${[[.Sources.Name]]}[[if .HasResource]] resources/resource.qrc[[end]])
 SET_TARGET_PROPERTIES([[.TargetLibName]] PROPERTIES VERSION ${[[.TargetLarge]]_VERSION} SOVERSION ${[[.TargetLarge]]_MAJOR_VERSION})
 [[if gt (len .QtModules) 0]]qt5_use_modules([[.TargetLibName]][[range $module := .QtModules]] [[$module]][[end]])[[end]]
 # build examples
@@ -71,7 +71,7 @@ SET_TARGET_PROPERTIES([[.TargetLibName]] PROPERTIES VERSION ${[[.TargetLarge]]_V
 file(GLOB examples RELATIVE examples *.cpp)
 foreach(path IN LISTS examples)
   get_filename_component(target ${path} NAME_WE)
-  add_executable(${target} ${path}[[if .Resources.HasItem]] ${QRC}[[end]])
+  add_executable(${target} ${path}[[if .HasResource]] resources/resource.qrc[[end]])
   qt5_use_modules(${target}[[range $module := .QtModules]] [[$module]][[end]])
   target_link_libraries(${target} [[.TargetLibName]])
 endforeach()
@@ -83,7 +83,7 @@ find_package(Qt5Test REQUIRED)
 [[.ExtraTestSources.DefineList]]
 [[.Tests.DefineList]]
 [[.Tests.StartLoop]]
-  add_executable(${file} test/${file}.cpp ${[[.Sources.Name]]} ${[[.ExtraTestSources.Name]]}[[if .Resources.HasItem]] ${QRC}[[end]])
+  add_executable(${file} test/${file}.cpp ${[[.Sources.Name]]} ${[[.ExtraTestSources.Name]]}[[if .HasResource]] resources/resource.qrc[[end]])
   add_test(NAME ${file} COMMAND ${file})
   [[if gt (len .QtModules) 0]]qt5_use_modules(${file} Test[[range $module := .QtModules]] [[$module]][[end]])[[end]]
 [[.Tests.EndLoop]]

@@ -16,6 +16,7 @@ func Pack(debugBuild bool) {
 	if !config.IsApplication {
 		log.Fatalln("pack command is for application package.")
 	}
+	os.MkdirAll(filepath.Join(config.Dir, "resources", "translations"), 0755)
 	err = BuildPackage(config.Dir, config, false, debugBuild, !config.IsApplication)
 	if err != nil {
 		log.Fatalln(err)
