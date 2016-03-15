@@ -99,6 +99,7 @@ func (s *SourceBundle) addfile(path string) {
 type SourceVariable struct {
 	Target            string
 	Parent            string
+	VendorPath        string
 	Requires          []string
 	QtModules         []string
 	Sources           *SourceBundle
@@ -325,12 +326,12 @@ func AddLicense(config *PackageConfig, name string) {
 	config.Save()
 }
 
-func AddCMakeForApp(config *PackageConfig, refresh, debugBuild bool) (bool, error) {
+func AddCMakeForApp(config *PackageConfig, rootPackageDir string, refresh, debugBuild bool) (bool, error) {
 	variable := &SourceVariable{
-		config:    config,
-		Target:    CleanName(config.Name),
-		QtModules: CleanList(config.QtModules),
-		Debug:     debugBuild,
+		config:     config,
+		VendorPath: filepath.Join(rootPackageDir, "vendor"),
+		Target:     CleanName(config.Name),
+		QtModules:  CleanList(config.QtModules),
 	}
 	for _, require := range config.Requires {
 		packageNames := strings.Split(require, "/")
@@ -344,18 +345,19 @@ func AddCMakeForApp(config *PackageConfig, refresh, debugBuild bool) (bool, erro
 
 	sort.Strings(variable.QtModules)
 	sort.Strings(variable.Requires)
-	WriteTemplate(config.Dir, BuildFolder(debugBuild), "windows.rc", "windows.rc", variable, !refresh)
+	WriteTemplate(config.Dir, BuildFolder(false), "windows.rc", "windows.rc", variable, !refresh)
+	WriteTemplate(config.Dir, BuildFolder(true), "windows.rc", "windows.rc", variable, !refresh)
 	_, err := os.Stat(filepath.Join(config.Dir, BuildFolder(debugBuild)))
 	changed, err2 := WriteTemplate(config.Dir, "", "CMakeLists.txt", "CMakeListsApp.txt", variable, !refresh)
 	return changed || os.IsNotExist(err), err2
 }
 
-func AddCMakeForLib(config *PackageConfig, refresh, debugBuild bool) (bool, error) {
+func AddCMakeForLib(config *PackageConfig, rootPackageDir string, refresh, debugBuild bool) (bool, error) {
 	variable := &SourceVariable{
-		config:    config,
-		Target:    CleanName(config.Name),
-		QtModules: CleanList(config.QtModules),
-		Debug:     debugBuild,
+		config:     config,
+		VendorPath: filepath.Join(rootPackageDir, "vendor"),
+		Target:     CleanName(config.Name),
+		QtModules:  CleanList(config.QtModules),
 	}
 	for _, require := range config.Requires {
 		packageNames := strings.Split(require, "/")

@@ -2,7 +2,7 @@ package qtpm
 
 import (
 	"fmt"
-	"log"
+	"github.com/fatih/color"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -11,15 +11,18 @@ import (
 func Pack(debugBuild bool) {
 	config, err := LoadConfig(".", true)
 	if err != nil {
-		log.Fatalln(err)
+		color.Red(err.Error())
+		os.Exit(1)
 	}
 	if !config.IsApplication {
-		log.Fatalln("pack command is for application package.")
+		color.Red("pack command is for application package.\n")
+		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "resources", "translations"), 0755)
-	err = BuildPackage(config.Dir, config, false, debugBuild, !config.IsApplication)
+	err = BuildPackage(config.Dir, config, false, debugBuild, false)
 	if err != nil {
-		log.Fatalln(err)
+		color.Red("\nBuild Error\n")
+		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "release"), 0755)
 	buildDirPath := filepath.Join(config.Dir, BuildFolder(debugBuild))
@@ -35,13 +38,16 @@ func Pack(debugBuild bool) {
 		} else {
 			dmgFileName = fmt.Sprintf("%s-%d.%d.%d.dmg", config.Name, config.Version[0], config.Version[1], config.Version[2])
 		}
+		printSection("\nCreating Installer: %s\n", config.Name)
 		err := SequentialRun(buildDirPath).
 			Run(macdeployqtPath, config.Name+".app", "-dmg").
 			Run("mv", config.Name+".dmg", filepath.Join(config.Dir, "release", dmgFileName)).Finish()
 		if err != nil {
-			log.Fatalln("packaging error:", err.Error())
+			color.Red("packaging error: %s\n", err.Error())
+			os.Exit(1)
 		}
-		log.Println("Generated:", dmgFileName)
+		printSuccess("\nGenerated: %s", dmgFileName)
+		printSuccess("\nFinish Build Successfully\n")
 	} else {
 		panic("it support only darwin")
 	}

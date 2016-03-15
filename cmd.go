@@ -1,6 +1,7 @@
 package qtpm
 
 import (
+	"bytes"
 	"github.com/kr/pty"
 	"github.com/mattn/go-colorable"
 	"io"
@@ -11,6 +12,7 @@ import (
 
 type Cmd struct {
 	command *exec.Cmd
+	Silent  bool
 }
 
 func Command(command, workDir string, args ...string) *Cmd {
@@ -41,12 +43,19 @@ func (c *Cmd) Run() error {
 
 	var outputWait sync.WaitGroup
 	outputWait.Add(2)
+	var colorableStdout io.Writer
+	if c.Silent {
+		colorableStdout = bytes.NewBuffer(nil)
+	} else {
+		colorableStdout = colorable.NewColorableStdout()
+	}
 	go func() {
-		io.Copy(colorable.NewColorableStdout(), outpty)
+		io.Copy(colorableStdout, outpty)
 		outputWait.Done()
 	}()
+	colorableStderr := colorable.NewColorableStderr()
 	go func() {
-		io.Copy(colorable.NewColorableStderr(), errpty)
+		io.Copy(colorableStderr, errpty)
 		outputWait.Done()
 	}()
 	err = cmd.Start()

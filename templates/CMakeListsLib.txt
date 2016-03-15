@@ -7,13 +7,19 @@ project([[.TargetSmall]])
 set([[.TargetLarge]]_MAJOR_VERSION [[.VersionMajor]])
 set([[.TargetLarge]]_MINOR_VERSION [[.VersionMinor]])
 set([[.TargetLarge]]_PATCH_VERSION [[.VersionPatch]])
-set([[.TargetLarge]]_VERSION
- ${[[.TargetLarge]]_MAJOR_VERSION}.${[[.TargetLarge]]_MINOR_VERSION}.${[[.TargetLarge]]_PATCH_VERSION})
-[[if .Debug]]set(CMAKE_BUILD_TYPE Debug)
-set(WORKDIR "build-debug")
-[[else]]set(CMAKE_BUILD_TYPE Release)
-set(WORKDIR "build-release")
-[[end]]
+set([[.TargetLarge]]_VERSION [[.Version]])
+
+if(CMAKE_BUILD_TYPE MATCHES Release)
+    message("-- Release Build")
+    set(WORKDIR "build-release")
+    include_directories([[.VendorPath]]/release/include)
+    link_directories([[.VendorPath]]/release/lib)
+else()
+    message("-- Debug Build")
+    set(WORKDIR "build-debug")
+    include_directories([[.VendorPath]]/release/include)
+    link_directories([[.VendorPath]]/release/lib)
+endif()
 
 # compiler setting
 
@@ -46,18 +52,11 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 if(DEFINED ENV{QTDIR})
     set(CMAKE_PREFIX_PATH "$ENV{QTDIR}")
 endif()
-if(DEFINED ENV{QTPM_INCLUDE_PATH})
-    include_directories("$ENV{QTPM_INCLUDE_PATH}")
-endif()
-if(DEFINED ENV{QTPM_LIBRARY_PATH})
-    link_directories("$ENV{QTPM_LIBRARY_PATH}")
-endif()
 [[range $index, $qtmodule := .QtModules]]find_package(Qt5[[$qtmodule]] REQUIRED)
 [[end]]
-
 # include extra settings
 
-include("CMakeExtra.txt")
+include("CMakeExtra.txt" OPTIONAL)
 
 # build setting
 
