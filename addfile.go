@@ -327,9 +327,16 @@ func AddLicense(config *PackageConfig, name string) {
 }
 
 func AddCMakeForApp(config *PackageConfig, rootPackageDir string, refresh, debugBuild bool) (bool, error) {
+	var vendorPath string
+	if config.Dir == rootPackageDir {
+		vendorPath = "vendor"
+	} else {
+		vendorPath, _ = filepath.Rel(config.Dir, filepath.Join(rootPackageDir, "vendor"))
+	}
+
 	variable := &SourceVariable{
 		config:     config,
-		VendorPath: filepath.Join(rootPackageDir, "vendor"),
+		VendorPath: vendorPath,
 		Target:     CleanName(config.Name),
 		QtModules:  CleanList(config.QtModules),
 	}
@@ -353,9 +360,16 @@ func AddCMakeForApp(config *PackageConfig, rootPackageDir string, refresh, debug
 }
 
 func AddCMakeForLib(config *PackageConfig, rootPackageDir string, refresh, debugBuild bool) (bool, error) {
+	var vendorPath string
+	if config.Dir == rootPackageDir {
+		vendorPath = "vendor"
+	} else {
+		vendorPath, _ = filepath.Rel(config.Dir, filepath.Join(rootPackageDir, "vendor"))
+	}
+
 	variable := &SourceVariable{
 		config:     config,
-		VendorPath: filepath.Join(rootPackageDir, "vendor"),
+		VendorPath: vendorPath,
 		Target:     CleanName(config.Name),
 		QtModules:  CleanList(config.QtModules),
 	}
