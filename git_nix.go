@@ -1,7 +1,7 @@
 // +build !windows
 
 // Package git contains various commands that shell out to git
-package git
+package qtpm
 
 import (
 	"os/exec"

@@ -1,11 +1,10 @@
-package main
+package qtpm
 
 import (
 	"archive/zip"
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/qtpm/qtpm/git"
 	"io"
 	"io/ioutil"
 	"log"
@@ -120,7 +119,7 @@ func getSinglePackage(rootConfig *PackageConfig, packageName string, save, updat
 	if os.IsNotExist(err) {
 		os.MkdirAll(workDir, 0755)
 		if useGit || paths[0] != "github.com" {
-			err = git.CloneWithoutFilters([]string{
+			err = CloneWithoutFilters([]string{
 				"--depth", "1", fmt.Sprintf("git@%s:%s/%s.git", paths[0], paths[1], paths[2]),
 			}, workDir)
 		} else {
@@ -136,7 +135,7 @@ func getSinglePackage(rootConfig *PackageConfig, packageName string, save, updat
 			err = DownloadZip(installDir, paths[1], paths[2])
 		} else {
 			os.MkdirAll(workDir, 0755)
-			err = git.Pull([]string{"--ff-only"}, installDir)
+			err = Pull([]string{"--ff-only"}, installDir)
 		}
 		if err != nil {
 			return nil, err

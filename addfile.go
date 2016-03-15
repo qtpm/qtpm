@@ -1,8 +1,9 @@
-package main
+package qtpm
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/fatih/color"
 	"io/ioutil"
 	"log"
 	"os"
@@ -391,9 +392,6 @@ func WriteTemplate(basePath, dir, fileName, templateName string, variable interf
 	if err != nil {
 		panic(err)
 	}
-	if err != nil {
-		return false, err
-	}
 	if checkFileChange {
 		existingContent, err := ioutil.ReadFile(filePath)
 		if err == nil && bytes.Compare(existingContent, buffer.Bytes()) == 0 {
@@ -401,6 +399,11 @@ func WriteTemplate(basePath, dir, fileName, templateName string, variable interf
 		}
 	}
 	err = ioutil.WriteFile(filePath, buffer.Bytes(), 0644)
+	if err != nil {
+		color.Red("Write file error: %s\n", filepath.Join(dir, fileName))
+	} else {
+		color.Magenta("Wrote: %s\n", filepath.Join(dir, fileName))
+	}
 	return true, err
 }
 

@@ -6,7 +6,7 @@ Install
 
 .. code-block:: bash
 
-   $ go get github.com/qtpm/qtpm
+   $ go get github.com/qtpm/qtpm/...
 
 Usage
 ----------

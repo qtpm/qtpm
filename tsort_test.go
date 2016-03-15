@@ -1,4 +1,4 @@
-package main
+package qtpm
 
 import (
 	"github.com/k0kubun/pp"

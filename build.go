@@ -1,12 +1,12 @@
-package main
+package qtpm
 
 import (
 	"bytes"
 	"fmt"
-	winicon "github.com/Kodeworks/golang-image-ico"
+	"github.com/Kodeworks/golang-image-ico"
+	"github.com/fatih/color"
 	"image"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,31 +17,39 @@ import (
 func Build(refresh, debugBuild bool) {
 	config, err := LoadConfig(".", true)
 	if err != nil {
-		log.Fatalln(err)
+		color.Red(err.Error())
+		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "resources", "translations"), 0755)
 	err = BuildPackage(config.Dir, config, refresh, debugBuild, !config.IsApplication)
 	if err != nil {
-		log.Fatalln(err)
+		color.Red("\nBuild Error\n")
+		os.Exit(1)
 	}
+	printSuccess("\nFinish Build Successfully\n")
 }
 
 func Test(refresh bool) {
 	config, err := LoadConfig(".", true)
 	if err != nil {
-		log.Fatalln(err)
+		color.Red(err.Error())
+		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "resources", "translations"), 0755)
-	BuildPackage(config.Dir, config, refresh, true, false)
-	buildPath := filepath.Join(config.Dir, BuildFolder(true))
-	makeCmd := exec.Command("make", "test")
-	makeCmd.Dir = buildPath
-	makeCmd.Env = append(makeCmd.Env, "CTEST_OUTPUT_ON_FAILURE=1")
-	out, err := makeCmd.CombinedOutput()
-	log.Println(string(out))
+	err = BuildPackage(config.Dir, config, refresh, true, false)
 	if err != nil {
-		log.Fatal(err)
+		color.Red("\nBuild Error\n")
+		os.Exit(1)
 	}
+	buildPath := filepath.Join(config.Dir, BuildFolder(true))
+	makeCmd := Command("make", buildPath, "test")
+	makeCmd.AddEnv("CTEST_OUTPUT_ON_FAILURE=1")
+	err = makeCmd.Run()
+	if err != nil {
+		color.Red("\nTest Fail\n")
+		os.Exit(1)
+	}
+	printSuccess("\nTest Pass\n")
 }
 
 type sequentialRun struct {
@@ -93,6 +101,11 @@ func BuildPackage(rootPackageDir string, config *PackageConfig, refresh, debugBu
 	if err != nil {
 		return err
 	}
+	if debugBuild {
+		printSection("\nBuild Package: %s (debug)\n", config.Name)
+	} else {
+		printSection("\nBuild Package: %s (release)\n", config.Name)
+	}
 	return RunCMakeAndBuild(rootPackageDir, config.Dir, vendorPath, changed, debugBuild, install)
 }
 
@@ -112,6 +125,7 @@ func BuildFolder(debugBuild bool) string {
 }
 
 func CreateIcon(rootPackageDir string, debugBuild bool) {
+
 	var iconImage image.Image
 	buildDir := filepath.Join(rootPackageDir, BuildFolder(debugBuild))
 	resultPath1 := filepath.Join(buildDir, "MacOSXAppIcon.icns")
@@ -132,12 +146,15 @@ func CreateIcon(rootPackageDir string, debugBuild bool) {
 		}
 	}
 	if iconImage == nil {
+		printSection("\nCreating Icon: default image\n")
 		pngPath = filepath.Join(buildDir, "icon.png")
 		ioutil.WriteFile(pngPath, MustAsset("resources/qt-logo.png"), 0644)
 		iconImage, _, err = image.Decode(bytes.NewReader(MustAsset("resources/qt-logo.png")))
 		if err != nil {
 			panic(err) // qtpm should be able to read fallback icon anytime
 		}
+	} else {
+		printSection("Creating Icon: 'resources/icon.png'\n\n")
 	}
 
 	icon, err := os.Create(resultPath2)
@@ -145,7 +162,7 @@ func CreateIcon(rootPackageDir string, debugBuild bool) {
 	if err != nil {
 		panic(err)
 	}
-	winicon.Encode(icon, iconImage)
+	ico.Encode(icon, iconImage)
 
 	os.MkdirAll(filepath.Join(buildDir, "MacOSXAppIcon.iconset"), 0755)
 	err = SequentialRun(buildDir).
@@ -172,40 +189,36 @@ func RunCMakeAndBuild(rootPackageDir, packageDir, vendorPath string, update, deb
 		"QTPM_LIBRARY_PATH=" + filepath.Join(VendorFolder(rootPackageDir, debugBuild), "lib"),
 	}
 	if update {
+		printSubSection("\nGenerate CMakeLists.txt\n")
 		os.MkdirAll(buildPath, 0755)
-		var cmd *exec.Cmd
+		var cmd *Cmd
 		if vendorPath == "" {
-			cmd = exec.Command("cmake", "..")
+			cmd = Command("cmake", buildPath, "..")
 		} else {
-			cmd = exec.Command("cmake", "..", "-DCMAKE_INSTALL_PREFIX="+vendorPath)
+			cmd = Command("cmake", buildPath, "..", "-DCMAKE_INSTALL_PREFIX="+vendorPath)
 		}
-		cmd.Dir = buildPath
 		qtDir := FindQt(rootPackageDir)
-		cmd.Env = append(cmd.Env, additionalEnvs...)
+		cmd.AddEnv(additionalEnvs...)
 		if qtDir != "" {
-			cmd.Env = append(cmd.Env, "QTDIR="+qtDir)
+			cmd.AddEnv("QTDIR=" + qtDir)
 		}
-		out, err := cmd.CombinedOutput()
-		log.Println(string(out))
+		err := cmd.Run()
 		if err != nil {
 			return err
 		}
 	}
-	makeCmd := exec.Command("make")
-	makeCmd.Dir = buildPath
-	makeCmd.Env = append(makeCmd.Env, additionalEnvs...)
+	printSubSection("\nStart Building\n")
+	makeCmd := Command("make", buildPath)
+	makeCmd.AddEnv(additionalEnvs...)
 
-	out, err := makeCmd.CombinedOutput()
-	log.Println(string(out))
+	err := makeCmd.Run()
 	if err != nil {
 		return err
 	}
 	if install {
-		makeCmd := exec.Command("make", "install")
-		makeCmd.Dir = buildPath
-		out, err = makeCmd.CombinedOutput()
-		log.Println(string(out))
-		return err
+		printSubSection("\nStart Installing\n")
+		makeCmd := Command("make", buildPath, "install")
+		return makeCmd.Run()
 	}
 	return nil
 }

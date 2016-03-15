@@ -1,14 +1,27 @@
 package main
 
 import (
+	"fmt"
+	"github.com/fatih/color"
+	"github.com/qtpm/qtpm"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"log"
 	"os"
 )
 
 var (
+	printTitle1 = color.New(color.FgWhite, color.Bold, color.BgGreen).SprintfFunc()
+	printTitle2 = color.New(color.FgBlack, color.Bold, color.BgWhite).SprintfFunc()
+	printBold   = color.New(color.Bold).SprintfFunc()
+)
+
+const (
+	version = "0.5.0"
+)
+
+var (
 	app               = kingpin.New("qtpm", "Package Manager fot Qt")
-	verbose           = app.Flag("verbose", "Set verbose mode").Short('v').Bool()
+	silent            = app.Flag("silent", "Set silent mode").Short('v').Bool()
 	buildCommand      = app.Command("build", "Build program")
 	buildTypeFlag     = buildCommand.Arg("build type", "release/debug").Default("debug").Enum("debug", "release")
 	refreshBuildFlag  = buildCommand.Flag("refresh", "Refresh cache").Short('r').Bool()
@@ -44,48 +57,70 @@ var (
 	linguistEditLang  = linguistEdit.Arg("lang", "Language (fr, ge, etc...").String()
 )
 
+func printLogo() {
+	if *silent {
+		return
+	}
+	logo := printTitle1("Qt") + printTitle2("pm")
+	fmt.Println(printBold("\n%s - version %s by Yoshiki Shibukawa\n", logo, version))
+}
+
 func main() {
-	kingpin.CommandLine.HelpFlag.Short('h')
+	app.HelpFlag.Short('h')
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	case buildCommand.FullCommand():
-		Build(*refreshBuildFlag, *buildTypeFlag == "debug")
+		printLogo()
+		qtpm.Build(*refreshBuildFlag, *buildTypeFlag == "debug")
 	case packCommand.FullCommand():
-		Pack(*packTypeFlag == "debug")
+		printLogo()
+		qtpm.Pack(*packTypeFlag == "debug")
 	case cleanCommand.FullCommand():
-		Clean()
+		printLogo()
+		qtpm.Clean()
 	case getCommand.FullCommand():
-		Get(*getPackageName, *getUpdateFlag, *getUseGitFlag)
+		printLogo()
+		qtpm.Get(*getPackageName, *getUpdateFlag, *getUseGitFlag)
 	case installCommand.FullCommand():
+		printLogo()
 		panic("not implemented yet")
 	case testCommand.FullCommand():
-		Test(*refreshTestFlag)
+		printLogo()
+		qtpm.Test(*refreshTestFlag)
 	case initAppCommand.FullCommand():
-		InitApplication(*appName, *appLicense)
+		printLogo()
+		qtpm.InitApplication(*appName, *appLicense)
 	case initLibCommand.FullCommand():
-		InitLibrary(*libName, *libLicense)
+		printLogo()
+		qtpm.InitLibrary(*libName, *libLicense)
 	case addClassCommand.FullCommand():
-		config, err := LoadConfig(".", true)
+		printLogo()
+		config, err := qtpm.LoadConfig(".", true)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		AddClass(config.Dir, *className, !config.IsApplication)
+		qtpm.AddClass(config.Dir, *className, !config.IsApplication)
 	case addTestCommand.FullCommand():
-		config, err := LoadConfig(".", true)
+		printLogo()
+		config, err := qtpm.LoadConfig(".", true)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		AddTest(config.Dir, *testName)
+		qtpm.AddTest(config.Dir, *testName)
 	case addLicenseCommand.FullCommand():
-		config, err := LoadConfig(".", true)
+		printLogo()
+		config, err := qtpm.LoadConfig(".", true)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		AddLicense(config, *licenseName)
+		qtpm.AddLicense(config, *licenseName)
 	case linguistAdd.FullCommand():
-		LinguistAdd(*linguistAddLang)
+		printLogo()
+		qtpm.LinguistAdd(*linguistAddLang, false)
 	case linguistUpdate.FullCommand():
-		LinguistUpdate()
+		printLogo()
+		qtpm.LinguistUpdate()
 	case linguistEdit.FullCommand():
-		LinguistEdit(*linguistEditLang)
+		printLogo()
+		qtpm.LinguistEdit(*linguistEditLang)
 	}
 }

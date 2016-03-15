@@ -1,6 +1,6 @@
 // Copied from github.com/github/git-lofs/git
 // Package git contains various commands that shell out to git
-package git
+package qtpm
 
 import (
 	"bufio"
@@ -793,16 +793,16 @@ func Pull(args []string, workDir string) error {
 
 			// Swallow all the known messages from intentionally breaking filter
 			if strings.Contains(s, "error: external filter") ||
-			strings.Contains(s, "error: cannot fork") ||
-			// Linux / Mac messages
-			strings.Contains(s, "error: cannot run : No such file or directory") ||
-			strings.Contains(s, "warning: Clone succeeded, but checkout failed") ||
-			strings.Contains(s, "You can inspect what was checked out with 'git status'") ||
-			strings.Contains(s, "retry the checkout") ||
-			// Windows messages
-			strings.Contains(s, "error: cannot spawn : No such file or directory") ||
-			// blank formatting
-			len(strings.TrimSpace(s)) == 0 {
+				strings.Contains(s, "error: cannot fork") ||
+				// Linux / Mac messages
+				strings.Contains(s, "error: cannot run : No such file or directory") ||
+				strings.Contains(s, "warning: Clone succeeded, but checkout failed") ||
+				strings.Contains(s, "You can inspect what was checked out with 'git status'") ||
+				strings.Contains(s, "retry the checkout") ||
+				// Windows messages
+				strings.Contains(s, "error: cannot spawn : No such file or directory") ||
+				// blank formatting
+				len(strings.TrimSpace(s)) == 0 {
 				// Send filtered stderr to trace in case useful
 				tracerx.Printf(s)
 				continue

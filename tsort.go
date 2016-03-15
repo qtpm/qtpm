@@ -1,4 +1,4 @@
-package main
+package qtpm
 
 func remove(input [][2]string, value [2]string) [][2]string {
 	for i, v := range input {

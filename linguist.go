@@ -1,4 +1,4 @@
-package main
+package qtpm
 
 import (
 	"fmt"
@@ -11,15 +11,17 @@ import (
 	"strings"
 )
 
-func LinguistAdd(language string) {
+func LinguistAdd(language string, update bool) {
 	config, err := LoadConfig(".", true)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	tsPath := filepath.Join(config.Dir, "translations", fmt.Sprintf("%s_%s.ts", strings.ToLower(config.Name), language))
-	_, err = os.Stat(tsPath)
-	if !os.IsNotExist(err) {
-		log.Fatalf("%s already exists in translations folder\n", fmt.Sprintf("%s_%s.ts", strings.ToLower(config.Name), language))
+	if !update {
+		_, err = os.Stat(tsPath)
+		if !os.IsNotExist(err) {
+			log.Fatalf("%s already exists in translations folder\n", fmt.Sprintf("%s_%s.ts", strings.ToLower(config.Name), language))
+		}
 	}
 	var command string
 	qtdir := FindQt(config.Dir)
@@ -46,12 +48,15 @@ func LinguistUpdate() {
 	for _, entry := range entries {
 		if entry.IsDir() || filepath.Ext(entry.Name()) != ".ts" {
 			continue
-			name := entry.Name()[:len(entry.Name())-3]
-			fragments := strings.Split(name, "_")
-			lang := fragments[len(fragments)-1]
-			LinguistAdd(lang)
 		}
+		LinguistAdd(GetLangFromTSFile(entry.Name()), true)
 	}
+}
+
+func GetLangFromTSFile(filename string) string {
+	name := filename[:len(filename)-3]
+	fragments := strings.Split(name, "_")
+	return fragments[len(fragments)-1]
 }
 
 func LinguistEdit(language string) {
@@ -59,20 +64,23 @@ func LinguistEdit(language string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	var tsPath string
 	if language == "" {
-		dirs, _ := ioutil.ReadDir(filepath.Join(config.Dir, "translations"))
-		if len(dirs) == 0 {
+		files, _ := ioutil.ReadDir(filepath.Join(config.Dir, "translations"))
+		found := false
+		for _, file := range files {
+			if file.IsDir() || filepath.Ext(file.Name()) != ".ts" {
+				continue
+			}
+			language = GetLangFromTSFile(file.Name())
+			break
+		}
+		if !found {
 			log.Fatalln("No .ts files in translations folder")
 		}
-		tsPath = filepath.Join(config.Dir, "translations", dirs[0].Name())
-	} else {
-		tsPath = filepath.Join(config.Dir, "translations", strings.ToLower(config.Name)+"_"+language+".ts")
-		_, err = os.Stat(tsPath)
-		if os.IsNotExist(err) {
-			LinguistAdd(language)
-		}
 	}
+	tsPath := filepath.Join(config.Dir, "translations", strings.ToLower(config.Name)+"_"+language+".ts")
+	LinguistAdd(language, true)
+
 	qtdir := FindQt(config.Dir)
 	var command string
 	if qtdir == "" {
