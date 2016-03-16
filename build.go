@@ -20,7 +20,7 @@ func Build(refresh, debugBuild bool) {
 		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "resources", "translations"), 0755)
-	err = BuildPackage(config.Dir, config, refresh, debugBuild, !config.IsApplication)
+	err = BuildPackage(config.Dir, config, refresh, debugBuild, true, !config.IsApplication)
 	if err != nil {
 		color.Red("\nBuild Error\n")
 		os.Exit(1)
@@ -35,7 +35,7 @@ func Test(refresh bool) {
 		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "resources", "translations"), 0755)
-	err = BuildPackage(config.Dir, config, refresh, true, false)
+	err = BuildPackage(config.Dir, config, refresh, true, true, false)
 	if err != nil {
 		color.Red("\nBuild Error\n")
 		os.Exit(1)
@@ -80,7 +80,7 @@ func (s *sequentialRun) Finish() error {
 	return s.err
 }
 
-func BuildPackage(rootPackageDir string, config *PackageConfig, refresh, debugBuild, install bool) error {
+func BuildPackage(rootPackageDir string, config *PackageConfig, refresh, debugBuild, build, install bool) error {
 	var vendorPath string
 	var changed bool
 	err := ReleaseTranslation(rootPackageDir, config.Dir)
@@ -99,6 +99,9 @@ func BuildPackage(rootPackageDir string, config *PackageConfig, refresh, debugBu
 	}
 	if err != nil {
 		return err
+	}
+	if !build {
+		return nil
 	}
 	if debugBuild {
 		printSection("\nBuild Package: %s (debug)\n", config.Name)

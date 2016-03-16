@@ -19,7 +19,7 @@ func Pack(debugBuild bool) {
 		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "resources", "translations"), 0755)
-	err = BuildPackage(config.Dir, config, false, debugBuild, false)
+	err = BuildPackage(config.Dir, config, false, debugBuild, true, false)
 	if err != nil {
 		color.Red("\nBuild Error\n")
 		os.Exit(1)
