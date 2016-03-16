@@ -56,6 +56,7 @@ func InitLibrary(name, license string) {
 	WriteTemplate(".", "src", strings.ToLower(packageName)+"_global.h", "libglobal.h", variable, false)
 	WriteTemplate(".", "examples", "example.cpp", "main.cpp", variable, false)
 	WriteTemplate(".", "", ".gitignore", "dotgitignore", variable, false)
+	WriteTemplate(".", "", ".clang-format", "dotclang-format", variable, false)
 	WriteTemplate(".", "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
 	WriteTemplate(".", "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
 	WriteTemplate(".", "", "README.rst", "READMELib.rst", variable, false)
@@ -74,6 +75,7 @@ func InitApplication(name, license string) {
 	}
 	WriteTemplate(".", "src", "main.cpp", "main.cpp", variable, false)
 	WriteTemplate(".", "", ".gitignore", "dotgitignore", variable, false)
+	WriteTemplate(".", "", ".clang-format", "dotclang-format", variable, false)
 	WriteTemplate(".", "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
 	WriteTemplate(".", "", "README.rst", "READMEApp.rst", variable, false)
 }

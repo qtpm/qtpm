@@ -17,17 +17,15 @@ import (
 
 type SourceBundle struct {
 	Name                  string
-	EntryName             string
 	Files                 []string
 	Test                  bool
 	PlatformSpecificFiles map[string][]string
 }
 
-func NewSourceBundle(name, entryName string, test bool) *SourceBundle {
+func NewSourceBundle(name string, test bool) *SourceBundle {
 	return &SourceBundle{
-		Name:      name,
-		EntryName: entryName,
-		Test:      test,
+		Name: name,
+		Test: test,
 		PlatformSpecificFiles: make(map[string][]string),
 	}
 }
@@ -59,7 +57,7 @@ func (s SourceBundle) DefineList() string {
 }
 
 func (s SourceBundle) StartLoop() string {
-	return fmt.Sprintf("foreach(%s IN LISTS %s)", s.EntryName, s.Name)
+	return fmt.Sprintf("foreach(file IN LISTS %s)", s.Name)
 }
 
 func (s SourceBundle) EndLoop() string {
@@ -80,19 +78,15 @@ var platformNames = map[string]string{
 func (s *SourceBundle) addfile(path string) {
 	_, name := filepath.Split(path)
 	basename := name[:len(name)-len(filepath.Ext(name))]
-	var registerName string
 	if s.Test {
-		registerName = basename
 		basename = basename[:len(name)-5]
-	} else {
-		registerName = path
 	}
 	fragments := strings.Split(basename, "_")
 	last := fragments[len(fragments)-1]
 	if platform, ok := platformNames[last]; ok {
-		s.PlatformSpecificFiles[platform] = append(s.PlatformSpecificFiles[platform], registerName)
+		s.PlatformSpecificFiles[platform] = append(s.PlatformSpecificFiles[platform], path)
 	} else {
-		s.Files = append(s.Files, registerName)
+		s.Files = append(s.Files, path)
 	}
 }
 
@@ -106,6 +100,7 @@ type SourceVariable struct {
 	InstallHeaderDirs map[string]*SourceBundle
 	Tests             *SourceBundle
 	ExtraTestSources  *SourceBundle
+	Examples          *SourceBundle
 	HasResource       bool
 	IsLibrary         bool
 	Debug             bool
@@ -221,23 +216,28 @@ var supportedHeaderExtensions = map[string]bool{
 	".h++": true,
 }
 
-func (sv *SourceVariable) SearchFiles(dir string) {
-	sv.Sources = NewSourceBundle("sources", "file", false)
+func (sv *SourceVariable) SearchFiles() {
+	dir := sv.config.Dir
+	sv.Sources = NewSourceBundle("sources", false)
 	sv.InstallHeaderDirs = make(map[string]*SourceBundle)
-	sv.Tests = NewSourceBundle("tests", "file", true)
-	sv.ExtraTestSources = NewSourceBundle("extra_test_sources", "file", false)
+	sv.Tests = NewSourceBundle("tests", true)
+	sv.ExtraTestSources = NewSourceBundle("extra_test_sources", false)
+	sv.Examples = NewSourceBundle("examples", false)
 
 	for _, extraDir := range sv.config.ExtraInstallDirs {
 		dirName := strings.Replace(extraDir, "/", "__", -1)
 		varName := strings.Join([]string{"public_headers", dirName}, "__")
-		sv.InstallHeaderDirs[extraDir] = NewSourceBundle(varName, "file", false)
+		sv.InstallHeaderDirs[extraDir] = NewSourceBundle(varName, false)
 	}
 	if _, ok := sv.InstallHeaderDirs[""]; !ok {
-		sv.InstallHeaderDirs[""] = NewSourceBundle("public_headers", "file", false)
+		sv.InstallHeaderDirs[""] = NewSourceBundle("public_headers", false)
 	}
 
 	srcDir := filepath.Join(dir, "src")
 	filepath.Walk(srcDir, func(fullPath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if info.IsDir() || strings.HasPrefix(info.Name(), "_") {
 			return nil
 		}
@@ -266,12 +266,26 @@ func (sv *SourceVariable) SearchFiles(dir string) {
 				continue
 			}
 			if strings.HasSuffix(name, "_test.cpp") {
-				sv.Tests.addfile(name)
+				sv.Tests.addfile("test/" + name)
 			} else {
 				sv.ExtraTestSources.addfile("test/" + name)
 			}
 		}
 	}
+
+	exampleDir := filepath.Join(dir, "examples")
+	filepath.Walk(exampleDir, func(fullPath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() || strings.HasPrefix(info.Name(), "_") {
+			return nil
+		}
+		if supportedSourceExtensions[filepath.Ext(fullPath)] {
+			sv.Examples.addfile("examples/" + fullPath[len(exampleDir)+1:])
+		}
+		return nil
+	})
 }
 
 func AddTest(basePath, name string) {
@@ -298,6 +312,7 @@ func AddClass(basePath, name string, isLibrary bool) {
 
 func CreateResource(rootPackageDir string) bool {
 	resourceDir := filepath.Join(rootPackageDir, "resources")
+	os.MkdirAll(resourceDir, 0755)
 	var result []string
 	filepath.Walk(resourceDir, func(fullPath string, info os.FileInfo, err error) error {
 		if info.IsDir() || strings.HasPrefix(info.Name(), "_") {
@@ -347,7 +362,7 @@ func AddCMakeForApp(config *PackageConfig, rootPackageDir string, refresh, debug
 		}
 		variable.Requires = append(variable.Requires, packageNames[2])
 	}
-	variable.SearchFiles(config.Dir)
+	variable.SearchFiles()
 	variable.HasResource = CreateResource(config.Dir)
 
 	sort.Strings(variable.QtModules)
@@ -380,7 +395,7 @@ func AddCMakeForLib(config *PackageConfig, rootPackageDir string, refresh, debug
 		}
 		variable.Requires = append(variable.Requires, packageNames[2])
 	}
-	variable.SearchFiles(config.Dir)
+	variable.SearchFiles()
 	sort.Strings(variable.QtModules)
 	sort.Strings(variable.Requires)
 

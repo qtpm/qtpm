@@ -41,8 +41,7 @@ if(DEFINED ENV{QTDIR})
 endif()
 
 [[range $module := .QtModules]]find_package(Qt5[[$module]] REQUIRED)
-[[end]]
-# include extra settings
+[[end]]# include extra settings
 
 include("CMakeExtra.txt" OPTIONAL)
 [[if .Tests.HasItem]]
@@ -53,12 +52,12 @@ find_package(Qt5Test REQUIRED)
 [[.ExtraTestSources.DefineList]]
 [[.Tests.DefineList]]
 [[.Tests.StartLoop]]
-  add_executable(${file} test/${file}.cpp ${[[.Sources.Name]]} ${[[.ExtraTestSources.Name]]}[[if .Resources.HasItem]] ${QRC}[[end]])
-  add_test(NAME ${file} COMMAND ${file})
+  get_filename_component(execname ${file} NAME_WE)
+  add_executable(${execname} ${file} ${[[.Sources.Name]]} ${[[.ExtraTestSources.Name]]}[[if .Resources.HasItem]] ${QRC}[[end]])
+  add_test(NAME ${execname} COMMAND ${execname})
   qt5_use_modules(${file} Test[[range $module := .QtModules]] [[$module]][[end]])
 [[.Tests.EndLoop]]
-[[end]]
-# build setting
+[[end]]# build setting
 
 include_directories(src)
 [[.Sources.DefineList]][[if gt (len .Requires) 0]]
