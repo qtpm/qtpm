@@ -44,7 +44,7 @@ var (
 
 	docCommand = app.Command("doc", "Generate document")
 
-	fmtCommand = app.Command("fmt", "Generate document")
+	fmtCommand = app.Command("fmt", "Format source code")
 
 	getCommand     = app.Command("get", "Get package")
 	getUpdateFlag  = getCommand.Flag("update", "Update package to the latest").Short('u').Bool()
