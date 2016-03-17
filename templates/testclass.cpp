@@ -1,12 +1,12 @@
 #include <QString>
 #include <QtTest>
-#include "[[.TargetSmall]].h"
+#include "[[.Dir]][[.ClassNameSmall]].h"
 
-class Test[[.Target]] : public QObject {
+class Test[[.ClassName]] : public QObject {
     Q_OBJECT
 
 public:
-    Test[[.Target]]() {
+    Test[[.ClassName]]() {
     }
 
 private Q_SLOTS:
@@ -30,6 +30,6 @@ private Q_SLOTS:
     }
 };
 
-QTEST_APPLESS_MAIN(Test[[.Target]])
+QTEST_APPLESS_MAIN(Test[[.ClassName]])
 
-#include "[[.TargetSmall]]_test.moc"
+#include "[[.ClassNameSmall]]_test.moc"

@@ -288,26 +288,43 @@ func (sv *SourceVariable) SearchFiles() {
 	})
 }
 
-func AddTest(basePath, name string) {
-	name, _ = ParseName(name)
-	variable := &SourceVariable{
-		Target: name,
+func AddTest(config *PackageConfig, name string) {
+	dirName, className, _ := ParseName(name)
+	if dirName != "" {
+		dirName = dirName + "/"
 	}
-	WriteTemplate(basePath, "test", strings.ToLower(name)+"_test.cpp", "testclass.cpp", variable, false)
+	variable := map[string]interface{}{
+		"ClassName":      className,
+		"ClassNameSmall": strings.ToLower(className),
+		"Dir":            dirName,
+	}
+	WriteTemplate(config.Dir, "test", strings.ToLower(className)+"_test.cpp", "testclass.cpp", variable, false)
 }
 
-func AddClass(basePath, name string, isLibrary bool) {
-	className, parent := ParseName(name)
+func AddClass(config *PackageConfig, name string, isLibrary bool) {
+	dirName, className, parent := ParseName(name)
 	if parent == "" {
 		parent = "QObject"
 	}
-	variable := &SourceVariable{
-		Target:    className,
-		Parent:    parent,
-		IsLibrary: isLibrary,
+	dir := filepath.Join(append([]string{"src"}, strings.Split(dirName, "/")...)...)
+	os.MkdirAll(filepath.Join(config.Dir, dir), 0755)
+	exportFlag := true
+	if dirName != "" {
+		dirName = dirName + "/"
+		exportFlag = false
 	}
-	WriteTemplate(basePath, "src", strings.ToLower(className)+".h", "classsource.h", variable, false)
-	WriteTemplate(basePath, "src", strings.ToLower(className)+".cpp", "classsource.cpp", variable, false)
+	variable := map[string]interface{}{
+		"Parent":         parent,
+		"ClassName":      className,
+		"ClassNameSmall": strings.ToLower(className),
+		"ClassNameLarge": strings.ToUpper(className),
+		"TargetSmall":    strings.ToLower(config.Name),
+		"TargetLarge":    strings.ToUpper(config.Name),
+		"DoExport":       exportFlag,
+		"Dir":            dirName,
+	}
+	WriteTemplate(config.Dir, dir, strings.ToLower(className)+".h", "classsource.h", variable, false)
+	WriteTemplate(config.Dir, dir, strings.ToLower(className)+".cpp", "classsource.cpp", variable, false)
 }
 
 func CreateResource(rootPackageDir string) bool {
@@ -438,9 +455,18 @@ func WriteTemplate(basePath, dir, fileName, templateName string, variable interf
 	return true, err
 }
 
-func ParseName(name string) (string, string) {
-	names := strings.Split(name, "@")
-	className := names[0]
+func ParseName(name string) (dirName, className, parentName string) {
+	if strings.Contains(name, "/") {
+		names := strings.Split(name, "/")
+		dirName = strings.Join(names[:len(names)-1], "/")
+		name = names[len(names)-1]
+	}
+	if strings.Contains(name, "@") {
+		names := strings.Split(name, "@")
+		parentName = strings.ToUpper(names[1][:2]) + names[1][2:]
+		name = names[0]
+	}
+	className = name
 	if strings.HasPrefix(className, "Test") {
 		className = className[4:]
 	} else if className == "" {
@@ -449,12 +475,7 @@ func ParseName(name string) (string, string) {
 	}
 	className = strings.ToUpper(className[:1]) + className[1:]
 
-	var parentName string
-	if len(names) == 2 {
-		parentName = strings.ToUpper(names[1][:2]) + names[1][2:]
-	}
-
-	return CleanName(className), CleanName(parentName)
+	return
 }
 
 var re1 = regexp.MustCompile("[^a-zA-Z0-9_-]")

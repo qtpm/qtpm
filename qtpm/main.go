@@ -118,14 +118,17 @@ func main() {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		qtpm.AddClass(config.Dir, *className, !config.IsApplication)
+		qtpm.AddClass(config, *className, !config.IsApplication)
+		qtpm.AddTest(config, *className)
+		qtpm.Touch()
 	case addTestCommand.FullCommand():
 		printLogo()
 		config, err := qtpm.LoadConfig(".", true)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		qtpm.AddTest(config.Dir, *testName)
+		qtpm.AddTest(config, *testName)
+		qtpm.Touch()
 	case addLicenseCommand.FullCommand():
 		printLogo()
 		config, err := qtpm.LoadConfig(".", true)

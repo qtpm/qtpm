@@ -1,8 +1,8 @@
-#include "[[.TargetSmall]].h"
+#include "[[.ClassNameSmall]].h"
 
-[[.Target]]::[[.Target]]([[.Parent]] *parent) : [[.Parent]](parent)
+[[.ClassName]]::[[.ClassName]]([[.Parent]] *parent) : [[.Parent]](parent)
 {
 
 }
 
-#include "moc_[[.TargetSmall]].cpp"
+#include "moc_[[.ClassNameSmall]].cpp"

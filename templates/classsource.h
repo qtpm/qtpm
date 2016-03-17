@@ -1,16 +1,17 @@
-#ifndef [[.TargetLarge]]_H
-#define [[.TargetLarge]]_H
+#ifndef [[.ClassNameLarge]]_H
+#define [[.ClassNameLarge]]_H
 
-[[if .IsLibrary]]#include "[[.TargetSmall]]_global.h"
+[[if .DoExport]]#include "[[.TargetSmall]]_global.h"
 [[end]]#include <[[.Parent]]>
 
-class [[if .IsLibrary]][[.TargetLarge]]SHARED_EXPORT [[end]][[.Target]] : public [[.Parent]] {
+class [[if .DoExport]][[.TargetLarge]]SHARED_EXPORT [[end]][[.ClassName]] : public [[.Parent]] {
     Q_OBJECT
 public:
-    explicit [[.Target]]([[.Parent]] *parent = 0);
+    explicit [[.ClassName]]([[.Parent]] *parent = 0);
+    virtual ~[[.ClassName]]() = default;
 signals:
 public slots:
 };
 
-#endif // [[.TargetLarge]]_H
+#endif // [[.ClassNameLarge]]_H
 

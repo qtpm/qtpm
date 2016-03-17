@@ -42,17 +42,16 @@ func initDirs(workDir string, extraDirs ...string) {
 }
 
 func InitLibrary(name, license string) {
-	packageName, parentName := ParseName(name)
+	_, packageName, _ := ParseName(name)
 	config, dir := prepareProject(packageName, license)
 	initDirs(dir, "examples")
 	config.Save()
 	variable := &SourceVariable{
 		config: config,
 		Target: packageName,
-		Parent: parentName,
 	}
-	AddClass(".", packageName, true)
-	AddTest(".", packageName)
+	AddClass(config, packageName, true)
+	AddTest(config, packageName)
 	WriteTemplate(".", "src", strings.ToLower(packageName)+"_global.h", "libglobal.h", variable, false)
 	WriteTemplate(".", "examples", "example.cpp", "main.cpp", variable, false)
 	WriteTemplate(".", "", ".gitignore", "dotgitignore", variable, false)
@@ -63,7 +62,7 @@ func InitLibrary(name, license string) {
 }
 
 func InitApplication(name, license string) {
-	packageName, _ := ParseName(name)
+	_, packageName, _ := ParseName(name)
 	config, dir := prepareProject(packageName, license)
 	initDirs(dir)
 	config.Save()
