@@ -11,6 +11,10 @@ import (
 const packageFileName = "qtpackage.toml"
 const userPackageFileName = "qtpackage.user.toml"
 
+const (
+	Version = "0.6.0"
+)
+
 type PackageConfig struct {
 	Name             string                    `toml:"name"`
 	Author           string                    `toml:"author"`

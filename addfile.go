@@ -247,12 +247,15 @@ func (sv *SourceVariable) SearchFiles() {
 		if dir == "." {
 			dir = ""
 		}
-		if supportedSourceExtensions[filepath.Ext(path)] && path != "main.cpp" {
+		ext := filepath.Ext(path)
+		if (supportedSourceExtensions[ext] || ext == ".ui") && path != "main.cpp" {
 			sv.Sources.addfile(outputPath)
 		} else {
 			_, ok := sv.InstallHeaderDirs[dir]
-			if supportedHeaderExtensions[filepath.Ext(path)] && ok {
+			if supportedHeaderExtensions[ext] && ok {
 				sv.InstallHeaderDirs[dir].addfile(outputPath)
+			} else {
+				sv.Sources.addfile(outputPath)
 			}
 		}
 		return nil
@@ -381,9 +384,9 @@ func AddCMakeForApp(config *PackageConfig, rootPackageDir string, refresh, debug
 	}
 	variable.SearchFiles()
 	variable.HasResource = CreateResource(config.Dir)
-
 	sort.Strings(variable.QtModules)
 	sort.Strings(variable.Requires)
+
 	WriteTemplate(config.Dir, BuildFolder(false), "windows.rc", "windows.rc", variable, !refresh)
 	WriteTemplate(config.Dir, BuildFolder(true), "windows.rc", "windows.rc", variable, !refresh)
 	_, err := os.Stat(filepath.Join(config.Dir, BuildFolder(debugBuild)))
@@ -413,6 +416,7 @@ func AddCMakeForLib(config *PackageConfig, rootPackageDir string, refresh, debug
 		variable.Requires = append(variable.Requires, packageNames[2])
 	}
 	variable.SearchFiles()
+	variable.HasResource = CreateResource(config.Dir)
 	sort.Strings(variable.QtModules)
 	sort.Strings(variable.Requires)
 

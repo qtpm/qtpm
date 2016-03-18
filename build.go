@@ -127,7 +127,6 @@ func BuildFolder(debugBuild bool) string {
 }
 
 func CreateIcon(rootPackageDir string, debugBuild bool) {
-
 	var iconImage image.Image
 	releaseBuildDir := filepath.Join(rootPackageDir, BuildFolder(false))
 	resultPath1 := filepath.Join(releaseBuildDir, "MacOSXAppIcon.icns")

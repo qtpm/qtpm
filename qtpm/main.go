@@ -15,10 +15,6 @@ var (
 	printBold   = color.New(color.Bold).SprintfFunc()
 )
 
-const (
-	version = "0.5.0"
-)
-
 var (
 	app    = kingpin.New("qtpm", "Package Manager fot Qt")
 	silent = app.Flag("silent", "Set silent mode").Short('v').Bool()
@@ -76,7 +72,7 @@ func printLogo() {
 		return
 	}
 	logo := printTitle1("Qt") + printTitle2("pm")
-	fmt.Println(printBold("\n%s - version %s by Yoshiki Shibukawa\n", logo, version))
+	fmt.Println(printBold("\n%s - version %s by Yoshiki Shibukawa\n", logo, qtpm.Version))
 }
 
 func main() {
