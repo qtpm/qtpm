@@ -2,7 +2,7 @@ package qtpm
 
 import (
 	"fmt"
-"strings"
+	"strings"
 )
 
 var allVars = []string{

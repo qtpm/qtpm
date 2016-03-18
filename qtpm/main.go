@@ -7,6 +7,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"log"
 	"os"
+	"runtime"
 )
 
 var (
@@ -74,7 +75,12 @@ func printLogo() {
 	if *silent {
 		return
 	}
-	logo := printTitle1("Qt") + printTitle2("pm")
+	var logo string
+	if runtime.GOOS == "windows" {
+		logo = color.GreenString("Qtpm")
+	} else {
+		logo = printTitle1("Qt") + printTitle2("pm")
+	}
 	fmt.Println(printBold("\n%s - version %s by Yoshiki Shibukawa\n", logo, qtpm.Version))
 }
 

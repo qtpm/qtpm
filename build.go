@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -144,15 +145,25 @@ func OldestUnixTime(paths ...string) int64 {
 func CreateIcon(rootPackageDir string, debugBuild bool) {
 	var iconImage image.Image
 	releaseBuildDir := filepath.Join(rootPackageDir, BuildFolder(false))
-	resultPath1 := filepath.Join(releaseBuildDir, "MacOSXAppIcon.icns")
-	resultPath2 := filepath.Join(releaseBuildDir, "WindowsAppIcon.ico")
 	debugBuildDir := filepath.Join(rootPackageDir, BuildFolder(true))
-	resultPath3 := filepath.Join(debugBuildDir, "MacOSXAppIcon.icns")
-	resultPath4 := filepath.Join(debugBuildDir, "WindowsAppIcon.ico")
+
+	resultPath1 := filepath.Join(releaseBuildDir, "WindowsAppIcon.ico")
+	resultPath2 := filepath.Join(debugBuildDir, "WindowsAppIcon.ico")
+	resultPath3 := filepath.Join(releaseBuildDir, "MacOSXAppIcon.icns")
+	resultPath4 := filepath.Join(debugBuildDir, "MacOSXAppIcon.icns")
 	pngPath := filepath.Join(rootPackageDir, "Resources", "icon.png")
 
 	file, err := os.Open(pngPath)
-	oldestUnixTime := OldestUnixTime(resultPath1, resultPath2, resultPath3, resultPath4)
+	var oldestUnixTime int64
+
+	if runtime.GOOS == "windows" {
+		oldestUnixTime = OldestUnixTime(resultPath1, resultPath2)
+	} else if runtime.GOOS == "darwin" {
+		oldestUnixTime = OldestUnixTime(resultPath3, resultPath4)
+	} else {
+		return
+	}
+
 	if err == nil {
 		inputStat, err := file.Stat()
 		if err == nil && oldestUnixTime > inputStat.ModTime().Unix() {
@@ -164,6 +175,7 @@ func CreateIcon(rootPackageDir string, debugBuild bool) {
 		}
 	} else if oldestUnixTime > 0 {
 		return
+
 	}
 	sourceFile := filepath.Join("Resources", "icon.png")
 	if iconImage == nil {
@@ -176,37 +188,39 @@ func CreateIcon(rootPackageDir string, debugBuild bool) {
 		}
 	}
 
-	icon, err := os.Create(resultPath2)
-	defer icon.Close()
-	if err != nil {
-		panic(err)
+	if runtime.GOOS == "windows" {
+		icon, err := os.Create(resultPath1)
+		defer icon.Close()
+		if err != nil {
+			panic(err)
+		}
+		ico.Encode(icon, iconImage)
+		color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(false), "WindowsAppIcon.ico"), sourceFile)
+
+		CopyFile(resultPath1, resultPath2)
+		color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(true), "WindowsAppIcon.ico"), sourceFile)
+	} else {
+		os.MkdirAll(filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset"), 0755)
+		err = SequentialRun(releaseBuildDir).
+			Run("sips", "-z", "16", "16", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_16x16.png")).
+			Run("sips", "-z", "32", "32", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_16x16@2x.png")).
+			Run("sips", "-z", "32", "32", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_32x32.png")).
+			Run("sips", "-z", "64", "64", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_32x32@2x.png")).
+			Run("sips", "-z", "128", "128", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_128x128.png")).
+			Run("sips", "-z", "256", "256", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_128x128@2x.png")).
+			Run("sips", "-z", "256", "256", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_256x256.png")).
+			Run("sips", "-z", "512", "512", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_256x256@2x.png")).
+			Run("sips", "-z", "512", "512", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_512x512.png")).
+			Run("sips", "-z", "1024", "1024", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_512x512@2x.png")).
+			Run("iconutil", "-c", "icns", "--output", resultPath3, filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset")).Finish()
+		if err != nil {
+			panic(err)
+		}
+		color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(false), "MacOSXAppIcon.icns"), sourceFile)
+
+		CopyFile(resultPath3, resultPath4)
+		color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(true), "MacOSXAppIcon.icns"), sourceFile)
 	}
-	ico.Encode(icon, iconImage)
-	color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(false), "WindowsAppIcon.ico"), sourceFile)
-
-	CopyFile(resultPath2, resultPath4)
-	color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(true), "WindowsAppIcon.ico"), sourceFile)
-
-	os.MkdirAll(filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset"), 0755)
-	err = SequentialRun(releaseBuildDir).
-		Run("sips", "-z", "16", "16", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_16x16.png")).
-		Run("sips", "-z", "32", "32", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_16x16@2x.png")).
-		Run("sips", "-z", "32", "32", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_32x32.png")).
-		Run("sips", "-z", "64", "64", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_32x32@2x.png")).
-		Run("sips", "-z", "128", "128", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_128x128.png")).
-		Run("sips", "-z", "256", "256", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_128x128@2x.png")).
-		Run("sips", "-z", "256", "256", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_256x256.png")).
-		Run("sips", "-z", "512", "512", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_256x256@2x.png")).
-		Run("sips", "-z", "512", "512", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_512x512.png")).
-		Run("sips", "-z", "1024", "1024", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_512x512@2x.png")).
-		Run("iconutil", "-c", "icns", "--output", resultPath1, filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset")).Finish()
-	if err != nil {
-		panic(err)
-	}
-	color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(false), "MacOSXAppIcon.icns"), sourceFile)
-
-	CopyFile(resultPath1, resultPath3)
-	color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(true), "MacOSXAppIcon.icns"), sourceFile)
 }
 
 func RunCMakeAndBuild(rootPackageDir, packageDir, vendorPath string, update, debugBuild, install bool) error {

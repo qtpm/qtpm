@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"git"
 	"io"
 	"io/ioutil"
 	"log"
@@ -119,7 +120,7 @@ func getSinglePackage(rootConfig *PackageConfig, packageName string, save, updat
 	if os.IsNotExist(err) {
 		os.MkdirAll(workDir, 0755)
 		if useGit || paths[0] != "github.com" {
-			err = CloneWithoutFilters([]string{
+			err = git.CloneWithoutFilters([]string{
 				"--depth", "1", fmt.Sprintf("git@%s:%s/%s.git", paths[0], paths[1], paths[2]),
 			}, workDir)
 		} else {
@@ -135,7 +136,8 @@ func getSinglePackage(rootConfig *PackageConfig, packageName string, save, updat
 			err = DownloadZip(installDir, paths[1], paths[2])
 		} else {
 			os.MkdirAll(workDir, 0755)
-			err = Pull([]string{"--ff-only"}, installDir)
+			cmd := Command("get", installDir, "pull", "--ff-only")
+			err = cmd.Run()
 		}
 		if err != nil {
 			return nil, err
