@@ -49,6 +49,9 @@ var (
 
 	testCommand = app.Command("test", "Test package")
 
+	envCommand  = app.Command("env", "Show command information")
+	envVarsArgs = envCommand.Arg("var", "variable names").Strings()
+
 	refreshTestFlag = testCommand.Flag("refresh", "Refresh cache").Short('r').Bool()
 
 	addCommand        = app.Command("add", "Add source template")
@@ -108,6 +111,8 @@ func main() {
 	case testCommand.FullCommand():
 		printLogo()
 		qtpm.Test(*refreshTestFlag)
+	case envCommand.FullCommand():
+		qtpm.Env(*envVarsArgs)
 	case addClassCommand.FullCommand():
 		printLogo()
 		config, err := qtpm.LoadConfig(".", true)

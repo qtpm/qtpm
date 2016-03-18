@@ -101,7 +101,8 @@ type SourceVariable struct {
 	Tests             *SourceBundle
 	ExtraTestSources  *SourceBundle
 	Examples          *SourceBundle
-	HasResource       bool
+	Resources         *SourceBundle
+	HasQtResource     bool
 	IsLibrary         bool
 	Debug             bool
 	BuildNumber       int
@@ -223,6 +224,7 @@ func (sv *SourceVariable) SearchFiles() {
 	sv.Tests = NewSourceBundle("tests", true)
 	sv.ExtraTestSources = NewSourceBundle("extra_test_sources", false)
 	sv.Examples = NewSourceBundle("examples", false)
+	sv.Resources = NewSourceBundle("resources", false)
 
 	for _, extraDir := range sv.config.ExtraInstallDirs {
 		dirName := strings.Replace(extraDir, "/", "__", -1)
@@ -287,6 +289,18 @@ func (sv *SourceVariable) SearchFiles() {
 		if supportedSourceExtensions[filepath.Ext(fullPath)] {
 			sv.Examples.addfile("examples/" + fullPath[len(exampleDir)+1:])
 		}
+		return nil
+	})
+
+	resourceDir := filepath.Join(dir, "Resources")
+	filepath.Walk(resourceDir, func(fullPath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() || strings.HasPrefix(info.Name(), "_") {
+			return nil
+		}
+		sv.Resources.addfile("Resources/" + fullPath[len(resourceDir)+1:])
 		return nil
 	})
 }
@@ -383,7 +397,7 @@ func AddCMakeForApp(config *PackageConfig, rootPackageDir string, refresh, debug
 		variable.Requires = append(variable.Requires, packageNames[2])
 	}
 	variable.SearchFiles()
-	variable.HasResource = CreateResource(config.Dir)
+	variable.HasQtResource = CreateResource(config.Dir)
 	sort.Strings(variable.QtModules)
 	sort.Strings(variable.Requires)
 
@@ -416,7 +430,7 @@ func AddCMakeForLib(config *PackageConfig, rootPackageDir string, refresh, debug
 		variable.Requires = append(variable.Requires, packageNames[2])
 	}
 	variable.SearchFiles()
-	variable.HasResource = CreateResource(config.Dir)
+	variable.HasQtResource = CreateResource(config.Dir)
 	sort.Strings(variable.QtModules)
 	sort.Strings(variable.Requires)
 

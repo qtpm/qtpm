@@ -3,6 +3,7 @@ package qtpm
 import (
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -25,14 +26,26 @@ func CMakeOptions(qtdir string) []string {
 }
 
 func FindQt(dir string) string {
+	// from environment variable
 	env := os.Getenv("QTDIR")
 	if env != "" {
 		return env
 	}
+
+	// from setting file
 	userSetting, _ := LoadUserConfig(dir)
 	if userSetting != nil && userSetting.QtDir != "" {
 		return userSetting.QtDir
 	}
+
+	// from qmake
+	cmd := exec.Command("qmake", "-query", "QT_INSTALL_PREFIX")
+	output, err := cmd.CombinedOutput()
+	if err == nil {
+		return strings.TrimSpace(string(output))
+	}
+
+	// Search default install folder
 	var paths []string
 	if runtime.GOOS == "windows" {
 		paths = []string{
