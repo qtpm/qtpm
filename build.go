@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -19,7 +18,7 @@ func Build(refresh, debugBuild bool) {
 		color.Red(err.Error())
 		os.Exit(1)
 	}
-	os.MkdirAll(filepath.Join(config.Dir, "resources", "translations"), 0755)
+	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
 	err = BuildPackage(config.Dir, config, refresh, debugBuild, true, !config.IsApplication)
 	if err != nil {
 		color.Red("\nBuild Error\n")
@@ -34,7 +33,7 @@ func Test(refresh bool) {
 		color.Red(err.Error())
 		os.Exit(1)
 	}
-	os.MkdirAll(filepath.Join(config.Dir, "resources", "translations"), 0755)
+	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
 	err = BuildPackage(config.Dir, config, refresh, true, true, false)
 	if err != nil {
 		color.Red("\nBuild Error\n")
@@ -88,6 +87,8 @@ func BuildPackage(rootPackageDir string, config *PackageConfig, refresh, debugBu
 		return err
 	}
 	vendorPath = VendorFolder(rootPackageDir, debugBuild)
+	os.MkdirAll(filepath.Join(vendorPath, "include"), 0755)
+	os.MkdirAll(filepath.Join(vendorPath, "lib"), 0755)
 	if config.IsApplication {
 		changed, err = AddCMakeForApp(config, rootPackageDir, refresh, debugBuild)
 		buildPath := filepath.Join(config.Dir, BuildFolder(debugBuild))
@@ -126,36 +127,53 @@ func BuildFolder(debugBuild bool) string {
 	}
 }
 
+func OldestUnixTime(paths ...string) int64 {
+	var unixTime int64
+	for _, path := range paths {
+		stat, err := os.Stat(path)
+		if os.IsNotExist(err) {
+			return 0
+		}
+		if unixTime < stat.ModTime().Unix() {
+			unixTime = stat.ModTime().Unix()
+		}
+	}
+	return unixTime
+}
+
 func CreateIcon(rootPackageDir string, debugBuild bool) {
 	var iconImage image.Image
 	releaseBuildDir := filepath.Join(rootPackageDir, BuildFolder(false))
 	resultPath1 := filepath.Join(releaseBuildDir, "MacOSXAppIcon.icns")
 	resultPath2 := filepath.Join(releaseBuildDir, "WindowsAppIcon.ico")
-	pngPath := filepath.Join(rootPackageDir, "resources", "icon.png")
+	debugBuildDir := filepath.Join(rootPackageDir, BuildFolder(true))
+	resultPath3 := filepath.Join(debugBuildDir, "MacOSXAppIcon.icns")
+	resultPath4 := filepath.Join(debugBuildDir, "WindowsAppIcon.ico")
+	pngPath := filepath.Join(rootPackageDir, "Resources", "icon.png")
+
 	file, err := os.Open(pngPath)
+	oldestUnixTime := OldestUnixTime(resultPath1, resultPath2, resultPath3, resultPath4)
 	if err == nil {
-		outputStat, err := os.Stat(resultPath2)
-		if !os.IsNotExist(err) {
-			inputStat, err := file.Stat()
-			if err == nil && outputStat.ModTime().Unix() > inputStat.ModTime().Unix() {
-				return
-			}
+		inputStat, err := file.Stat()
+		if err == nil && oldestUnixTime > inputStat.ModTime().Unix() {
+			return
 		}
 		iconImage, _, err = image.Decode(file)
 		if err != nil {
 			iconImage = nil
 		}
+	} else if oldestUnixTime > 0 {
+		return
 	}
+	sourceFile := filepath.Join("Resources", "icon.png")
 	if iconImage == nil {
-		printSection("\nCreating Icon: default image\n")
+		sourceFile = "default image"
 		pngPath = filepath.Join(releaseBuildDir, "icon.png")
 		ioutil.WriteFile(pngPath, MustAsset("resources/qt-logo.png"), 0644)
 		iconImage, _, err = image.Decode(bytes.NewReader(MustAsset("resources/qt-logo.png")))
 		if err != nil {
 			panic(err) // qtpm should be able to read fallback icon anytime
 		}
-	} else {
-		printSection("Creating Icon: 'resources/icon.png'\n\n")
 	}
 
 	icon, err := os.Create(resultPath2)
@@ -164,6 +182,10 @@ func CreateIcon(rootPackageDir string, debugBuild bool) {
 		panic(err)
 	}
 	ico.Encode(icon, iconImage)
+	color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(false), "WindowsAppIcon.ico"), sourceFile)
+
+	CopyFile(resultPath2, resultPath4)
+	color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(true), "WindowsAppIcon.ico"), sourceFile)
 
 	os.MkdirAll(filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset"), 0755)
 	err = SequentialRun(releaseBuildDir).
@@ -181,17 +203,20 @@ func CreateIcon(rootPackageDir string, debugBuild bool) {
 	if err != nil {
 		panic(err)
 	}
-	debugBuildDir := filepath.Join(rootPackageDir, BuildFolder(true))
-	resultPath3 := filepath.Join(debugBuildDir, "MacOSXAppIcon.icns")
-	resultPath4 := filepath.Join(debugBuildDir, "WindowsAppIcon.ico")
+	color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(false), "MacOSXAppIcon.icns"), sourceFile)
+
 	CopyFile(resultPath1, resultPath3)
-	CopyFile(resultPath2, resultPath4)
+	color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(true), "MacOSXAppIcon.icns"), sourceFile)
 }
 
 func RunCMakeAndBuild(rootPackageDir, packageDir, vendorPath string, update, debugBuild, install bool) error {
 	buildPath := filepath.Join(packageDir, BuildFolder(debugBuild))
-	if update {
-		printSubSection("\nGenerate CMakeLists.txt\n")
+
+	makefilePath := filepath.Join(buildPath, "Makefile")
+	_, err := os.Stat(makefilePath)
+
+	if update || os.IsNotExist(err) {
+		printSubSection("\nRun CMake\n")
 		os.MkdirAll(buildPath, 0755)
 		args := []string{".."}
 		if debugBuild {
@@ -202,8 +227,9 @@ func RunCMakeAndBuild(rootPackageDir, packageDir, vendorPath string, update, deb
 		if vendorPath != "" {
 			args = append(args, "-DCMAKE_INSTALL_PREFIX="+vendorPath)
 		}
-		cmd := Command("cmake", buildPath, args...)
 		qtDir := FindQt(rootPackageDir)
+		args = append(args, CMakeOptions(qtDir)...)
+		cmd := Command("cmake", buildPath, args...)
 		if qtDir != "" {
 			cmd.AddEnv("QTDIR=" + qtDir)
 		}
@@ -212,72 +238,20 @@ func RunCMakeAndBuild(rootPackageDir, packageDir, vendorPath string, update, deb
 			return err
 		}
 	}
-	printSubSection("\nStart Building\n")
-	makeCmd := Command("make", buildPath)
 
-	err := makeCmd.Run()
-	if err != nil {
-		return err
+	buildArgs := []string{"--build", "."}
+	if debugBuild {
+		buildArgs = append(buildArgs, "--config", "Debug")
+	} else {
+		buildArgs = append(buildArgs, "--config", "Release")
 	}
 	if install {
-		printSubSection("\nStart Installing\n")
-		makeCmd := Command("make", buildPath, "install")
-		return makeCmd.Run()
-	}
-	return nil
-}
-
-func FindQt(dir string) string {
-	env := os.Getenv("QTDIR")
-	if env != "" {
-		return env
-	}
-	userSetting, _ := LoadUserConfig(dir)
-	if userSetting != nil && userSetting.QtDir != "" {
-		return userSetting.QtDir
-	}
-	var paths []string
-	if runtime.GOOS == "windows" {
-		paths = []string{
-			os.Getenv("USERPROFILE"),
-			"C:\\", "D:\\",
-			os.Getenv("ProgramFiles"),
-			os.Getenv("ProgramFiles(x86)"),
-		}
+		printSubSection("\nStart Building and Installing\n")
+		buildArgs = append(buildArgs, "--target", "install")
 	} else {
-		paths = []string{
-			os.Getenv("HOME"),
-			"/",
-		}
+		printSubSection("\nStart Building\n")
 	}
-	for _, path := range paths {
-		versions, err := ioutil.ReadDir(filepath.Join(path, "Qt"))
-		if err != nil {
-			continue
-		}
-		var biggestDir string
-		for _, version := range versions {
-			if strings.HasPrefix(version.Name(), "5.") {
-				if version.Name() > biggestDir {
-					biggestDir = version.Name()
-				}
-			}
-		}
-		if biggestDir == "" {
-			continue
-		}
-		targets, err := ioutil.ReadDir(filepath.Join(path, "Qt", biggestDir))
-		for _, target := range targets {
-			name := target.Name()
-			if strings.Contains(name, "ios") || strings.Contains(name, "android") || strings.Contains(name, "winphone") {
-				continue
-			}
-			return filepath.Join(path, "Qt", biggestDir, name)
-		}
-	}
-	return ""
-}
 
-func CreateApplicationBundleFiles() {
-
+	makeCmd := Command("cmake", buildPath, buildArgs...)
+	return makeCmd.Run()
 }

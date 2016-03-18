@@ -75,7 +75,7 @@ cp ../test/package8_windows.cpp src
 cp ../test/package8_linux.cpp src
 cp ../test/package8_darwin.cpp src
 cp ../test/package8_main.cpp src/main.cpp
-mkdir -p resources/translations/
+mkdir -p qtresources/translations/
 cp ../test/workbench8_ja.ts translations/
 ../qtpmcmd build
 popd >> /dev/null

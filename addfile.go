@@ -331,7 +331,7 @@ func AddClass(config *PackageConfig, name string, isLibrary bool) {
 }
 
 func CreateResource(rootPackageDir string) bool {
-	resourceDir := filepath.Join(rootPackageDir, "resources")
+	resourceDir := filepath.Join(rootPackageDir, "qtresources")
 	os.MkdirAll(resourceDir, 0755)
 	var result []string
 	filepath.Walk(resourceDir, func(fullPath string, info os.FileInfo, err error) error {
@@ -347,7 +347,7 @@ func CreateResource(rootPackageDir string) bool {
 	if len(result) == 0 {
 		return false
 	}
-	WriteTemplate(rootPackageDir, "resources", "resource.qrc", "resource.qrc", result, false)
+	WriteTemplate(rootPackageDir, "qtresources", "resource.qrc", "resource.qrc", result, false)
 	return true
 }
 

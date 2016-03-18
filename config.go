@@ -12,7 +12,7 @@ const packageFileName = "qtpackage.toml"
 const userPackageFileName = "qtpackage.user.toml"
 
 const (
-	Version = "0.6.0"
+	Version = "0.7.0"
 )
 
 type PackageConfig struct {

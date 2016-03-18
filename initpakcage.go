@@ -34,7 +34,7 @@ func prepareProject(name, license string) (*PackageConfig, string) {
 }
 
 func initDirs(workDir string, extraDirs ...string) {
-	dirs := []string{"src", "src/private", "translations", "resources", "test", "vendor", "doc", "html"}
+	dirs := []string{"src", "src/private", "translations", "qtresources", "test", "vendor", "doc", "html"}
 	dirs = append(dirs, extraDirs...)
 	for _, dir := range dirs {
 		os.MkdirAll(filepath.Join(workDir, dir), 0755)
@@ -58,13 +58,13 @@ func InitLibrary(name, license string) {
 	WriteTemplate(".", "", ".clang-format", "dotclang-format", variable, false)
 	WriteTemplate(".", "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
 	WriteTemplate(".", "", "README.rst", "READMELib.rst", variable, false)
-	Touch()
+	Touch(false)
 }
 
 func InitApplication(name, license string) {
 	_, packageName, _ := ParseName(name)
 	config, dir := prepareProject(packageName, license)
-	initDirs(dir)
+	initDirs(dir, "Resource")
 	config.Save()
 
 	variable := &SourceVariable{
@@ -77,5 +77,5 @@ func InitApplication(name, license string) {
 	WriteTemplate(".", "", ".clang-format", "dotclang-format", variable, false)
 	WriteTemplate(".", "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
 	WriteTemplate(".", "", "README.rst", "READMEApp.rst", variable, false)
-	Touch()
+	Touch(false)
 }

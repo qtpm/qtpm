@@ -103,7 +103,7 @@ func LinguistEdit(language string) {
 
 func ReleaseTranslation(rootPackageDir, srcDir string) error {
 	qtdir := FindQt(rootPackageDir)
-	os.MkdirAll(filepath.Join(rootPackageDir, "resources", "translations"), 0755)
+	os.MkdirAll(filepath.Join(rootPackageDir, "qtresources", "translations"), 0755)
 	files, _ := ioutil.ReadDir(filepath.Join(srcDir, "translations"))
 	var command string
 	if qtdir == "" {
@@ -118,7 +118,7 @@ func ReleaseTranslation(rootPackageDir, srcDir string) error {
 			continue
 		}
 		srcPath := filepath.Join(srcDir, "translations", file.Name())
-		destPath := filepath.Join(rootPackageDir, "resources", "translations", file.Name()[:len(file.Name())-3]+".qm")
+		destPath := filepath.Join(rootPackageDir, "qtresources", "translations", file.Name()[:len(file.Name())-3]+".qm")
 		cmd := exec.Command(command, srcPath, "-qm", destPath)
 		out, err := cmd.CombinedOutput()
 		log.Println(string(out))

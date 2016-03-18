@@ -92,7 +92,7 @@ func main() {
 		qtpm.Pack(*packTypeFlag == "debug")
 	case touchCommand.FullCommand():
 		printLogo()
-		qtpm.Touch()
+		qtpm.Touch(true)
 	case cleanCommand.FullCommand():
 		printLogo()
 		qtpm.Clean()
@@ -116,7 +116,7 @@ func main() {
 		}
 		qtpm.AddClass(config, *className, !config.IsApplication)
 		qtpm.AddTest(config, *className)
-		qtpm.Touch()
+		qtpm.Touch(false)
 	case addTestCommand.FullCommand():
 		printLogo()
 		config, err := qtpm.LoadConfig(".", true)
@@ -124,7 +124,7 @@ func main() {
 			log.Fatalln(err)
 		}
 		qtpm.AddTest(config, *testName)
-		qtpm.Touch()
+		qtpm.Touch(false)
 	case addLicenseCommand.FullCommand():
 		printLogo()
 		config, err := qtpm.LoadConfig(".", true)

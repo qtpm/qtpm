@@ -61,7 +61,8 @@ Folder Structure and Naming Convention
    + src/           // Header files under this folder will be published.
    |  |             // Don't add `main.cpp`. qtpm assumes this package is an application, not library.
    |  + private/    // Files under this folder will hide from outer modules.
-   + resources/     // .qrc files are linked to application.
+   + translations/  // .ts files (use `qtpm i18n` commands)
+   + qtresources/   // Files that are listed in resource.qrc and linked to application.
    + examples/      // Each .cpp file is build into executable.
    + test/          // Each _test.cpp file is built into executable and launched by qtpm test.
    |                // Use `qtpm add test`` to add test case.
@@ -69,7 +70,7 @@ Folder Structure and Naming Convention
    + doc/           // (not working yet) QDoc setting file and extra image files and so on.
    + html/          // (not working yet) HTML output of QDoc.
    + vendor/        // External libraries (source and binary)
-   + build/         // Work folder.
+   + build-*/       // Work folder.
    + CMakeExtra.txt // This file is included from created CMakeLists.txt.
                     // You can add any extra build options here.
 

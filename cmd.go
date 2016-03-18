@@ -68,5 +68,5 @@ func (c *Cmd) Run() error {
 
 	err = cmd.Wait()
 	outputWait.Wait()
-	return nil
+	return err
 }
