@@ -3,13 +3,15 @@
 package qtpm
 
 import (
+	"bufio"
 	"bytes"
-	"github.com/kr/pty"
-	"github.com/mattn/go-colorable"
 	"io"
 	"os/exec"
 	"sync"
 	"syscall"
+
+	"github.com/kr/pty"
+	"github.com/mattn/go-colorable"
 )
 
 type Cmd struct {
@@ -52,12 +54,20 @@ func (c *Cmd) Run() error {
 		colorableStdout = colorable.NewColorableStdout()
 	}
 	go func() {
-		io.Copy(colorableStdout, outpty)
+		scanner := bufio.NewScanner(outpty)
+		for scanner.Scan() {
+			colorableStdout.Write(scanner.Bytes())
+			colorableStdout.Write([]byte("\n"))
+		}
 		outputWait.Done()
 	}()
 	colorableStderr := colorable.NewColorableStderr()
 	go func() {
-		io.Copy(colorableStderr, errpty)
+		scanner := bufio.NewScanner(errpty)
+		for scanner.Scan() {
+			colorableStderr.Write(scanner.Bytes())
+			colorableStderr.Write([]byte("\n"))
+		}
 		outputWait.Done()
 	}()
 	err = cmd.Start()

@@ -87,6 +87,7 @@ func FindQt(dir string) string {
 				// mingw has higher priority than MSVC by default
 				// because Qt bundles mingw. It is good for default behavior to make it easy
 				candidate = name
+				break
 			} else if name > candidate {
 				// Higher version of MSVC has higher priority
 				candidate = name

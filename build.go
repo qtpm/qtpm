@@ -3,14 +3,15 @@ package qtpm
 import (
 	"bytes"
 	"fmt"
-	"github.com/Kodeworks/golang-image-ico"
-	"github.com/fatih/color"
 	"image"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/Kodeworks/golang-image-ico"
+	"github.com/fatih/color"
 )
 
 func Build(refresh, debugBuild bool) {
