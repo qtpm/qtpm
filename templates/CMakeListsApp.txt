@@ -11,12 +11,10 @@ set([[.TargetLarge]]_VERSION [[.Version]])
 
 if(CMAKE_BUILD_TYPE MATCHES Release)
     message("-- Release Build")
-    set(WORKDIR "build-release")
     include_directories([[.VendorPath]]/release/include)
     link_directories([[.VendorPath]]/release/lib)
 else()
     message("-- Debug Build")
-    set(WORKDIR "build-debug")
     include_directories([[.VendorPath]]/debug/include)
     link_directories([[.VendorPath]]/debug/lib)
 endif()
@@ -67,20 +65,32 @@ if(APPLE)
   set(MACOSX_BUNDLE_BUNDLE_NAME [[.Target]])
   set(MACOSX_BUNDLE_GUI_IDENTIFIER "[[.Target]]")
   set(MACOSX_BUNDLE_ICON_FILE MacOSXAppIcon.icns)
-  set_source_files_properties(${WORKDIR}/MacOSXAppIcon.icns PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")[[if .Resources.HasItem]]
+  set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/MacOSXAppIcon.icns PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")[[if .Resources.HasItem]]
   set_source_files_properties(${[[.Resources.Name]]} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")[[end]]
   set(MACOSX_BUNDLE_INFO_STRING "[[.Target]]-[[.Version]], Copyright [[.CopyRight]]")
   set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${[[.TargetLarge]]_MAJOR_VERSION}.${[[.TargetLarge]]_MINOR_VERSION}" )
   set(MACOSX_BUNDLE_LONG_VERSION_STRING "${[[.TargetLarge]]_VERSION}")
   set(MACOSX_BUNDLE_BUNDLE_VERSION "${[[.TargetLarge]]_VERSION}")
   set(MACOSX_BUNDLE_COPYRIGHT "(C) [[.CopyRight]]")
-  add_executable([[.TargetSmall]] MACOSX_BUNDLE src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .HasQtResource]] qtresources/resource.qrc[[end]][[if .Resources.HasItem]] ${[[.Resources.Name]]}[[end]] ${WORKDIR}/MacOSXAppIcon.icns)
+  add_executable([[.TargetSmall]] MACOSX_BUNDLE src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .HasQtResource]] qtresources/resource.qrc[[end]][[if .Resources.HasItem]] ${[[.Resources.Name]]}[[end]] ${CMAKE_CURRENT_BINARY_DIR}/MacOSXAppIcon.icns)
 elseif(WIN32)
-  set(RES_FILES "${WORKDIR}/windows.rc")
-  set(CMAKE_RC_COMPILER_INIT windres)
-  ENABLE_LANGUAGE(RC)
-  SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
-  add_executable([[.TargetSmall]] WIN32 src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .HasQtResource]] qtresources/resource.qrc[[end]] ${RES_FILES})
+  set(winres "${CMAKE_CURRENT_BINARY_DIR}/windows.rc")
+  if(MINGW)
+    if(NOT CMAKE_RC_COMPILER)
+      set(CMAKE_RC_COMPILER windres.exe)
+    endif()
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/windows.res.obj
+      COMMAND ${CMAKE_RC_COMPILER}
+        -D GCC_WINDRES
+        -I ${CMAKE_CURRENT_SOURCE_DIR}
+        -I ${CMAKE_CURRENT_BINARY_DIR}
+        -o ${CMAKE_CURRENT_BINARY_DIR}/windows.res.obj
+        -i ${winres})
+    set(${[[.Sources.Name]]} ${CMAKE_CURRENT_BINARY_DIR}/windows.res.obj}
+  else()
+    set(${{[.Sources.Name]]} ${winres})
+  endif()
+  add_executable([[.TargetSmall]] WIN32 src/main.cpp ${[[.Sources.Name]]}[[if .HasQtResource]] qtresources/resource.qrc[[end]])
 else()
   add_executable([[.TargetSmall]] src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .HasQtResource]] qtresources/resource.qrc[[end]])
 endif()
