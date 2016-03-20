@@ -44,7 +44,7 @@ func initDirs(workDir string, extraDirs ...string) {
 func InitLibrary(name, license string) {
 	_, packageName, _ := ParseName(name)
 	config, dir := prepareProject(packageName, license)
-	initDirs(dir, "examples")
+	initDirs(dir, "examples", "dest/release", "dest/debug")
 	config.Save()
 	variable := &SourceVariable{
 		config: config,

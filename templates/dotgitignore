@@ -30,19 +30,24 @@ Makefile*
 *.autosave
 
 #QtCtreator Qml
+
 *.qmlproject.user
 *.qmlproject.user.*
 
 #QtCtreator CMake
+
 CMakeLists.txt.user
 
 #qtpm
+
 build-debug
 build-release
 vendor
+dest
 qtpackage.user.toml
 CMakeLists.txt
 
 # OS specific
+
 .DS_Store
 Thumbs.db

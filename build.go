@@ -81,15 +81,12 @@ func (s *sequentialRun) Finish() error {
 }
 
 func BuildPackage(rootPackageDir string, config *PackageConfig, refresh, debugBuild, build, install bool) error {
-	var vendorPath string
 	var changed bool
 	err := ReleaseTranslation(rootPackageDir, config.Dir)
 	if err != nil {
 		return err
 	}
-	vendorPath = VendorFolder(rootPackageDir, debugBuild)
-	os.MkdirAll(filepath.Join(vendorPath, "include"), 0755)
-	os.MkdirAll(filepath.Join(vendorPath, "lib"), 0755)
+	rootPackageBuildPath := filepath.Join(rootPackageDir, BuildFolder(debugBuild))
 	if config.IsApplication {
 		changed, err = AddCMakeForApp(config, rootPackageDir, refresh, debugBuild)
 		buildPath := filepath.Join(config.Dir, BuildFolder(debugBuild))
@@ -97,7 +94,8 @@ func BuildPackage(rootPackageDir string, config *PackageConfig, refresh, debugBu
 		CreateIcon(config.Dir, debugBuild)
 	} else {
 		changed, err = AddCMakeForLib(config, rootPackageDir, refresh, debugBuild)
-		os.MkdirAll(vendorPath, 0755)
+		os.MkdirAll(filepath.Join(rootPackageBuildPath, "include"), 0755)
+		os.MkdirAll(filepath.Join(rootPackageBuildPath, "lib"), 0755)
 	}
 	if err != nil {
 		return err
@@ -110,14 +108,7 @@ func BuildPackage(rootPackageDir string, config *PackageConfig, refresh, debugBu
 	} else {
 		printSection("\nBuild Package: %s (release)\n", config.Name)
 	}
-	return RunCMakeAndBuild(rootPackageDir, config.Dir, vendorPath, changed, debugBuild, install)
-}
-
-func VendorFolder(rootPackageDir string, debugBuild bool) string {
-	if debugBuild {
-		return filepath.Join(rootPackageDir, "vendor", "debug")
-	}
-	return filepath.Join(rootPackageDir, "vendor", "release")
+	return RunCMakeAndBuild(rootPackageDir, config.Dir, changed, debugBuild, install)
 }
 
 func BuildFolder(debugBuild bool) string {
@@ -223,8 +214,19 @@ func CreateIcon(rootPackageDir string, debugBuild bool) {
 	}
 }
 
-func RunCMakeAndBuild(rootPackageDir, packageDir, vendorPath string, update, debugBuild, install bool) error {
+func RunCMakeAndBuild(rootPackageDir, packageDir string, update, debugBuild, install bool) error {
 	buildPath := filepath.Join(packageDir, BuildFolder(debugBuild))
+	var installPrefix string
+	if rootPackageDir != packageDir {
+		installPrefix = filepath.Join(rootPackageDir, BuildFolder(debugBuild))
+	} else {
+		if debugBuild {
+			installPrefix = filepath.Join(rootPackageDir, "dest", "debug")
+		} else {
+			installPrefix = filepath.Join(rootPackageDir, "dest", "release")
+		}
+		os.MkdirAll(installPrefix, 0755)
+	}
 
 	makefilePath := filepath.Join(buildPath, "Makefile")
 	_, err := os.Stat(makefilePath)
@@ -232,14 +234,11 @@ func RunCMakeAndBuild(rootPackageDir, packageDir, vendorPath string, update, deb
 	if update || os.IsNotExist(err) {
 		printSubSection("\nRun CMake\n")
 		os.MkdirAll(buildPath, 0755)
-		args := []string{".."}
+		args := []string{"..", "-DCMAKE_INSTALL_PREFIX=" + installPrefix}
 		if debugBuild {
 			args = append(args, "-DCMAKE_BUILD_TYPE=Debug")
 		} else {
 			args = append(args, "-DCMAKE_BUILD_TYPE=Release")
-		}
-		if vendorPath != "" {
-			args = append(args, "-DCMAKE_INSTALL_PREFIX="+vendorPath)
 		}
 		qtDir := FindQt(rootPackageDir)
 		args = append(args, CMakeOptions(qtDir)...)

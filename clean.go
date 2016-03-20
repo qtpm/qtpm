@@ -17,8 +17,6 @@ func Clean() {
 		"CMakeLists.txt",
 		"build-debug",
 		"build-release",
-		"vendor/debug",
-		"vendor/release",
 	}
 	for _, target := range targets {
 		path := filepath.Join(dir, target)

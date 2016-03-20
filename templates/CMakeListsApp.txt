@@ -9,15 +9,8 @@ set([[.TargetLarge]]_MINOR_VERSION [[.VersionMinor]])
 set([[.TargetLarge]]_PATCH_VERSION [[.VersionPatch]])
 set([[.TargetLarge]]_VERSION [[.Version]])
 
-if(CMAKE_BUILD_TYPE MATCHES Release)
-    message("-- Release Build")
-    include_directories([[.VendorPath]]/release/include)
-    link_directories([[.VendorPath]]/release/lib)
-else()
-    message("-- Debug Build")
-    include_directories([[.VendorPath]]/debug/include)
-    link_directories([[.VendorPath]]/debug/lib)
-endif()
+include_directories([[.DestinationPath]]/include)
+link_directories([[.DestinationPath]]/lib)
 
 # compiler setting
 
@@ -79,14 +72,14 @@ elseif(WIN32)
     if(NOT CMAKE_RC_COMPILER)
       set(CMAKE_RC_COMPILER windres.exe)
     endif()
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/windows.res.obj
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/windows.rc.obj
       COMMAND ${CMAKE_RC_COMPILER}
         -D GCC_WINDRES
         -I ${CMAKE_CURRENT_SOURCE_DIR}
         -I ${CMAKE_CURRENT_BINARY_DIR}
-        -o ${CMAKE_CURRENT_BINARY_DIR}/windows.res.obj
+        -o ${CMAKE_CURRENT_BINARY_DIR}/windows.rc.obj
         -i ${winres})
-    set(${[[.Sources.Name]]} ${CMAKE_CURRENT_BINARY_DIR}/windows.res.obj}
+    set(${[[.Sources.Name]]} ${CMAKE_CURRENT_BINARY_DIR}/windows.rc.obj})
   else()
     set(${{[.Sources.Name]]} ${winres})
   endif()

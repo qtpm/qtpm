@@ -9,17 +9,8 @@ set([[.TargetLarge]]_MINOR_VERSION [[.VersionMinor]])
 set([[.TargetLarge]]_PATCH_VERSION [[.VersionPatch]])
 set([[.TargetLarge]]_VERSION [[.Version]])
 
-if(CMAKE_BUILD_TYPE MATCHES Release)
-    message("-- Release Build")
-    set(WORKDIR "build-release")
-    include_directories([[.VendorPath]]/release/include)
-    link_directories([[.VendorPath]]/release/lib)
-else()
-    message("-- Debug Build")
-    set(WORKDIR "build-debug")
-    include_directories([[.VendorPath]]/debug/include)
-    link_directories([[.VendorPath]]/debug/lib)
-endif()
+include_directories([[.DestinationPath]]/include)
+link_directories([[.DestinationPath]]/lib)
 
 # compiler setting
 
@@ -89,7 +80,10 @@ find_package(Qt5Test REQUIRED)
 [[.Tests.EndLoop]]
 [[end]]# install setting
 
-install(TARGETS [[.TargetLibName]] LIBRARY DESTINATION lib)
+install(TARGETS [[.TargetLibName]]
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})
 [[range $installHeaders := .InstallHeaders]]
 [[$installHeaders.Files.DefineList]]
 install(FILES ${[[$installHeaders.Files.Name]]} DESTINATION include/[[$root.TargetSmall]]/[[$installHeaders.TargetDir]])

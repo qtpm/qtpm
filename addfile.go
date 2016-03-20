@@ -92,8 +92,7 @@ func (s *SourceBundle) addfile(path string) {
 
 type SourceVariable struct {
 	Target            string
-	Parent            string
-	VendorPath        string
+	DestinationPath   string
 	Requires          []string
 	QtModules         []string
 	Sources           *SourceBundle
@@ -376,18 +375,18 @@ func AddLicense(config *PackageConfig, name string) {
 }
 
 func AddCMakeForApp(config *PackageConfig, rootPackageDir string, refresh, debugBuild bool) (bool, error) {
-	var vendorPath string
+	var destinationPath string
 	if config.Dir == rootPackageDir {
-		vendorPath = "vendor"
+		destinationPath = BuildFolder(debugBuild)
 	} else {
-		vendorPath, _ = filepath.Rel(config.Dir, filepath.Join(rootPackageDir, "vendor"))
+		destinationPath, _ = filepath.Rel(config.Dir, filepath.Join(rootPackageDir, BuildFolder(debugBuild)))
 	}
 
 	variable := &SourceVariable{
-		config:     config,
-		VendorPath: vendorPath,
-		Target:     CleanName(config.Name),
-		QtModules:  CleanList(config.QtModules),
+		config:          config,
+		DestinationPath: destinationPath,
+		Target:          CleanName(config.Name),
+		QtModules:       CleanList(config.QtModules),
 	}
 	for _, require := range config.Requires {
 		packageNames := strings.Split(require, "/")
@@ -409,18 +408,18 @@ func AddCMakeForApp(config *PackageConfig, rootPackageDir string, refresh, debug
 }
 
 func AddCMakeForLib(config *PackageConfig, rootPackageDir string, refresh, debugBuild bool) (bool, error) {
-	var vendorPath string
+	var destinationPath string
 	if config.Dir == rootPackageDir {
-		vendorPath = "vendor"
+		destinationPath = BuildFolder(debugBuild)
 	} else {
-		vendorPath, _ = filepath.Rel(config.Dir, filepath.Join(rootPackageDir, "vendor"))
+		destinationPath, _ = filepath.Rel(config.Dir, filepath.Join(rootPackageDir, BuildFolder(debugBuild)))
 	}
 
 	variable := &SourceVariable{
-		config:     config,
-		VendorPath: vendorPath,
-		Target:     CleanName(config.Name),
-		QtModules:  CleanList(config.QtModules),
+		config:          config,
+		DestinationPath: destinationPath,
+		Target:          CleanName(config.Name),
+		QtModules:       CleanList(config.QtModules),
 	}
 	for _, require := range config.Requires {
 		packageNames := strings.Split(require, "/")
