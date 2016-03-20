@@ -72,14 +72,15 @@ elseif(WIN32)
     if(NOT CMAKE_RC_COMPILER)
       set(CMAKE_RC_COMPILER windres.exe)
     endif()
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/windows.rc.obj
+	set(winresobj "${CMAKE_CURRENT_BINARY_DIR}/windows.rc.obj")
+    add_custom_command(OUTPUT "${winresobj}"
       COMMAND ${CMAKE_RC_COMPILER}
         -D GCC_WINDRES
         -I ${CMAKE_CURRENT_SOURCE_DIR}
         -I ${CMAKE_CURRENT_BINARY_DIR}
-        -o ${CMAKE_CURRENT_BINARY_DIR}/windows.rc.obj
+        -o ${winresobj}
         -i ${winres})
-    set(${[[.Sources.Name]]} ${CMAKE_CURRENT_BINARY_DIR}/windows.rc.obj})
+    set(${[[.Sources.Name]]} "${winresobj}")
   else()
     set(${{[.Sources.Name]]} ${winres})
   endif()

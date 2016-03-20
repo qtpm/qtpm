@@ -40,11 +40,11 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
+	"os"
 	"time"
+	"io/ioutil"
+	"path/filepath"
 )
 
 func bindataRead(data []byte, name string) ([]byte, error) {
@@ -73,9 +73,9 @@ type asset struct {
 }
 
 type bindataFileInfo struct {
-	name    string
-	size    int64
-	mode    os.FileMode
+	name string
+	size int64
+	mode os.FileMode
 	modTime time.Time
 }
 
@@ -114,11 +114,11 @@ func templatesCmakeextraTxt() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/CMakeExtra.txt", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
-var _templatesCmakelistsappTxt = []byte("\x1f\x8b\x08\x00\x00\x09\x6e\x88\x00\xff\xc4\x57\x5f\x6f\x9b\x48\x10\x7f\xf7\xa7\x58\xb9\x79\xc0\xd2\x95\xb4\xd7\xeb\xcb\x49\xf7\x40\x81\x38\x5c\xf9\xe7\x05\x27\xa9\x22\xb4\xc2\xb0\x71\x69\x0d\x38\xb0\x56\x5b\x59\xfe\xee\x37\xbb\xb0\x06\xdb\xc4\x69\xf2\x72\x2f\x89\x77\x76\xe6\x37\xb3\xf3\x9f\x24\x8f\xbf\x53\x92\x67\x45\x96\x6f\x72\x52\xd1\xc7\x4d\x56\xd1\x54\xb9\x31\x71\x60\x79\x2e\xfa\xa0\xbe\x57\xdf\x4d\x46\xa3\x37\x68\x5d\x95\xdf\x68\xc2\xd0\x72\x55\x2e\xe2\x15\xaa\x29\x63\x59\xb1\x1c\x8d\x5a\xba\x72\x7f\xaf\x86\x71\xb5\xa4\x2c\xc8\xe3\xd5\x2a\x8a\x40\x08\x78\x3a\xb2\xcd\xff\x46\x11\x71\xb4\x7f\x3d\x4c\x24\x3e\x5c\xdf\xd0\xaa\xce\xca\xc2\x89\xbf\x95\x15\x17\x1b\x96\xb2\xdc\x61\xa9\xac\x38\x23\xe5\x6b\xa1\x7e\x3d\x20\xe5\xc7\x2c\xf9\xfa\xa4\xd4\x29\xbf\x78\x4d\x56\x24\xab\x4d\x4a\x49\x0a\x0e\x4a\x58\x59\x65\xb4\xe6\xb2\x06\xad\xc1\x11\x31\x6b\x60\x01\xf5\xb2\x65\x9c\x8c\x56\x59\xf1\xfd\x79\xf6\x55\xb6\x10\x0e\x4e\xca\x7c\x9d\xad\x68\xd5\xb9\x96\x5b\xa7\x3b\xda\x67\x93\xe8\x77\x77\x24\x08\x35\xd7\xd0\xb0\x81\xde\xbf\x9f\x8c\xb2\x07\xc5\x09\x6e\xf4\xc9\x08\xa1\x43\xae\x2b\x5b\x9b\x06\x68\x7c\xb1\x3d\x22\xed\xd0\xe5\xed\x5f\xe3\xc9\x88\xae\x6a\xaa\xbc\x44\xec\xed\x2d\x84\x93\x0b\x16\x29\x28\x15\x96\xd2\x22\x5e\xac\x28\x9a\xb1\xbe\x89\xda\x3c\xf4\x1c\x4f\x47\x9e\x3b\x39\xa2\xce\xad\x21\x2a\xd6\x8f\xa9\x96\xab\xdb\x73\x03\x94\xcf\x31\x36\xdd\x90\x18\x16\x16\x1c\xa0\xd6\x30\xaf\x2c\xd7\x34\x90\xe9\xde\x6c\x67\x21\x5c\xec\xf8\x13\xfa\x8f\xf0\x31\xb0\xdc\xf1\x88\x5f\xc3\x33\x3a\xbe\xbe\xe5\xf7\xf7\x55\x5c\x2c\x29\xba\xc8\xcb\x74\x03\x0f\xf8\xfb\x1f\xa4\xce\x98\x23\x0e\x75\x14\x3d\x64\x45\x4a\xd6\x71\xf2\x3d\x5e\x52\x65\xc6\x3e\xde\xdf\xb7\x8c\x51\x84\xb0\x39\x9b\x5b\xd8\x34\x26\x00\x02\x78\x51\xf4\x06\xb5\x61\x46\xf4\x27\xab\x62\x19\xb4\x7a\x9f\x27\xca\x58\x77\xa0\xb4\x4c\x7e\xab\xb2\x9f\x6c\x8c\x3c\x3f\x84\xb4\xd2\x6c\x8e\x91\x3d\x20\x35\x84\x54\xa8\xd5\xeb\xb8\xb6\x18\xcd\xa3\xa8\x73\x2c\xe3\x17\xa3\x51\x73\x22\x4c\x64\xcc\x12\x1e\x70\x6c\x20\x07\x38\xb0\x4c\x15\xda\x38\x39\x28\x37\x55\x42\x6b\x48\x37\x10\xa2\x76\x56\x33\x50\xc0\x33\x5d\xe8\x1c\xa6\x06\x2c\xae\x98\x5d\x96\x6b\x20\x22\x04\x05\x41\x1e\x20\x1f\x8b\x38\xa7\x84\xe7\x66\x59\xd0\x82\x29\xf4\x27\x4d\x38\x09\x5d\x6c\xf9\xed\x0e\xb9\x9a\x63\x92\x5b\x93\xc7\x23\x4e\x53\xc2\xef\x37\x8c\x1b\xae\x5c\x6c\x25\xf3\x6e\xcf\x7d\xb1\x05\x75\xd2\x38\x17\xae\xa2\xa8\x25\x9e\x98\xde\xde\x36\xbe\x02\x2f\xcd\x18\xa6\xb5\xb8\x83\x78\x5c\x6c\x67\x58\xdf\xb5\xb1\x90\xba\xb9\xa7\x14\x6e\x0f\xea\xab\xd6\x3d\xc7\x81\xca\xe9\xd3\xb8\xc0\x23\xfb\x48\x36\x35\xb4\xbe\x26\xfc\x8a\xb4\x90\x9b\xf0\x4c\xa2\xa0\x5e\x66\xec\x4d\xd8\xbb\xd1\x2c\xd2\xd6\x89\xfb\x54\x59\x6c\xb2\x55\xda\xd5\xf5\x50\x27\xa9\xab\x44\x60\x0c\x05\xae\x71\x81\x7c\x7d\x3f\x65\x40\xa0\x23\x1f\x8a\x08\xd5\x42\x72\xc9\x90\x02\x71\xe4\x08\xa2\xbb\xd7\x13\xf4\x0e\x64\x45\x77\x82\xe6\x53\xc5\x6d\x6f\x6a\xde\x2c\xb9\xec\x6c\xd1\x3c\x55\xed\x1e\xd9\xfe\xe7\x15\xa9\xf9\xbe\x6d\xca\x3e\xe2\x68\xba\x17\xdc\x91\x4f\x73\xd7\xb0\x4d\xf9\x4f\x04\x62\xdf\x5c\x9b\x28\x9d\x32\x4f\xe7\x16\xb1\x0c\x28\x77\xeb\xca\x32\x31\x1a\xf7\x04\xc6\xc3\x12\x96\xee\xb9\xe4\xca\xb2\x4d\xe4\xc4\x09\xd0\xb5\xf5\xda\x4a\xca\x42\xcd\x92\xa2\x6e\x25\x48\xe3\x12\x91\xbf\x35\x81\x09\xb5\xa6\x15\xcb\x44\x90\xdb\xfe\xd6\xb6\x98\x4f\x96\xab\xe1\x2f\xbc\xd3\xec\x2e\x4f\xd1\x90\x8f\x3d\xdf\xc4\xa1\x65\x06\xa8\xb5\xc1\xd7\xf4\xcf\xda\xd4\x24\xb6\xa7\x6b\xbc\x9a\xd1\x78\xef\xff\xf1\xe4\xe9\x38\x3d\x67\xd5\x41\x1c\x65\x59\xbc\x58\x7b\x13\x9c\x41\x9f\xb9\x57\x1e\x0c\x10\x6c\xb9\xd3\x03\x17\xbf\xed\xcf\xb8\x3f\x90\x5e\xae\x7f\x55\xd9\xf2\x2b\xe3\x71\xe3\x07\xcc\x0f\x4f\x46\x22\xb8\xf6\x70\x28\xc7\xe5\x1e\x5e\xbc\xe6\xcc\xcc\xdf\xa9\x43\x1c\xfd\xf9\xbe\x1b\xa3\x61\x85\xb6\xe7\x4e\x7f\x47\xdf\x1e\xe7\x6c\x82\xca\x39\xff\x0a\x04\xdd\xf3\xbf\x60\x6b\x7a\x1d\xa2\xb1\xa2\x4f\x86\xbc\x75\xd4\x0b\x8f\xb7\x23\x74\x80\x87\xa0\xfa\x2f\xf3\x38\x2b\xd4\x64\xbd\x6e\xb2\x28\x38\xce\xa1\xc1\xd6\xd9\x2f\xf3\x93\x1e\xf9\xc8\x2a\x99\x1d\x97\xf2\x97\xfa\x58\x25\x07\x42\x03\xd9\x8a\x86\xf3\xb1\x15\x43\x2f\xab\xa1\x66\xe3\x80\x86\x71\x6b\xb9\x1f\xfe\x94\xde\xfc\x91\x15\x60\x51\x6f\xdf\x18\xc0\x02\x9e\xb4\xfc\x51\xab\x55\x22\x1c\xca\x37\x1e\x88\xf7\x6d\x33\xf8\xe1\xe4\x7a\x21\x6a\xa4\xb1\x0e\x01\x71\x7c\x68\x09\xb8\xb9\xed\x2f\x06\xbd\x4b\xc4\x21\x41\xaf\x0a\x81\x69\x18\xe5\x6a\xc0\x7f\xf3\x88\x25\x9b\x9a\x95\x39\x1f\x77\x79\x5c\xa4\x8a\x37\x0f\xfd\x79\x78\xf6\xc5\x9d\x95\x6a\xb9\xf8\xd6\x6a\xef\x46\xce\x89\x0d\xbb\x96\x05\xa1\xb7\x06\x9a\xea\x3a\x01\xbf\x18\xd8\x0c\x3a\xb2\x75\xa2\x2f\xf0\xe6\x58\x37\x85\xbe\x73\x6c\x3d\xb3\x3a\xb6\xf2\xe5\xd6\x83\x54\x06\x52\x4d\x8c\x7a\x8b\xd6\x13\xb3\xfb\x77\xd1\x05\xd2\x7e\xfd\x94\x90\xdb\x21\xc8\x9e\xea\x2e\x42\xcf\x55\x94\x48\xb0\x83\x4a\x7a\xa2\x64\x5e\x51\x2b\xbd\xbd\xf9\x39\x33\xfe\x8f\x52\xee\x76\xdc\xc3\x81\xbf\xdf\x59\xc4\xc4\x3f\xde\x78\x8e\x4d\x7f\xc5\xd6\x23\x67\xce\x88\xaf\xc3\x35\x03\x98\xfe\xf7\x8b\xdc\x84\xad\xe6\xaa\x5d\x2c\xd2\xe0\x57\x0d\x6e\xb0\xe5\xe6\xd1\x7e\x02\xf0\xd9\x46\xa0\x10\x9a\x5c\xe7\xf3\x9d\xd8\x96\x6e\xba\x81\x79\xda\x26\x7a\x05\x71\xd9\x32\xa9\x55\xcd\xc6\x7d\x28\x39\x2b\xe5\xb8\x10\x33\xe8\x37\xa6\xd3\x79\x10\x3e\xa6\x86\x41\x0e\x07\xd8\x39\x10\xf1\x55\x3a\x08\x72\xf0\xbd\xca\x41\xa4\x07\x75\x1f\xb6\xfe\xc9\x7f\x01\x00\x00\xff\xff\xaa\xf6\x6a\x92\xac\x0f\x00\x00")
+var _templatesCmakelistsappTxt = []byte("\x1f\x8b\x08\x00\x00\x09\x6e\x88\x00\xff\xc4\x58\xdd\x6f\x9b\x48\x10\x7f\x3e\xfe\x8a\x95\x9b\x07\x5b\xba\x92\xb8\x49\x7b\xbd\xd3\xf5\x24\x0a\xc4\xe1\xca\x97\x01\x27\xa9\x22\x84\x30\xac\x5d\x5a\x1b\x1c\x58\xab\xa9\x2c\xff\xef\x37\xbb\xb0\x80\x6d\xe2\x7c\xbc\x9c\xa5\xd6\x61\x76\xe6\x37\xdf\xb3\x83\xa3\x65\xf8\x03\x07\xcb\x24\x4d\x96\xeb\x65\x90\xe3\xfb\x75\x92\xe3\xb8\x7f\xad\x3a\xae\x66\x99\xe8\x5c\x1c\x8a\x67\x03\x41\x78\x83\x56\x79\xf6\x1d\x47\x04\xcd\x17\xd9\x34\x5c\xa0\x02\x13\x92\xa4\x73\x41\xa8\xe8\xfd\xbb\x3b\xd1\x0b\xf3\x39\x26\xee\x32\x5c\x2c\x7c\x1f\x84\x80\xa7\x21\xeb\xf4\x7f\xdf\x0f\x0c\xe9\x5f\xcb\x09\x38\x3e\x1c\x5f\xe3\xbc\x48\xb2\xd4\x08\xbf\x67\x39\x15\xeb\x96\xd2\xcc\x6e\xa9\x24\x3d\x22\x65\x4b\x9e\x7c\xd5\x21\x65\x87\x24\xfa\xf6\xa8\xd4\x21\x3f\xf3\x26\x49\xa3\xc5\x3a\xc6\x41\x0c\x01\x8a\x48\x96\x27\xb8\xa0\xb2\x0a\x2e\x20\x10\x21\x29\x61\x01\xf5\xb4\x62\x1c\x08\x8b\x24\xfd\xf1\x34\xfb\x22\x99\xb2\x00\x47\xd9\x72\x95\x2c\x70\xde\x84\x96\x5a\x27\x1b\xd2\x17\x35\x90\x6f\x6f\x03\xd7\x93\x4c\x45\x72\x14\x34\x1c\x0e\x84\x64\xd6\x37\xdc\x6b\x79\x20\x20\xb4\xcb\x75\xa9\x4b\x23\x17\xf5\x4e\x36\x7b\xa4\x2d\x3a\xbd\xb9\xe8\x0d\x04\xbc\x28\x70\xff\x25\x62\x6f\x6f\x20\x9d\x54\x30\x8d\x41\x29\xb3\x14\xa7\xe1\x74\x81\xd1\x98\xb4\x4d\x94\x26\x9e\x65\x58\x32\xb2\xcc\xc1\x1e\x75\xa2\x75\x51\x1d\x79\x9f\xaa\x99\xb2\x3e\x51\x40\xf9\xc4\x71\x54\xd3\x0b\x14\xcd\x61\x1c\xa0\x56\x51\x2f\x35\x53\x55\x90\x6a\x5e\x6f\xc6\x1e\x1c\x6c\xa9\x0b\x6d\x27\x6c\x07\x58\x6e\x69\xc6\xaf\xc0\x8d\x86\xaf\x6d\xf9\xdd\x5d\x1e\xa6\x73\x8c\x4e\x96\x59\xbc\x06\x07\xfe\xfa\x84\xc4\x31\x31\xd8\x43\xe1\xfb\xb3\x24\x8d\x83\x55\x18\xfd\x08\xe7\xb8\x3f\x26\xef\xef\xee\x2a\x46\xdf\x47\x8e\x3a\x9e\x68\x8e\xaa\x0c\x00\x04\xf0\x7c\xff\x0d\xaa\xd2\x8c\xf0\x03\xc9\x43\x9e\xb4\xa2\xae\x93\x7e\x4f\x36\xa0\xb5\x54\x7a\x2a\x92\x07\xd2\x43\x96\xed\x41\x59\x49\x3a\xc5\x48\x66\x48\xf4\xa0\x14\x0a\xf1\x2a\x2c\x34\x82\x97\xbe\xdf\x04\x96\xd0\x03\x41\x28\x9f\x02\xc2\x2a\x66\x0e\x0e\xec\x1b\x48\x01\x76\x2c\x13\x99\x36\x4a\x76\xb3\x75\x1e\xe1\x02\xca\x0d\x84\xb0\x9e\x14\x04\x14\xd0\x4a\x67\x3a\xbb\xa9\x2e\x09\x73\xa2\x67\xd9\x0a\x88\x08\x41\x43\x04\x33\xa8\xc7\x34\x5c\xe2\x80\xd6\x66\x96\xe2\x94\xf4\xf1\x03\x8e\x28\x09\x9d\x6c\xe8\xe9\x16\x99\x92\xa1\x06\x37\x2a\xcd\x47\x18\xc7\x01\x3d\x5f\x13\x6a\x78\xff\x64\xc3\x99\xb7\x35\xf7\xc9\x06\xd4\x71\xe3\x4c\x38\xf2\xfd\x8a\x78\x60\x7a\x75\x5a\xc6\x0a\xa2\x34\x26\x0e\x2e\xd8\x19\xe4\xe3\x64\x33\x76\xe4\x6d\x95\x0b\xae\x9b\x46\xaa\x4f\xed\x41\x6d\xd5\xb2\x65\x18\xd0\x39\x6d\x1a\x15\xb8\x27\xef\x83\x75\x01\xa3\xaf\x4c\x7f\x9f\x5b\x48\x4d\x78\xa2\x50\x50\xab\x32\x6a\x13\xea\x30\xaa\x69\x5c\x05\xb1\x2e\x95\xe9\x3a\x59\xc4\x4d\x5f\x77\x4d\x92\x22\x8f\x18\x46\x57\xe2\xca\x10\x70\xef\xdb\x25\x03\x02\x0d\x79\x57\x84\xa9\x66\x92\x73\x82\xfa\x90\x47\x8a\xc0\xa6\x7b\x31\x40\x67\x20\xcb\xa6\x13\x0c\x9f\x3c\xac\x66\x53\xe9\x33\xe7\xd2\x93\x69\xe9\xaa\xd8\x38\x59\x7d\xd3\x8e\x94\x6c\x5b\x57\xf9\x1c\x31\x24\xd9\x72\x6f\x83\xcf\x13\x53\xd1\x55\xfe\xc5\x12\x51\x0f\xd7\x32\x4b\x87\xcc\xa3\x89\x16\x68\x0a\xb4\xbb\x76\xa9\xa9\x0e\xea\xb5\x04\x7a\xdd\x12\x9a\x6c\x99\xc1\xa5\xa6\xab\xc8\x08\x23\xa0\x4b\xab\x95\x16\x65\xa9\x98\x44\x69\x51\x49\x04\x65\x48\x58\xfd\x16\x01\xdc\x50\x2b\x9c\x93\x84\x25\xb9\x9a\x6f\xd5\x88\xf9\xac\x99\x92\xf3\x95\x4e\x9a\xed\xe9\x21\x1a\xb2\x1d\xcb\x56\x1d\x4f\x53\x5d\x54\xd9\x60\x4b\xf2\x17\x69\xa4\x06\xba\x25\x4b\xb4\x9b\x51\xaf\x8e\x7f\x6f\xf0\x78\x9e\x9e\xb2\x6a\x27\x8f\xbc\x2d\x5e\xac\xbd\x4c\x4e\x67\xcc\xcc\x4b\x0b\x2e\x10\x47\x33\x47\x3b\x21\x7e\xdb\xbe\xe3\x7e\x47\x72\xb6\xfa\x95\x27\xf3\x6f\x84\xe6\x8d\x3e\x38\xf4\xe1\xd1\x4c\xb8\x57\x96\xe3\xf1\xeb\xb2\x86\x67\xde\x1c\xb9\xf3\xb7\x62\x17\x47\xfb\x7e\xdf\xf6\x50\xb7\x42\xdd\x32\x47\xcf\xd1\x57\xe3\x1c\x2d\x50\x7e\xcf\xbf\x02\x41\xb6\xec\xaf\x8e\x36\xba\xf2\x50\xaf\x2f\x0f\xba\xa2\xb5\x37\x0b\xf7\xb7\x23\xb4\x83\x87\xa0\xfb\x4f\x97\x61\x92\x8a\xd1\x6a\x55\x56\x91\xbb\x5f\x43\x9d\xa3\xb3\xdd\xe6\x07\x33\xf2\x9e\xe4\xbc\x3a\x4e\xf9\x5f\xe2\x7d\x1e\xed\x08\x75\x54\x2b\xea\xae\xc7\x4a\x0c\xbd\xac\x87\xca\x8d\x03\x06\xc6\x8d\x66\x9e\xbf\xe3\xd1\xfc\x99\xa4\x60\x51\x6b\xdf\xe8\xc0\x02\x9e\x38\xfb\x59\x88\x79\xc4\x02\x4a\x37\x1e\xc8\xf7\x4d\x79\xf1\xc3\x93\x69\x79\xa8\x94\x76\x64\x48\x88\x61\xc3\x48\x70\xca\xd3\xf6\x62\xd0\x3a\x44\x14\x12\xf4\x8a\x90\x98\x92\x91\xaf\x06\x7f\x97\x1f\x74\xa5\x4a\x0a\x3b\xa0\xe9\x8b\xd6\x05\xc9\x96\xf4\xee\x5b\x86\x69\xdc\xb7\x26\x9e\x3d\xf1\x8e\xba\xdf\x98\x2c\x66\xd3\xef\xc2\xa7\xf2\x23\xfc\xd6\xb8\x0c\xe4\xe7\x7a\x4d\x21\x7a\x83\x27\xac\x01\xac\x1a\x78\xdb\x13\xfe\x29\x3f\x28\xfa\x30\xbc\x88\x3f\xcc\x62\x7c\x7e\x36\x1b\xc2\xbf\x0f\xf8\xdd\xc7\xe8\x02\xc7\x1f\x87\xb3\x8b\x3f\xa7\x17\x17\xe1\xf9\x1f\x1f\x87\xef\xce\x70\x15\xad\xe6\x8a\x3c\x88\xd9\xb6\x62\x41\xe8\xad\x82\x46\xb2\x1c\x40\x1e\x15\x47\x75\x1b\xb2\x76\x10\x12\xd7\x9a\x38\xb2\xca\xfc\x39\xc6\xd6\x72\xfb\x30\x01\x4c\x26\x7b\x49\xb4\x6b\xa9\x04\xf1\xa0\xb4\xb6\xc4\x47\x16\x8f\xe7\xa2\x03\x12\xcf\xe6\x8e\x75\x4d\xf0\x5f\xa3\xff\x79\x95\x00\x02\x65\x29\xbc\x22\xbb\xf5\xba\xcf\xad\xd8\x74\x45\xa1\x65\x2d\xef\x88\xa7\x27\x18\x6b\xe8\x9d\xc9\xf5\xc8\x88\x7a\xc5\x6c\x6a\xbd\xa7\x3c\x65\xc6\xff\x31\x3a\x9b\x77\x8a\xdd\x05\xab\xde\x11\xd9\x86\xb5\xbf\x61\xee\x9b\xfe\x8a\x2d\x93\xdf\xf1\x02\x7d\xfd\x28\x08\xc0\xb4\xdf\x17\xf9\x9b\x87\x56\x1e\x55\x8b\x5c\xec\xfe\x2a\x20\x0c\x3a\xdf\xf4\xaa\x57\x2e\xba\x4b\x04\xd0\xc8\x65\xaf\xd2\x7d\x2a\xd0\x35\x59\x35\x5d\xf5\xb0\x2c\x5b\x0d\x7d\x5a\x31\x89\x79\x41\x7a\x6d\x28\xbe\x9b\xf0\xeb\x99\xdd\xf9\xcf\xd8\x06\x8e\x83\xd0\xb5\xa0\x1b\x64\x77\x61\x38\x06\xc2\x7e\x05\xe8\x04\xd9\xf9\x7d\x80\x82\xf0\x08\xca\x36\xbc\x65\x0d\xfe\x0b\x00\x00\xff\xff\x4f\xee\xb2\xf9\x1c\x11\x00\x00")
 
 func templatesCmakelistsappTxtBytes() ([]byte, error) {
 	return bindataRead(
@@ -134,7 +134,7 @@ func templatesCmakelistsappTxt() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/CMakeListsApp.txt", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -154,7 +154,7 @@ func templatesCmakelistslibTxt() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/CMakeListsLib.txt", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -174,7 +174,7 @@ func templatesReadmeappRst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/READMEApp.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -194,7 +194,7 @@ func templatesReadmelibRst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/READMELib.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -214,7 +214,7 @@ func templatesClasssourceCpp() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/classsource.cpp", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -234,7 +234,7 @@ func templatesClasssourceH() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/classsource.h", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -254,7 +254,7 @@ func templatesDotclangFormat() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/dotclang-format", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -274,7 +274,7 @@ func templatesDotgitignore() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/dotgitignore", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -294,7 +294,7 @@ func templatesLibQdocconf() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/lib.qdocconf", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -314,7 +314,7 @@ func templatesLibglobalH() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/libglobal.h", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -334,7 +334,7 @@ func templatesMainCpp() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/main.cpp", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -354,7 +354,7 @@ func templatesResourceQrc() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/resource.qrc", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -374,7 +374,7 @@ func templatesTestclassCpp() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/testclass.cpp", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -394,7 +394,7 @@ func templatesWindowsRc() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "templates/windows.rc", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -414,7 +414,7 @@ func licensesCreditsRst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/CREDITS.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -434,7 +434,7 @@ func licensesReadmeRst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/README.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -454,7 +454,7 @@ func licensesApacheV20Rst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/apache-v2.0.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -474,7 +474,7 @@ func licensesArtisticV20Rst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/artistic-v2.0.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -494,7 +494,7 @@ func licensesBsd2Rst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/bsd-2.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -514,7 +514,7 @@ func licensesBsd3Rst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/bsd-3.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -534,7 +534,7 @@ func licensesEplV10Rst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/epl-v1.0.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -554,7 +554,7 @@ func licensesGnuAgplV30Rst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/gnu-agpl-v3.0.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -574,7 +574,7 @@ func licensesGnuGplV20Rst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/gnu-gpl-v2.0.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -594,7 +594,7 @@ func licensesGnuGplV30Rst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/gnu-gpl-v3.0.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -614,7 +614,7 @@ func licensesGnuLgplV21Rst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/gnu-lgpl-v2.1.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -634,7 +634,7 @@ func licensesGnuLgplV30Rst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/gnu-lgpl-v3.0.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -654,7 +654,7 @@ func licensesMitRst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/mit.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -674,7 +674,7 @@ func licensesMplV20Rst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/mpl-v2.0.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -694,7 +694,7 @@ func licensesUnlicenseRst() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "licenses/unlicense.rst", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -714,7 +714,7 @@ func resourcesQtLogoPng() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "resources/qt-logo.png", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -737,7 +737,7 @@ func Asset(name string) ([]byte, error) {
 // It simplifies safe initialization of global variables.
 func MustAsset(name string) []byte {
 	a, err := Asset(name)
-	if err != nil {
+	if (err != nil) {
 		panic("asset: Asset(" + name + "): " + err.Error())
 	}
 
@@ -770,37 +770,37 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"templates/CMakeExtra.txt":    templatesCmakeextraTxt,
+	"templates/CMakeExtra.txt": templatesCmakeextraTxt,
 	"templates/CMakeListsApp.txt": templatesCmakelistsappTxt,
 	"templates/CMakeListsLib.txt": templatesCmakelistslibTxt,
-	"templates/READMEApp.rst":     templatesReadmeappRst,
-	"templates/READMELib.rst":     templatesReadmelibRst,
-	"templates/classsource.cpp":   templatesClasssourceCpp,
-	"templates/classsource.h":     templatesClasssourceH,
-	"templates/dotclang-format":   templatesDotclangFormat,
-	"templates/dotgitignore":      templatesDotgitignore,
-	"templates/lib.qdocconf":      templatesLibQdocconf,
-	"templates/libglobal.h":       templatesLibglobalH,
-	"templates/main.cpp":          templatesMainCpp,
-	"templates/resource.qrc":      templatesResourceQrc,
-	"templates/testclass.cpp":     templatesTestclassCpp,
-	"templates/windows.rc":        templatesWindowsRc,
-	"licenses/CREDITS.rst":        licensesCreditsRst,
-	"licenses/README.rst":         licensesReadmeRst,
-	"licenses/apache-v2.0.rst":    licensesApacheV20Rst,
-	"licenses/artistic-v2.0.rst":  licensesArtisticV20Rst,
-	"licenses/bsd-2.rst":          licensesBsd2Rst,
-	"licenses/bsd-3.rst":          licensesBsd3Rst,
-	"licenses/epl-v1.0.rst":       licensesEplV10Rst,
-	"licenses/gnu-agpl-v3.0.rst":  licensesGnuAgplV30Rst,
-	"licenses/gnu-gpl-v2.0.rst":   licensesGnuGplV20Rst,
-	"licenses/gnu-gpl-v3.0.rst":   licensesGnuGplV30Rst,
-	"licenses/gnu-lgpl-v2.1.rst":  licensesGnuLgplV21Rst,
-	"licenses/gnu-lgpl-v3.0.rst":  licensesGnuLgplV30Rst,
-	"licenses/mit.rst":            licensesMitRst,
-	"licenses/mpl-v2.0.rst":       licensesMplV20Rst,
-	"licenses/unlicense.rst":      licensesUnlicenseRst,
-	"resources/qt-logo.png":       resourcesQtLogoPng,
+	"templates/READMEApp.rst": templatesReadmeappRst,
+	"templates/READMELib.rst": templatesReadmelibRst,
+	"templates/classsource.cpp": templatesClasssourceCpp,
+	"templates/classsource.h": templatesClasssourceH,
+	"templates/dotclang-format": templatesDotclangFormat,
+	"templates/dotgitignore": templatesDotgitignore,
+	"templates/lib.qdocconf": templatesLibQdocconf,
+	"templates/libglobal.h": templatesLibglobalH,
+	"templates/main.cpp": templatesMainCpp,
+	"templates/resource.qrc": templatesResourceQrc,
+	"templates/testclass.cpp": templatesTestclassCpp,
+	"templates/windows.rc": templatesWindowsRc,
+	"licenses/CREDITS.rst": licensesCreditsRst,
+	"licenses/README.rst": licensesReadmeRst,
+	"licenses/apache-v2.0.rst": licensesApacheV20Rst,
+	"licenses/artistic-v2.0.rst": licensesArtisticV20Rst,
+	"licenses/bsd-2.rst": licensesBsd2Rst,
+	"licenses/bsd-3.rst": licensesBsd3Rst,
+	"licenses/epl-v1.0.rst": licensesEplV10Rst,
+	"licenses/gnu-agpl-v3.0.rst": licensesGnuAgplV30Rst,
+	"licenses/gnu-gpl-v2.0.rst": licensesGnuGplV20Rst,
+	"licenses/gnu-gpl-v3.0.rst": licensesGnuGplV30Rst,
+	"licenses/gnu-lgpl-v2.1.rst": licensesGnuLgplV21Rst,
+	"licenses/gnu-lgpl-v3.0.rst": licensesGnuLgplV30Rst,
+	"licenses/mit.rst": licensesMitRst,
+	"licenses/mpl-v2.0.rst": licensesMplV20Rst,
+	"licenses/unlicense.rst": licensesUnlicenseRst,
+	"resources/qt-logo.png": resourcesQtLogoPng,
 }
 
 // AssetDir returns the file names below a certain
@@ -839,93 +839,124 @@ func AssetDir(name string) ([]string, error) {
 }
 
 type bintree struct {
-	Func     func() (*asset, error)
+	Func func() (*asset, error)
 	Children map[string]*bintree
 }
-
 var _bintree = &bintree{nil, map[string]*bintree{
 	"licenses": &bintree{nil, map[string]*bintree{
-		"CREDITS.rst":       &bintree{licensesCreditsRst, map[string]*bintree{}},
-		"README.rst":        &bintree{licensesReadmeRst, map[string]*bintree{}},
-		"apache-v2.0.rst":   &bintree{licensesApacheV20Rst, map[string]*bintree{}},
-		"artistic-v2.0.rst": &bintree{licensesArtisticV20Rst, map[string]*bintree{}},
-		"bsd-2.rst":         &bintree{licensesBsd2Rst, map[string]*bintree{}},
-		"bsd-3.rst":         &bintree{licensesBsd3Rst, map[string]*bintree{}},
-		"epl-v1.0.rst":      &bintree{licensesEplV10Rst, map[string]*bintree{}},
-		"gnu-agpl-v3.0.rst": &bintree{licensesGnuAgplV30Rst, map[string]*bintree{}},
-		"gnu-gpl-v2.0.rst":  &bintree{licensesGnuGplV20Rst, map[string]*bintree{}},
-		"gnu-gpl-v3.0.rst":  &bintree{licensesGnuGplV30Rst, map[string]*bintree{}},
-		"gnu-lgpl-v2.1.rst": &bintree{licensesGnuLgplV21Rst, map[string]*bintree{}},
-		"gnu-lgpl-v3.0.rst": &bintree{licensesGnuLgplV30Rst, map[string]*bintree{}},
-		"mit.rst":           &bintree{licensesMitRst, map[string]*bintree{}},
-		"mpl-v2.0.rst":      &bintree{licensesMplV20Rst, map[string]*bintree{}},
-		"unlicense.rst":     &bintree{licensesUnlicenseRst, map[string]*bintree{}},
+		"CREDITS.rst": &bintree{licensesCreditsRst, map[string]*bintree{
+		}},
+		"README.rst": &bintree{licensesReadmeRst, map[string]*bintree{
+		}},
+		"apache-v2.0.rst": &bintree{licensesApacheV20Rst, map[string]*bintree{
+		}},
+		"artistic-v2.0.rst": &bintree{licensesArtisticV20Rst, map[string]*bintree{
+		}},
+		"bsd-2.rst": &bintree{licensesBsd2Rst, map[string]*bintree{
+		}},
+		"bsd-3.rst": &bintree{licensesBsd3Rst, map[string]*bintree{
+		}},
+		"epl-v1.0.rst": &bintree{licensesEplV10Rst, map[string]*bintree{
+		}},
+		"gnu-agpl-v3.0.rst": &bintree{licensesGnuAgplV30Rst, map[string]*bintree{
+		}},
+		"gnu-gpl-v2.0.rst": &bintree{licensesGnuGplV20Rst, map[string]*bintree{
+		}},
+		"gnu-gpl-v3.0.rst": &bintree{licensesGnuGplV30Rst, map[string]*bintree{
+		}},
+		"gnu-lgpl-v2.1.rst": &bintree{licensesGnuLgplV21Rst, map[string]*bintree{
+		}},
+		"gnu-lgpl-v3.0.rst": &bintree{licensesGnuLgplV30Rst, map[string]*bintree{
+		}},
+		"mit.rst": &bintree{licensesMitRst, map[string]*bintree{
+		}},
+		"mpl-v2.0.rst": &bintree{licensesMplV20Rst, map[string]*bintree{
+		}},
+		"unlicense.rst": &bintree{licensesUnlicenseRst, map[string]*bintree{
+		}},
 	}},
 	"resources": &bintree{nil, map[string]*bintree{
-		"qt-logo.png": &bintree{resourcesQtLogoPng, map[string]*bintree{}},
+		"qt-logo.png": &bintree{resourcesQtLogoPng, map[string]*bintree{
+		}},
 	}},
 	"templates": &bintree{nil, map[string]*bintree{
-		"CMakeExtra.txt":    &bintree{templatesCmakeextraTxt, map[string]*bintree{}},
-		"CMakeListsApp.txt": &bintree{templatesCmakelistsappTxt, map[string]*bintree{}},
-		"CMakeListsLib.txt": &bintree{templatesCmakelistslibTxt, map[string]*bintree{}},
-		"READMEApp.rst":     &bintree{templatesReadmeappRst, map[string]*bintree{}},
-		"READMELib.rst":     &bintree{templatesReadmelibRst, map[string]*bintree{}},
-		"classsource.cpp":   &bintree{templatesClasssourceCpp, map[string]*bintree{}},
-		"classsource.h":     &bintree{templatesClasssourceH, map[string]*bintree{}},
-		"dotclang-format":   &bintree{templatesDotclangFormat, map[string]*bintree{}},
-		"dotgitignore":      &bintree{templatesDotgitignore, map[string]*bintree{}},
-		"lib.qdocconf":      &bintree{templatesLibQdocconf, map[string]*bintree{}},
-		"libglobal.h":       &bintree{templatesLibglobalH, map[string]*bintree{}},
-		"main.cpp":          &bintree{templatesMainCpp, map[string]*bintree{}},
-		"resource.qrc":      &bintree{templatesResourceQrc, map[string]*bintree{}},
-		"testclass.cpp":     &bintree{templatesTestclassCpp, map[string]*bintree{}},
-		"windows.rc":        &bintree{templatesWindowsRc, map[string]*bintree{}},
+		"CMakeExtra.txt": &bintree{templatesCmakeextraTxt, map[string]*bintree{
+		}},
+		"CMakeListsApp.txt": &bintree{templatesCmakelistsappTxt, map[string]*bintree{
+		}},
+		"CMakeListsLib.txt": &bintree{templatesCmakelistslibTxt, map[string]*bintree{
+		}},
+		"READMEApp.rst": &bintree{templatesReadmeappRst, map[string]*bintree{
+		}},
+		"READMELib.rst": &bintree{templatesReadmelibRst, map[string]*bintree{
+		}},
+		"classsource.cpp": &bintree{templatesClasssourceCpp, map[string]*bintree{
+		}},
+		"classsource.h": &bintree{templatesClasssourceH, map[string]*bintree{
+		}},
+		"dotclang-format": &bintree{templatesDotclangFormat, map[string]*bintree{
+		}},
+		"dotgitignore": &bintree{templatesDotgitignore, map[string]*bintree{
+		}},
+		"lib.qdocconf": &bintree{templatesLibQdocconf, map[string]*bintree{
+		}},
+		"libglobal.h": &bintree{templatesLibglobalH, map[string]*bintree{
+		}},
+		"main.cpp": &bintree{templatesMainCpp, map[string]*bintree{
+		}},
+		"resource.qrc": &bintree{templatesResourceQrc, map[string]*bintree{
+		}},
+		"testclass.cpp": &bintree{templatesTestclassCpp, map[string]*bintree{
+		}},
+		"windows.rc": &bintree{templatesWindowsRc, map[string]*bintree{
+		}},
 	}},
 }}
 
 // RestoreAsset restores an asset under the given directory
 func RestoreAsset(dir, name string) error {
-	data, err := Asset(name)
-	if err != nil {
-		return err
-	}
-	info, err := AssetInfo(name)
-	if err != nil {
-		return err
-	}
-	err = os.MkdirAll(_filePath(dir, filepath.Dir(name)), os.FileMode(0755))
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(_filePath(dir, name), data, info.Mode())
-	if err != nil {
-		return err
-	}
-	err = os.Chtimes(_filePath(dir, name), info.ModTime(), info.ModTime())
-	if err != nil {
-		return err
-	}
-	return nil
+        data, err := Asset(name)
+        if err != nil {
+                return err
+        }
+        info, err := AssetInfo(name)
+        if err != nil {
+                return err
+        }
+        err = os.MkdirAll(_filePath(dir, filepath.Dir(name)), os.FileMode(0755))
+        if err != nil {
+                return err
+        }
+        err = ioutil.WriteFile(_filePath(dir, name), data, info.Mode())
+        if err != nil {
+                return err
+        }
+        err = os.Chtimes(_filePath(dir, name), info.ModTime(), info.ModTime())
+        if err != nil {
+                return err
+        }
+        return nil
 }
 
 // RestoreAssets restores an asset under the given directory recursively
 func RestoreAssets(dir, name string) error {
-	children, err := AssetDir(name)
-	// File
-	if err != nil {
-		return RestoreAsset(dir, name)
-	}
-	// Dir
-	for _, child := range children {
-		err = RestoreAssets(dir, filepath.Join(name, child))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+        children, err := AssetDir(name)
+        // File
+        if err != nil {
+                return RestoreAsset(dir, name)
+        }
+        // Dir
+        for _, child := range children {
+                err = RestoreAssets(dir, filepath.Join(name, child))
+                if err != nil {
+                        return err
+                }
+        }
+        return nil
 }
 
 func _filePath(dir, name string) string {
-	cannonicalName := strings.Replace(name, "\\", "/", -1)
-	return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
+        cannonicalName := strings.Replace(name, "\\", "/", -1)
+        return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
 }
+
