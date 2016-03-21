@@ -5,6 +5,7 @@ package qtpm
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"os/exec"
 	"sync"
@@ -56,8 +57,7 @@ func (c *Cmd) Run() error {
 	go func() {
 		scanner := bufio.NewScanner(outpty)
 		for scanner.Scan() {
-			colorableStdout.Write(scanner.Bytes())
-			colorableStdout.Write([]byte("\n"))
+			fmt.Fprintf(colorableStdout, "%s\n", scanner.Text())
 		}
 		outputWait.Done()
 	}()
@@ -65,8 +65,7 @@ func (c *Cmd) Run() error {
 	go func() {
 		scanner := bufio.NewScanner(errpty)
 		for scanner.Scan() {
-			colorableStderr.Write(scanner.Bytes())
-			colorableStderr.Write([]byte("\n"))
+			fmt.Fprintf(colorableStderr, "%s\n", scanner.Text())
 		}
 		outputWait.Done()
 	}()
