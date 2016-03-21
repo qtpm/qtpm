@@ -48,6 +48,21 @@ func Pack(debugBuild bool) {
 		}
 		printSuccess("\nGenerated: %s", dmgFileName)
 		printSuccess("\nFinish Build Successfully\n")
+	} else if runtime.GOOS == "windows" {
+		windeployqtPath := "windeployqt"
+		if qtDir != "" {
+			windeployqtPath = filepath.Join(qtDir, "bin", "windeployqt")
+		}
+		Touch(false)
+		printSection("\nCreating Installer: %s\n", config.Name)
+		err := SequentialRun(buildDirPath).
+			Run(windeployqtPath, config.Name+".app", "-dmg").
+			Run("cpack").Finish()
+		if err != nil {
+			color.Red("packaging error: %s\n", err.Error())
+			os.Exit(1)
+		}
+		printSuccess("\nFinish Build Successfully\n")
 	} else {
 		panic("it support only darwin")
 	}

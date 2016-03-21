@@ -92,20 +92,19 @@ endif()
 
 # installer setting
 
-if(NOT APPLE)
-    install(TARGETS [[.TargetSmall]]
-            RUNTIME
-            DESTINATION bin
-            COMPONENT applications)
+if(WIN32)
+    install(TARGETS [[.TargetSmall]] ${dlls} RUNTIME DESTINATION bin COMPONENT applications)
+    files(GLOB dlls ${CMAKE_CURRENT_BINARY_DIR}/*.dll)
+    install(PROGRAMS ${dlls} DESTINATION bin COMPONENT applications)
+    install(DIRECTORY iconengines imageformats platforms translations DESTINATION bin COMPONENT applications)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
     include(InstallRequiredSystemLibraries)
     install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}
             DESTINATION programs
-            COMPONENT applications)
-    [[if .Resources.HasItem]]install(FILES ${[[.Resources.Name]]}
+            COMPONENT applications)[[if .Resources.HasItem]]
+    install(FILES ${[[.Resources.Name]]}
             DESTINATION Resources
             COMPONENT applications)[[end]]
-
     set(CPACK_PACKAGE_NAME "[[.Target]]")
     set(CPACK_PACKAGE_VENDOR "[[.Organization]]")
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "[[.Description]]")
@@ -116,7 +115,6 @@ if(NOT APPLE)
     set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.rst")
     set(CPACK_PACKAGE_INSTALL_DIRECTORY "installer")
     set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "applications ([[.Target]])")
-    set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_BINARY_DIR}/WindowsAppIcon.ico")
     set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_BINARY_DIR}/WindowsAppIcon.ico")
     set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_BINARY_DIR}/WindowsAppIcon.ico")
     set(CPACK_NSIS_MENU_LINKS "programs\\[[.TargetSmall]]" "[[.Target]]")
