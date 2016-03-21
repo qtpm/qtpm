@@ -136,11 +136,18 @@ func (sv SourceVariable) AuthorName() string {
 	return sv.config.Author
 }
 
+func (sv SourceVariable) Description() string {
+	return sv.config.Description
+}
+
 func (sv SourceVariable) LicenseName() string {
 	return sv.config.License
 }
 
 func (sv SourceVariable) Organization() string {
+	if sv.config.Organization == "" {
+		return sv.config.Author
+	}
 	return sv.config.Organization
 }
 

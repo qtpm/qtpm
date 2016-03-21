@@ -21,6 +21,7 @@ func prepareProject(name, license string) (*PackageConfig, string) {
 
 	config := &PackageConfig{
 		Name:             name,
+		Description:      "Write your project description here",
 		Author:           UserName(),
 		License:          licenseName,
 		Requires:         make([]string, 0),

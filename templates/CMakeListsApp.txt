@@ -92,9 +92,33 @@ endif()
 
 # installer setting
 
-include(InstallRequiredSystemLibraries)
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.rst")
-set(CPACK_PACKAGE_VERSION_MAJOR "${[[.TargetLarge]]_MAJOR_VERSION}")
-set(CPACK_PACKAGE_VERSION_MINOR "${[[.TargetLarge]]_MINOR_VERSION}")
-set(CPACK_PACKAGE_VERSION_PATCH "${[[.TargetLarge]]_PATCH_VERSION}")
-include(CPack)
+if(NOT APPLE)
+    install(TARGETS [[.TargetSmall]]
+            RUNTIME
+            DESTINATION bin
+            COMPONENT applications)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
+    include(InstallRequiredSystemLibraries)
+    install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}
+            DESTINATION programs
+            COMPONENT applications)
+    [[if .Resources.HasItem]]install(FILES ${[[.Resources.Name]]}
+            DESTINATION Resources
+            COMPONENT applications)[[end]]
+
+    set(CPACK_PACKAGE_NAME "[[.Target]]")
+    set(CPACK_PACKAGE_VENDOR "[[.Organization]]")
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "[[.Description]]")
+    set(CPACK_PACKAGE_VERSION_MAJOR "${[[.TargetLarge]]_MAJOR_VERSION}")
+    set(CPACK_PACKAGE_VERSION_MINOR "${[[.TargetLarge]]_MINOR_VERSION}")
+    set(CPACK_PACKAGE_VERSION_PATCH "${[[.TargetLarge]]_PATCH_VERSION}")
+    set(CPACK_PACKAGE_VERSION "${[[.TargetLarge]]_VERSION}")
+    set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.rst")
+    set(CPACK_PACKAGE_INSTALL_DIRECTORY "installer")
+    set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "applications ([[.Target]])")
+    set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_BINARY_DIR}/WindowsAppIcon.ico")
+    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_BINARY_DIR}/WindowsAppIcon.ico")
+    set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_BINARY_DIR}/WindowsAppIcon.ico")
+    set(CPACK_NSIS_MENU_LINKS "programs\\[[.TargetSmall]]" "[[.Target]]")
+    include(CPack)
+endif()

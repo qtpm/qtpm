@@ -17,6 +17,7 @@ const (
 
 type PackageConfig struct {
 	Name             string                    `toml:"name"`
+	Description      string                    `toml:"description"`
 	Author           string                    `toml:"author"`
 	Organization     string                    `toml:"organization"`
 	License          string                    `toml:"license"`
