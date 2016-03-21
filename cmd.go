@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"sync"
 	"syscall"
@@ -23,6 +24,7 @@ type Cmd struct {
 func Command(command, workDir string, args ...string) *Cmd {
 	cmd := exec.Command(command, args...)
 	cmd.Dir = workDir
+	cmd.Env = os.Environ()
 	return &Cmd{
 		command: cmd,
 	}

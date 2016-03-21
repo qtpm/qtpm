@@ -94,7 +94,7 @@ endif()
 
 if(WIN32)
     install(TARGETS [[.TargetSmall]] ${dlls} RUNTIME DESTINATION bin COMPONENT applications)
-    files(GLOB dlls ${CMAKE_CURRENT_BINARY_DIR}/*.dll)
+    file(GLOB dlls ${CMAKE_CURRENT_BINARY_DIR}/*.dll)
     install(PROGRAMS ${dlls} DESTINATION bin COMPONENT applications)
     install(DIRECTORY iconengines imageformats platforms translations DESTINATION bin COMPONENT applications)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)

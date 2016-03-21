@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 func Pack(debugBuild bool) {
@@ -53,13 +54,18 @@ func Pack(debugBuild bool) {
 		if qtDir != "" {
 			windeployqtPath = filepath.Join(qtDir, "bin", "windeployqt")
 		}
-		Touch(false)
 		printSection("\nCreating Installer: %s\n", config.Name)
-		err := SequentialRun(buildDirPath).
-			Run(windeployqtPath, config.Name+".app", "-dmg").
-			Run("cpack").Finish()
+		cmd := Command(windeployqtPath, buildDirPath, strings.ToLower(config.Name)+".exe")
+		err := cmd.Run()
 		if err != nil {
-			color.Red("packaging error: %s\n", err.Error())
+			color.Red("packaging error at windeployqt: %s\n", err.Error())
+			os.Exit(1)
+		}
+		Touch(false)
+		cmd2 := Command("cpack", buildDirPath)
+		err = cmd2.Run()
+		if err != nil {
+			color.Red("packaging error at cpack: %s\n", err.Error())
 			os.Exit(1)
 		}
 		printSuccess("\nFinish Build Successfully\n")
