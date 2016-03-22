@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func Clean() {
@@ -13,24 +14,40 @@ func Clean() {
 		log.Fatalln(err)
 	}
 	dir := config.Dir
+	projectRoots := []string{
+		"",
+	}
 	targets := []string{
 		"CMakeLists.txt",
 		"build-debug",
 		"build-release",
+		"dest",
 	}
-	for _, target := range targets {
-		path := filepath.Join(dir, target)
-		_, err := os.Stat(path)
-		if os.IsNotExist(err) {
-			continue
+	filepath.Walk(filepath.Join(dir, "vendor"), func(fullPath string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			relPath := fullPath[len(dir)+1:]
+			if strings.Count(filepath.ToSlash(relPath), "/") > 3 {
+				return filepath.SkipDir
+			}
+			projectRoots = append(projectRoots, relPath)
 		}
-		fmt.Printf("%s ... ", target)
-		err = os.RemoveAll(path)
-		if err != nil {
-			fmt.Printf("error occured: %v\n", err)
-		} else {
-			fmt.Println("removed")
+		return nil
+	})
+	for _, projectRoot := range projectRoots {
+		for _, target := range targets {
+			path := filepath.Join(dir, projectRoot, target)
+			_, err := os.Stat(path)
+			if os.IsNotExist(err) {
+				continue
+			}
+			fmt.Printf("%s ... ", filepath.Join(projectRoot, target))
+			err = os.RemoveAll(path)
+			if err != nil {
+				fmt.Printf("error occured: %v\n", err)
+			} else {
+				fmt.Println("removed")
+			}
 		}
 	}
-	fmt.Println("\nRun qtpm get to recover vender header files/libraries.")
+	fmt.Println("\nRun qtpm get to redeploy vender's header files/libraries.")
 }
