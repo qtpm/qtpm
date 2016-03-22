@@ -38,6 +38,7 @@ func (c *Cmd) Run() error {
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 
 	var outputWait sync.WaitGroup
+	var lock sync.Mutex
 	outputWait.Add(2)
 	var colorableStdout io.Writer
 	if c.Silent {
@@ -48,7 +49,9 @@ func (c *Cmd) Run() error {
 	go func() {
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
+			lock.Lock()
 			fmt.Fprintf(colorableStdout, "%s\n", scanner.Text())
+			lock.Unlock()
 		}
 		outputWait.Done()
 	}()
@@ -56,7 +59,9 @@ func (c *Cmd) Run() error {
 	go func() {
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
+			lock.Lock()
 			fmt.Fprintf(colorableStderr, "%s\n", scanner.Text())
+			lock.Unlock()
 		}
 		outputWait.Done()
 	}()

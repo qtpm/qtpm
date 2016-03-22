@@ -384,9 +384,10 @@ func AddLicense(config *PackageConfig, name string) {
 func AddCMakeForApp(config *PackageConfig, rootPackageDir string, refresh, debugBuild bool) (bool, error) {
 	var destinationPath string
 	if config.Dir == rootPackageDir {
-		destinationPath = BuildFolder(debugBuild)
+		destinationPath = ""
 	} else {
-		destinationPath, _ = filepath.Rel(config.Dir, filepath.Join(rootPackageDir, BuildFolder(debugBuild)))
+		destinationPath, _ = filepath.Rel(config.Dir, rootPackageDir)
+		destinationPath += "/"
 	}
 
 	variable := &SourceVariable{
@@ -417,9 +418,10 @@ func AddCMakeForApp(config *PackageConfig, rootPackageDir string, refresh, debug
 func AddCMakeForLib(config *PackageConfig, rootPackageDir string, refresh, debugBuild bool) (bool, error) {
 	var destinationPath string
 	if config.Dir == rootPackageDir {
-		destinationPath = BuildFolder(debugBuild)
+		destinationPath = ""
 	} else {
-		destinationPath, _ = filepath.Rel(config.Dir, filepath.Join(rootPackageDir, BuildFolder(debugBuild)))
+		destinationPath, _ = filepath.Rel(config.Dir, rootPackageDir)
+		destinationPath += "/"
 	}
 
 	variable := &SourceVariable{

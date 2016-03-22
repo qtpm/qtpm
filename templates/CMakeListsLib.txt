@@ -9,8 +9,13 @@ set([[.TargetLarge]]_MINOR_VERSION [[.VersionMinor]])
 set([[.TargetLarge]]_PATCH_VERSION [[.VersionPatch]])
 set([[.TargetLarge]]_VERSION [[.Version]])
 
-include_directories([[.DestinationPath]]/include)
-link_directories([[.DestinationPath]]/lib)
+if(CMAKE_BUILD_TYPE MATCHES Release)
+    include_directories([[.DestinationPath]]build-release/include)
+    link_directories([[.DestinationPath]]build-release/lib)
+else()
+    include_directories([[.DestinationPath]]build-debug/include)
+    link_directories([[.DestinationPath]]build-debug/lib)
+endif()
 
 # compiler setting
 
