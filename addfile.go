@@ -91,21 +91,22 @@ func (s *SourceBundle) addfile(path string) {
 }
 
 type SourceVariable struct {
-	Target            string
-	DestinationPath   string
-	Requires          []string
-	QtModules         []string
-	Sources           *SourceBundle
-	InstallHeaderDirs map[string]*SourceBundle
-	Tests             *SourceBundle
-	ExtraTestSources  *SourceBundle
-	Examples          *SourceBundle
-	Resources         *SourceBundle
-	HasQtResource     bool
-	IsLibrary         bool
-	Debug             bool
-	BuildNumber       int
-	config            *PackageConfig
+	Target              string
+	DestinationPath     string
+	Requires            []string
+	QtModules           []string
+	Sources             *SourceBundle
+	InstallHeaderDirs   map[string]*SourceBundle
+	Tests               *SourceBundle
+	ExtraTestSources    *SourceBundle
+	Examples            *SourceBundle
+	ExtraExampleSources *SourceBundle
+	Resources           *SourceBundle
+	HasQtResource       bool
+	IsLibrary           bool
+	Debug               bool
+	BuildNumber         int
+	config              *PackageConfig
 }
 
 func (sv SourceVariable) TargetSmall() string {
@@ -230,6 +231,7 @@ func (sv *SourceVariable) SearchFiles() {
 	sv.Tests = NewSourceBundle("tests", true)
 	sv.ExtraTestSources = NewSourceBundle("extra_test_sources", false)
 	sv.Examples = NewSourceBundle("examples", false)
+	sv.ExtraExampleSources = NewSourceBundle("extra_example_sources", false)
 	sv.Resources = NewSourceBundle("resources", false)
 
 	for _, extraDir := range sv.config.ExtraInstallDirs {
@@ -284,19 +286,21 @@ func (sv *SourceVariable) SearchFiles() {
 		}
 	}
 
-	exampleDir := filepath.Join(dir, "examples")
-	filepath.Walk(exampleDir, func(fullPath string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
+	examples, err := ioutil.ReadDir(filepath.Join(dir, "examples"))
+	if err == nil {
+		for _, example := range examples {
+			name := example.Name()
+			ext := filepath.Ext(name)
+			if strings.HasPrefix(name, "_") || (!supportedSourceExtensions[ext] && ext != ".ui") {
+				continue
+			}
+			if strings.HasSuffix(name, "_example.cpp") {
+				sv.Examples.addfile("examples/" + name)
+			} else {
+				sv.ExtraExampleSources.addfile("examples/" + name)
+			}
 		}
-		if info.IsDir() || strings.HasPrefix(info.Name(), "_") {
-			return nil
-		}
-		if supportedSourceExtensions[filepath.Ext(fullPath)] {
-			sv.Examples.addfile("examples/" + fullPath[len(exampleDir)+1:])
-		}
-		return nil
-	})
+	}
 
 	resourceDir := filepath.Join(dir, "Resources")
 	filepath.Walk(resourceDir, func(fullPath string, info os.FileInfo, err error) error {

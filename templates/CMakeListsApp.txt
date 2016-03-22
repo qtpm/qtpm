@@ -10,11 +10,11 @@ set([[.TargetLarge]]_PATCH_VERSION [[.VersionPatch]])
 set([[.TargetLarge]]_VERSION [[.Version]])
 
 if(CMAKE_BUILD_TYPE MATCHES Release)
-    include_directories([[.DestinationPath]]/build-release/include)
-    link_directories([[.DestinationPath]]/build-release/lib)
+    include_directories([[.DestinationPath]]build-release/include)
+    link_directories([[.DestinationPath]]build-release/lib)
 else()
-    include_directories([[.DestinationPath]]/build-debug/include)
-    link_directories([[.DestinationPath]]/build-debug/lib)
+    include_directories([[.DestinationPath]]build-debug/include)
+    link_directories([[.DestinationPath]]build-debug/lib)
 endif()
 
 # compiler setting
@@ -101,7 +101,11 @@ if(WIN32)
     install(TARGETS [[.TargetSmall]] ${dlls} RUNTIME DESTINATION bin COMPONENT applications)
     file(GLOB dlls ${CMAKE_CURRENT_BINARY_DIR}/*.dll)
     install(PROGRAMS ${dlls} DESTINATION bin COMPONENT applications)
-    install(DIRECTORY iconengines imageformats platforms translations DESTINATION bin COMPONENT applications)
+    install(DIRECTORY
+        ${CMAKE_CURRENT_BINARY_DIR}/iconengines
+        ${CMAKE_CURRENT_BINARY_DIR}/imageformats
+        ${CMAKE_CURRENT_BINARY_DIR}/platforms
+        ${CMAKE_CURRENT_BINARY_DIR}/translations DESTINATION bin COMPONENT applications)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
     include(InstallRequiredSystemLibraries)
     install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}

@@ -64,10 +64,11 @@ SET_TARGET_PROPERTIES([[.TargetLibName]] PROPERTIES VERSION ${[[.TargetLarge]]_V
 [[if gt (len .QtModules) 0]]qt5_use_modules([[.TargetLibName]][[range $module := .QtModules]] [[$module]][[end]])[[end]][[if .Examples.HasItem]]
 # build examples
 
+[[.ExtraExampleSources.DefineList]]
 [[.Examples.DefineList]]
 [[.Examples.StartLoop]]
   get_filename_component(execname ${file} NAME_WE)
-  add_executable(${execname} ${file} ${[[.Sources.Name]]}[[if .HasQtResource]] qtresources/resource.qrc[[end]])
+  add_executable(${execname} ${file} ${[[.Sources.Name]]} ${[[.ExtraExampleSources.Name]]}[[if .HasQtResource]] qtresources/resource.qrc[[end]])
   qt5_use_modules(${execname} Test[[range $module := .QtModules]] [[$module]][[end]])
 [[.Examples.EndLoop]]
 [[end]][[if .Tests.HasItem]]
