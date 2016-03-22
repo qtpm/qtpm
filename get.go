@@ -21,9 +21,9 @@ func Get(packageName string, update, useGit bool) {
 	var packages []*PackageConfig
 	var err error
 	if packageName == "" && parentConfig != nil {
-		packages, err = getRecursively(parentConfig, parentConfig.Requires, false, update, useGit)
+		packages, err = getRecursively(parentConfig, parentConfig.Requires, true, false, update, useGit)
 	} else if packageName != "" {
-		packages, err = getRecursively(parentConfig, []string{packageName}, parentConfig != nil, update, useGit)
+		packages, err = getRecursively(parentConfig, []string{packageName}, true, parentConfig != nil, update, useGit)
 	} else {
 		fmt.Println("qtpackage.toml or package name argument are needed")
 		return
@@ -39,12 +39,12 @@ func Get(packageName string, update, useGit bool) {
 	}
 	os.MkdirAll(filepath.Join(dir, "qtresources", "translations"), 0755)
 	for _, packageConfig := range packages[:len(packages)-1] {
-		BuildPackage(dir, packageConfig, update, false, true, parentConfig != packageConfig)
-		BuildPackage(dir, packageConfig, update, true, true, parentConfig != packageConfig)
+		err = BuildPackage(parentConfig, packageConfig, update, false, true, parentConfig != packageConfig)
+		err = BuildPackage(parentConfig, packageConfig, update, true, true, parentConfig != packageConfig)
 	}
 }
 
-func getRecursively(rootPackage *PackageConfig, packages []string, save, update, useGit bool) ([]*PackageConfig, error) {
+func getRecursively(rootPackage *PackageConfig, packages []string, download, save, update, useGit bool) ([]*PackageConfig, error) {
 	loadedPackages := make(map[string]*PackageConfig)
 	if rootPackage != nil {
 		rootPackage.Children = loadedPackages
@@ -57,7 +57,7 @@ func getRecursively(rootPackage *PackageConfig, packages []string, save, update,
 	for len(nextPackages) > 0 {
 		waitingPackage := []string{}
 		for _, packageName := range nextPackages {
-			child, err := getSinglePackage(rootPackage, packageName, save, update, useGit)
+			child, err := getSinglePackage(rootPackage, packageName, download, save, update, useGit)
 			if err != nil {
 				return nil, err
 			}
@@ -102,7 +102,7 @@ func has(list []string, entry string) bool {
 	return false
 }
 
-func getSinglePackage(rootConfig *PackageConfig, packageName string, save, update, useGit bool) (*PackageConfig, error) {
+func getSinglePackage(rootConfig *PackageConfig, packageName string, download, save, update, useGit bool) (*PackageConfig, error) {
 	// download from git
 	paths := strings.Split(packageName, "/")
 	if len(paths) != 3 {
@@ -118,6 +118,9 @@ func getSinglePackage(rootConfig *PackageConfig, packageName string, save, updat
 	workDir := filepath.Join(parentDir, "vendor", paths[0], paths[1])
 	_, err := os.Stat(filepath.Join(parentDir, "vendor", packageName))
 	if os.IsNotExist(err) {
+		if !download {
+			return nil, fmt.Errorf("%s is not downloaded yet. Run qtpm get first.", packageName)
+		}
 		os.MkdirAll(workDir, 0755)
 		if useGit || paths[0] != "github.com" {
 			err = git.CloneWithoutFilters([]string{

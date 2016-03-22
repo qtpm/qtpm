@@ -1,10 +1,9 @@
 #ifndef PACKAGE1_H
 #define PACKAGE1_H
 
-#include "package1_global.h"
 #include <QObject>
 
-class PACKAGE1SHARED_EXPORT Package1 : public QObject {
+class Package1 : public QObject {
     Q_OBJECT
 public:
     explicit Package1(QObject *parent = 0);

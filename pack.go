@@ -20,7 +20,7 @@ func Pack(debugBuild bool) {
 		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
-	err = BuildPackage(config.Dir, config, false, debugBuild, true, false)
+	err = BuildPackage(config, config, false, debugBuild, true, false)
 	if err != nil {
 		color.Red("\nBuild Error\n")
 		os.Exit(1)
@@ -55,13 +55,24 @@ func Pack(debugBuild bool) {
 			windeployqtPath = filepath.Join(qtDir, "bin", "windeployqt")
 		}
 		printSection("\nCreating Installer: %s\n", config.Name)
-		cmd := Command(windeployqtPath, buildDirPath, strings.ToLower(config.Name)+".exe")
+		var args []string
+		if debugBuild {
+			args = append(args, "--debug", strings.ToLower(config.Name)+".exe")
+		} else {
+			args = append(args, "--release", strings.ToLower(config.Name)+".exe")
+		}
+		cmd := Command(windeployqtPath, buildDirPath, args...)
 		err := cmd.Run()
 		if err != nil {
 			color.Red("packaging error at windeployqt: %s\n", err.Error())
 			os.Exit(1)
 		}
-		Touch(false)
+		Touch(false, false)
+		err = RunCMakeAndBuild(config.Dir, config.Dir, true, debugBuild, false, false)
+		if err != nil {
+			color.Red("packaging error at recreate CMakeLists.txt: %s\n", err.Error())
+			os.Exit(1)
+		}
 		cmd2 := Command("cpack", buildDirPath)
 		err = cmd2.Run()
 		if err != nil {

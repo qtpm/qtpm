@@ -10,9 +10,11 @@ set([[.TargetLarge]]_PATCH_VERSION [[.VersionPatch]])
 set([[.TargetLarge]]_VERSION [[.Version]])
 
 if(CMAKE_BUILD_TYPE MATCHES Release)
+    message("-- Release Build")
     include_directories([[.DestinationPath]]build-release/include)
     link_directories([[.DestinationPath]]build-release/lib)
 else()
+    message("-- Debug Build")
     include_directories([[.DestinationPath]]build-debug/include)
     link_directories([[.DestinationPath]]build-debug/lib)
 endif()
@@ -39,7 +41,8 @@ endif()
 [[range $module := .QtModules]]find_package(Qt5[[$module]] REQUIRED)
 [[end]]# include extra settings
 
-include("CMakeExtra.txt" OPTIONAL)
+[[range $dependency := .AllDependencies]]include("[[$dependency]]CMakeExtra.txt" OPTIONAL)
+[[end]]
 [[if .Tests.HasItem]]
 # enable tests
 
@@ -53,12 +56,17 @@ find_package(Qt5Test REQUIRED)
   add_test(NAME ${execname} COMMAND ${execname})
   qt5_use_modules(${file} Test[[range $module := .QtModules]] [[$module]][[end]])
 [[.Tests.EndLoop]]
-[[end]]# build setting
+[[end]][[if gt (len .Requires) 0]]
+#dependencies
+
+link_libraries([[range .RequireLibs]] [[.]][[end]])
+[[end]]
+# build setting
 
 include_directories(src)
 [[.Sources.DefineList]][[if .Resources.HasItem]]
-[[.Resources.DefineList]][[end]][[if gt (len .Requires) 0]]
-link_libraries([[range .RequireLibs]] [[.]][[end]])[[end]]
+[[.Resources.DefineList]][[end]]
+
 if(APPLE)
   set(MACOSX_BUNDLE_BUNDLE_NAME [[.Target]])
   set(MACOSX_BUNDLE_GUI_IDENTIFIER "[[.Target]]")

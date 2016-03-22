@@ -21,7 +21,7 @@ func Build(refresh, debugBuild bool) {
 		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
-	err = BuildPackage(config.Dir, config, refresh, debugBuild, true, !config.IsApplication)
+	err = BuildPackage(config, config, refresh, debugBuild, true, !config.IsApplication)
 	if err != nil {
 		color.Red("\nBuild Error\n")
 		os.Exit(1)
@@ -36,7 +36,7 @@ func Test(refresh bool) {
 		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
-	err = BuildPackage(config.Dir, config, refresh, true, true, false)
+	err = BuildPackage(config, config, refresh, true, true, false)
 	if err != nil {
 		color.Red("\nBuild Error\n")
 		os.Exit(1)
@@ -81,20 +81,31 @@ func (s *sequentialRun) Finish() error {
 	return s.err
 }
 
-func BuildPackage(rootPackageDir string, config *PackageConfig, refresh, debugBuild, build, install bool) error {
+func BuildPackage(rootConfig, config *PackageConfig, refresh, debugBuild, build, install bool) error {
 	var changed bool
+	var rootPackageDir string
+	if rootConfig != nil {
+		rootPackageDir = rootConfig.Dir
+	} else {
+		rootPackageDir, _ = filepath.Abs(".")
+	}
 	err := ReleaseTranslation(rootPackageDir, config.Dir)
 	if err != nil {
 		return err
 	}
 	rootPackageBuildPath := filepath.Join(rootPackageDir, BuildFolder(debugBuild))
+	dependencies, err := getRecursively(rootConfig, config.Requires, false, false, false, false)
+	if err != nil {
+		return err
+	}
+	dependencies = append(dependencies, config)
 	if config.IsApplication {
-		changed, err = AddCMakeForApp(config, rootPackageDir, refresh, debugBuild)
+		changed, err = AddCMakeForApp(config, rootPackageDir, dependencies, refresh, debugBuild)
 		buildPath := filepath.Join(config.Dir, BuildFolder(debugBuild))
 		os.MkdirAll(buildPath, 0755)
 		CreateIcon(config.Dir, debugBuild)
 	} else {
-		changed, err = AddCMakeForLib(config, rootPackageDir, refresh, debugBuild)
+		changed, err = AddCMakeForLib(config, rootPackageDir, dependencies, refresh, debugBuild)
 		os.MkdirAll(filepath.Join(rootPackageBuildPath, "include"), 0755)
 		os.MkdirAll(filepath.Join(rootPackageBuildPath, "lib"), 0755)
 	}
@@ -109,7 +120,7 @@ func BuildPackage(rootPackageDir string, config *PackageConfig, refresh, debugBu
 	} else {
 		printSection("\nBuild Package: %s (release)\n", config.Name)
 	}
-	return RunCMakeAndBuild(rootPackageDir, config.Dir, changed, debugBuild, install)
+	return RunCMakeAndBuild(rootPackageDir, config.Dir, changed, debugBuild, true, install)
 }
 
 func BuildFolder(debugBuild bool) string {
@@ -215,13 +226,13 @@ func CreateIcon(rootPackageDir string, debugBuild bool) {
 	}
 }
 
-func RunCMakeAndBuild(rootPackageDir, packageDir string, update, debugBuild, install bool) error {
-	buildPath := filepath.Join(packageDir, BuildFolder(debugBuild))
+func RunCMakeAndBuild(rootPackageDir, packageDir string, update, debug, build, install bool) error {
+	buildPath := filepath.Join(packageDir, BuildFolder(debug))
 	var installPrefix string
 	if rootPackageDir != packageDir {
-		installPrefix = filepath.Join(rootPackageDir, BuildFolder(debugBuild))
+		installPrefix = filepath.Join(rootPackageDir, BuildFolder(debug))
 	} else {
-		if debugBuild {
+		if debug {
 			installPrefix = filepath.Join(rootPackageDir, "dest", "debug")
 		} else {
 			installPrefix = filepath.Join(rootPackageDir, "dest", "release")
@@ -235,8 +246,8 @@ func RunCMakeAndBuild(rootPackageDir, packageDir string, update, debugBuild, ins
 	if update || os.IsNotExist(err) {
 		printSubSection("\nRun CMake\n")
 		os.MkdirAll(buildPath, 0755)
-		args := []string{"..", "-DCMAKE_INSTALL_PREFIX=" + installPrefix}
-		if debugBuild {
+		args := []string{"..", "-DCMAKE_INSTALL_PREFIX=" + installPrefix, "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"}
+		if debug {
 			args = append(args, "-DCMAKE_BUILD_TYPE=Debug")
 		} else {
 			args = append(args, "-DCMAKE_BUILD_TYPE=Release")
@@ -252,9 +263,11 @@ func RunCMakeAndBuild(rootPackageDir, packageDir string, update, debugBuild, ins
 			return err
 		}
 	}
-
+	if !build {
+		return nil
+	}
 	buildArgs := []string{"--build", "."}
-	if debugBuild {
+	if debug {
 		buildArgs = append(buildArgs, "--config", "Debug")
 	} else {
 		buildArgs = append(buildArgs, "--config", "Release")

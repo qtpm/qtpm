@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 	"text/template"
@@ -77,6 +76,7 @@ var platformNames = map[string]string{
 
 func (s *SourceBundle) addfile(path string) {
 	_, name := filepath.Split(path)
+	path = filepath.ToSlash(path)
 	basename := name[:len(name)-len(filepath.Ext(name))]
 	if s.Test {
 		basename = basename[:len(name)-5]
@@ -95,6 +95,7 @@ type SourceVariable struct {
 	DestinationPath     string
 	Requires            []string
 	QtModules           []string
+	AllDependencies     []string
 	Sources             *SourceBundle
 	InstallHeaderDirs   map[string]*SourceBundle
 	Tests               *SourceBundle
@@ -103,7 +104,6 @@ type SourceVariable struct {
 	ExtraExampleSources *SourceBundle
 	Resources           *SourceBundle
 	HasQtResource       bool
-	IsLibrary           bool
 	Debug               bool
 	BuildNumber         int
 	config              *PackageConfig
@@ -385,7 +385,42 @@ func AddLicense(config *PackageConfig, name string) {
 	config.Save()
 }
 
-func AddCMakeForApp(config *PackageConfig, rootPackageDir string, refresh, debugBuild bool) (bool, error) {
+func RequiredQtModules(dependencies []*PackageConfig) []string {
+	var modules []string
+	for _, dependency := range dependencies {
+		modules = append(modules, dependency.QtModules...)
+	}
+	return CleanList(modules)
+}
+
+func AllDependenciesPaths(rootPackage *PackageConfig, dependencies []*PackageConfig) []string {
+	var paths []string
+	for _, dependency := range dependencies {
+		if rootPackage.Dir == dependency.Dir {
+			paths = append(paths, "")
+		} else {
+			path, _ := filepath.Rel(rootPackage.Dir, dependency.Dir)
+			paths = append(paths, path+"/")
+		}
+	}
+	return CleanList(paths)
+}
+
+func AllDependenciesLibs(dependencies []*PackageConfig) []string {
+	var requires []string
+	for _, dependency := range dependencies {
+		for _, require := range dependency.Requires {
+			packageNames := strings.Split(require, "/")
+			if len(packageNames) != 3 {
+				continue
+			}
+			requires = append(requires, packageNames[2])
+		}
+	}
+	return CleanList(requires)
+}
+
+func AddCMakeForApp(config *PackageConfig, rootPackageDir string, dependencies []*PackageConfig, refresh, debugBuild bool) (bool, error) {
 	var destinationPath string
 	if config.Dir == rootPackageDir {
 		destinationPath = ""
@@ -396,16 +431,11 @@ func AddCMakeForApp(config *PackageConfig, rootPackageDir string, refresh, debug
 
 	variable := &SourceVariable{
 		config:          config,
-		DestinationPath: destinationPath,
+		DestinationPath: filepath.ToSlash(destinationPath),
 		Target:          CleanName(config.Name),
-		QtModules:       CleanList(config.QtModules),
-	}
-	for _, require := range config.Requires {
-		packageNames := strings.Split(require, "/")
-		if len(packageNames) != 3 {
-			continue
-		}
-		variable.Requires = append(variable.Requires, packageNames[2])
+		QtModules:       RequiredQtModules(dependencies),
+		AllDependencies: AllDependenciesPaths(config, dependencies),
+		Requires:        AllDependenciesLibs(dependencies),
 	}
 	variable.SearchFiles()
 	variable.HasQtResource = CreateResource(config.Dir)
@@ -419,7 +449,7 @@ func AddCMakeForApp(config *PackageConfig, rootPackageDir string, refresh, debug
 	return changed || os.IsNotExist(err), err2
 }
 
-func AddCMakeForLib(config *PackageConfig, rootPackageDir string, refresh, debugBuild bool) (bool, error) {
+func AddCMakeForLib(config *PackageConfig, rootPackageDir string, dependencies []*PackageConfig, refresh, debugBuild bool) (bool, error) {
 	var destinationPath string
 	if config.Dir == rootPackageDir {
 		destinationPath = ""
@@ -430,7 +460,7 @@ func AddCMakeForLib(config *PackageConfig, rootPackageDir string, refresh, debug
 
 	variable := &SourceVariable{
 		config:          config,
-		DestinationPath: destinationPath,
+		DestinationPath: filepath.ToSlash(destinationPath),
 		Target:          CleanName(config.Name),
 		QtModules:       CleanList(config.QtModules),
 	}
@@ -483,46 +513,4 @@ func WriteTemplate(basePath, dir, fileName, templateName string, variable interf
 		color.Magenta("Wrote: %s\n", filepath.Join(dir, fileName))
 	}
 	return true, err
-}
-
-func ParseName(name string) (dirName, className, parentName string) {
-	if strings.Contains(name, "/") {
-		names := strings.Split(name, "/")
-		dirName = strings.Join(names[:len(names)-1], "/")
-		name = names[len(names)-1]
-	}
-	if strings.Contains(name, "@") {
-		names := strings.Split(name, "@")
-		parentName = strings.ToUpper(names[1][:2]) + names[1][2:]
-		name = names[0]
-	}
-	className = name
-	if strings.HasPrefix(className, "Test") {
-		className = className[4:]
-	} else if className == "" {
-		path, _ := filepath.Abs(".")
-		_, className = filepath.Split(path)
-	}
-	className = strings.ToUpper(className[:1]) + className[1:]
-
-	return
-}
-
-var re1 = regexp.MustCompile("[^a-zA-Z0-9_-]")
-var re2 = regexp.MustCompile("[-]")
-
-func CleanName(name string) string {
-	return re2.ReplaceAllString(re1.ReplaceAllString(name, ""), "_")
-}
-
-func CleanList(modules []string) []string {
-	used := make(map[string]bool)
-	var result []string
-	for _, module := range modules {
-		if !used[module] {
-			result = append(result, module)
-			used[module] = true
-		}
-	}
-	return result
 }

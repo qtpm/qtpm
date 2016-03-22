@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -53,13 +52,12 @@ func InitLibrary(name, license string) {
 	}
 	AddClass(config, packageName, true)
 	AddTest(config, packageName)
-	WriteTemplate(".", "src", strings.ToLower(packageName)+"_global.h", "libglobal.h", variable, false)
 	WriteTemplate(".", "examples", "example.cpp", "main.cpp", variable, false)
 	WriteTemplate(".", "", ".gitignore", "dotgitignore", variable, false)
 	WriteTemplate(".", "", ".clang-format", "dotclang-format", variable, false)
 	WriteTemplate(".", "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
 	WriteTemplate(".", "", "README.rst", "READMELib.rst", variable, false)
-	Touch(false)
+	Touch(true, false)
 }
 
 func InitApplication(name, license string) {
@@ -78,5 +76,5 @@ func InitApplication(name, license string) {
 	WriteTemplate(".", "", ".clang-format", "dotclang-format", variable, false)
 	WriteTemplate(".", "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
 	WriteTemplate(".", "", "README.rst", "READMEApp.rst", variable, false)
-	Touch(false)
+	Touch(true, false)
 }

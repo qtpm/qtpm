@@ -35,7 +35,8 @@ var (
 	packCommand  = app.Command("pack", "Create installer")
 	packTypeFlag = packCommand.Arg("build type", "release/debug").Default("release").Enum("debug", "release")
 
-	touchCommand = app.Command("touch", "Recreate CMakeLists.txt")
+	touchCommand  = app.Command("touch", "Recreate CMakeLists.txt")
+	touchTypeFlag = touchCommand.Arg("build type", "release/debug").Default("debug").Enum("debug", "release")
 
 	cleanCommand = app.Command("clean", "Clean temp files")
 
@@ -69,6 +70,8 @@ var (
 	linguistUpdate   = linguistCommand.Command("update", "Update translation source(.ts) file")
 	linguistEdit     = linguistCommand.Command("edit", "Edit language")
 	linguistEditLang = linguistEdit.Arg("lang", "Language (fr, ge, etc...").String()
+
+	versionCommand = app.Command("version", "Show version")
 )
 
 func printLogo() {
@@ -101,7 +104,7 @@ func main() {
 		qtpm.Pack(*packTypeFlag == "debug")
 	case touchCommand.FullCommand():
 		printLogo()
-		qtpm.Touch(true)
+		qtpm.Touch(*touchTypeFlag == "debug", true)
 	case cleanCommand.FullCommand():
 		printLogo()
 		qtpm.Clean()
@@ -127,7 +130,7 @@ func main() {
 		}
 		qtpm.AddClass(config, *className, !config.IsApplication)
 		qtpm.AddTest(config, *className)
-		qtpm.Touch(false)
+		qtpm.Touch(true, false)
 	case addTestCommand.FullCommand():
 		printLogo()
 		config, err := qtpm.LoadConfig(".", true)
@@ -135,7 +138,7 @@ func main() {
 			log.Fatalln(err)
 		}
 		qtpm.AddTest(config, *testName)
-		qtpm.Touch(false)
+		qtpm.Touch(true, false)
 	case addLicenseCommand.FullCommand():
 		printLogo()
 		config, err := qtpm.LoadConfig(".", true)
@@ -152,5 +155,7 @@ func main() {
 	case linguistEdit.FullCommand():
 		printLogo()
 		qtpm.LinguistEdit(*linguistEditLang)
+	case versionCommand.FullCommand():
+		fmt.Println(qtpm.Version)
 	}
 }
