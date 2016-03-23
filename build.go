@@ -21,7 +21,7 @@ func Build(refresh, debugBuild bool) {
 		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
-	err = BuildPackage(config, config, refresh, debugBuild, true, !config.IsApplication)
+	_, err = BuildPackage(config, config, refresh, debugBuild, true, !config.IsApplication)
 	if err != nil {
 		color.Red("\nBuild Error\n")
 		os.Exit(1)
@@ -36,7 +36,7 @@ func Test(refresh bool) {
 		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
-	err = BuildPackage(config, config, refresh, true, true, false)
+	_, err = BuildPackage(config, config, refresh, true, true, false)
 	if err != nil {
 		color.Red("\nBuild Error\n")
 		os.Exit(1)
@@ -81,7 +81,7 @@ func (s *sequentialRun) Finish() error {
 	return s.err
 }
 
-func BuildPackage(rootConfig, config *PackageConfig, refresh, debugBuild, build, install bool) error {
+func BuildPackage(rootConfig, config *PackageConfig, refresh, debugBuild, build, install bool) (*ProjectDetail, error) {
 	var changed bool
 	var rootPackageDir string
 	if rootConfig != nil {
@@ -89,38 +89,40 @@ func BuildPackage(rootConfig, config *PackageConfig, refresh, debugBuild, build,
 	} else {
 		rootPackageDir, _ = filepath.Abs(".")
 	}
+
 	err := ReleaseTranslation(rootPackageDir, config.Dir)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	rootPackageBuildPath := filepath.Join(rootPackageDir, BuildFolder(debugBuild))
 	dependencies, err := getRecursively(rootConfig, config.Requires, false, false, false, false)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	dependencies = append(dependencies, config)
+	var detail *ProjectDetail
 	if config.IsApplication {
-		changed, err = AddCMakeForApp(config, rootPackageDir, dependencies, refresh, debugBuild)
+		changed, detail, err = AddCMakeForApp(config, rootPackageDir, dependencies, refresh, debugBuild)
 		buildPath := filepath.Join(config.Dir, BuildFolder(debugBuild))
 		os.MkdirAll(buildPath, 0755)
 		CreateIcon(config.Dir, debugBuild)
 	} else {
-		changed, err = AddCMakeForLib(config, rootPackageDir, dependencies, refresh, debugBuild)
+		changed, detail, err = AddCMakeForLib(config, rootPackageDir, dependencies, refresh, debugBuild)
 		os.MkdirAll(filepath.Join(rootPackageBuildPath, "include"), 0755)
 		os.MkdirAll(filepath.Join(rootPackageBuildPath, "lib"), 0755)
 	}
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if !build {
-		return nil
+		return detail, nil
 	}
 	if debugBuild {
 		printSection("\nBuild Package: %s (debug)\n", config.Name)
 	} else {
 		printSection("\nBuild Package: %s (release)\n", config.Name)
 	}
-	return RunCMakeAndBuild(rootPackageDir, config.Dir, changed, debugBuild, true, install)
+	return detail, RunCMakeAndBuild(rootPackageDir, config.Dir, changed, debugBuild, true, install)
 }
 
 func BuildFolder(debugBuild bool) string {

@@ -20,7 +20,7 @@ func Pack(debugBuild bool) {
 		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
-	err = BuildPackage(config, config, false, debugBuild, true, false)
+	_, err = BuildPackage(config, config, false, debugBuild, true, false)
 	if err != nil {
 		color.Red("\nBuild Error\n")
 		os.Exit(1)

@@ -42,7 +42,8 @@ var (
 
 	docCommand = app.Command("doc", "Generate document")
 
-	fmtCommand = app.Command("fmt", "Format source code")
+	fmtCommand     = app.Command("fmt", "Format source code")
+	fmtTargetFiles = fmtCommand.Arg("files", "Format target").ExistingFilesOrDirs()
 
 	getCommand     = app.Command("get", "Get package")
 	getUpdateFlag  = getCommand.Flag("update", "Update package to the latest").Short('u').Bool()
@@ -50,6 +51,9 @@ var (
 	getPackageName = getCommand.Arg("package", "Package name on git repository").String()
 
 	testCommand = app.Command("test", "Test package")
+
+	vetCommand     = app.Command("vet", "Check program")
+	vetTargetFiles = vetCommand.Arg("files", "Check target").ExistingFilesOrDirs()
 
 	envCommand  = app.Command("env", "Show command information")
 	envVarsArgs = envCommand.Arg("var", "variable names").Strings()
@@ -113,13 +117,16 @@ func main() {
 		qtpm.Doc()
 	case fmtCommand.FullCommand():
 		printLogo()
-		qtpm.Format()
+		qtpm.Format(*fmtTargetFiles)
 	case getCommand.FullCommand():
 		printLogo()
 		qtpm.Get(*getPackageName, *getUpdateFlag, *getUseGitFlag)
 	case testCommand.FullCommand():
 		printLogo()
 		qtpm.Test(*refreshTestFlag)
+	case vetCommand.FullCommand():
+		printLogo()
+		qtpm.Vet(*vetTargetFiles)
 	case envCommand.FullCommand():
 		qtpm.Env(*envVarsArgs)
 	case addClassCommand.FullCommand():

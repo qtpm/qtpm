@@ -49,3 +49,30 @@ func CleanList(modules []string) []string {
 	sort.Strings(result)
 	return result
 }
+
+type PathFilter struct {
+	prefixes []string
+}
+
+func NewPathFilter(config *PackageConfig, paths []string) *PathFilter {
+	result := &PathFilter{}
+	for _, path := range paths {
+		absPath, _ := filepath.Abs(filepath.Join(".", path))
+		result.prefixes = append(result.prefixes, filepath.ToSlash(absPath[len(config.Dir)+1:]))
+	}
+	sort.Strings(result.prefixes)
+	return result
+}
+
+func (pf PathFilter) Match(path string) bool {
+	path = filepath.ToSlash(path)
+	if len(pf.prefixes) == 0 {
+		return true
+	}
+	for _, prefix := range pf.prefixes {
+		if strings.HasPrefix(path, prefix) {
+			return true
+		}
+	}
+	return false
+}

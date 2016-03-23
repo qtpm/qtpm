@@ -39,8 +39,8 @@ func Get(packageName string, update, useGit bool) {
 	}
 	os.MkdirAll(filepath.Join(dir, "qtresources", "translations"), 0755)
 	for _, packageConfig := range packages[:len(packages)-1] {
-		err = BuildPackage(parentConfig, packageConfig, update, false, true, parentConfig != packageConfig)
-		err = BuildPackage(parentConfig, packageConfig, update, true, true, parentConfig != packageConfig)
+		BuildPackage(parentConfig, packageConfig, update, false, true, parentConfig != packageConfig)
+		BuildPackage(parentConfig, packageConfig, update, true, true, parentConfig != packageConfig)
 	}
 }
 

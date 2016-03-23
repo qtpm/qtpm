@@ -6,62 +6,44 @@ import (
 	"github.com/fatih/color"
 	"io/ioutil"
 	"os"
-	"sort"
 )
 
-func Format() {
+func Format(targetFiles []string) {
 	config, err := LoadConfig(".", true)
 	if err != nil {
 		color.Red("%s\n", err.Error())
 		os.Exit(1)
 	}
-	variable := &SourceVariable{
+	detail := &ProjectDetail{
 		config: config,
 	}
-	variable.SearchFiles()
-	var sourceFiles []string
-	sourceFiles = append(sourceFiles, variable.Sources.Files...)
-	for _, files := range variable.Sources.PlatformSpecificFiles {
-		sourceFiles = append(sourceFiles, files...)
-	}
-	if config.IsApplication {
-		sourceFiles = append(sourceFiles, "src/main.cpp")
-	}
-	sourceFiles = append(sourceFiles, variable.ExtraTestSources.Files...)
-	for _, files := range variable.ExtraTestSources.PlatformSpecificFiles {
-		sourceFiles = append(sourceFiles, files...)
-	}
-	sourceFiles = append(sourceFiles, variable.Tests.Files...)
-	for _, files := range variable.Tests.PlatformSpecificFiles {
-		sourceFiles = append(sourceFiles, files...)
-	}
-	sourceFiles = append(sourceFiles, variable.Examples.Files...)
-	for _, files := range variable.Examples.PlatformSpecificFiles {
-		sourceFiles = append(sourceFiles, files...)
-	}
+	detail.SearchFiles()
+	sourceFiles := detail.AllFiles(config.IsApplication, AllSource)
 
-	sort.Strings(sourceFiles)
-
-	changed := 0
-
-	if len(sourceFiles) > 0 {
-		for _, sourceFile := range sourceFiles {
-			before, _ := ioutil.ReadFile(sourceFile)
-			cmd := Command("clang-format", config.Dir, "-i", sourceFile)
-			err := cmd.Run()
-			if err != nil {
-				color.Red("%s\n", err.Error())
-				os.Exit(1)
-			}
-			after, _ := ioutil.ReadFile(sourceFile)
-			if !bytes.Equal(before, after) {
-				changed++
-				color.Magenta("%s\n", sourceFile)
-			}
-		}
-	} else {
+	if len(sourceFiles) == 0 {
 		color.Red("\nNo source files found\n")
 		os.Exit(1)
+	}
+
+	pathFilter := NewPathFilter(config, targetFiles)
+	changed := 0
+
+	for _, sourceFile := range sourceFiles {
+		if !pathFilter.Match(sourceFile) {
+			continue
+		}
+		before, _ := ioutil.ReadFile(sourceFile)
+		cmd := Command("clang-format", config.Dir, "-i", sourceFile)
+		err := cmd.Run()
+		if err != nil {
+			color.Red("%s\n", err.Error())
+			os.Exit(1)
+		}
+		after, _ := ioutil.ReadFile(sourceFile)
+		if !bytes.Equal(before, after) {
+			changed++
+			color.Magenta("%s\n", sourceFile)
+		}
 	}
 	if changed != 0 {
 		fmt.Printf("\n")
