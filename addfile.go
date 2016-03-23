@@ -276,9 +276,9 @@ func (sv *ProjectDetail) SearchFiles() {
 		ext := filepath.Ext(path)
 		if supportedSourceExtensions[ext] || ext == ".ui" {
 			sv.Sources.addfile(outputPath)
-		} else {
+		} else if supportedHeaderExtensions[ext] {
 			_, ok := sv.InstallHeaderDirs[dir]
-			if supportedHeaderExtensions[ext] && ok {
+			if ok {
 				sv.InstallHeaderDirs[dir].addfile(outputPath)
 			} else {
 				sv.Sources.addfile(outputPath)

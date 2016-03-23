@@ -23,7 +23,7 @@ func Build(refresh, debugBuild bool) {
 	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
 	_, err = BuildPackage(config, config, refresh, debugBuild, true, !config.IsApplication)
 	if err != nil {
-		color.Red("\nBuild Error\n")
+		color.Red("\nBuild Error: %s\n", err.Error())
 		os.Exit(1)
 	}
 	printSuccess("\nFinish Build Successfully\n")
@@ -38,7 +38,7 @@ func Test(refresh bool) {
 	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
 	_, err = BuildPackage(config, config, refresh, true, true, false)
 	if err != nil {
-		color.Red("\nBuild Error\n")
+		color.Red("\nBuild Error: %s\n", err.Error())
 		os.Exit(1)
 	}
 	buildPath := filepath.Join(config.Dir, BuildFolder(true))
