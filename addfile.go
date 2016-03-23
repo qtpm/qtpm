@@ -231,6 +231,12 @@ var supportedHeaderExtensions = map[string]bool{
 	".h++": true,
 }
 
+var ignoreResources = map[string]bool{
+	"icon.png":           true,
+	"WindowsAppIcon.ico": true,
+	"MacOSXAppIcon.icns": true,
+}
+
 func (sv *ProjectDetail) SearchFiles() {
 	dir := sv.config.Dir
 	sv.Sources = NewSourceBundle("sources", false)
@@ -317,7 +323,7 @@ func (sv *ProjectDetail) SearchFiles() {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() || strings.HasPrefix(info.Name(), "_") {
+		if info.IsDir() || strings.HasPrefix(info.Name(), "_") || ignoreResources[info.Name()] {
 			return nil
 		}
 		sv.Resources.addfile("Resources/" + fullPath[len(resourceDir)+1:])

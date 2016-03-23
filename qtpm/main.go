@@ -32,6 +32,10 @@ var (
 	buildTypeFlag    = buildCommand.Arg("build type", "release/debug").Default("debug").Enum("debug", "release")
 	refreshBuildFlag = buildCommand.Flag("refresh", "Refresh cache").Short('r').Bool()
 
+	runCommand     = app.Command("run", "Build and launch program")
+	runTypeFlag    = runCommand.Arg("build type", "release/debug").Default("debug").Enum("debug", "release")
+	refreshRunFlag = runCommand.Flag("refresh", "Refresh cache").Short('r').Bool()
+
 	packCommand  = app.Command("pack", "Create installer")
 	packTypeFlag = packCommand.Arg("build type", "release/debug").Default("release").Enum("debug", "release")
 
@@ -103,6 +107,9 @@ func main() {
 	case buildCommand.FullCommand():
 		printLogo()
 		qtpm.Build(*refreshBuildFlag, *buildTypeFlag == "debug")
+	case runCommand.FullCommand():
+		printLogo()
+		qtpm.Run(*refreshRunFlag, *runTypeFlag == "debug")
 	case packCommand.FullCommand():
 		printLogo()
 		qtpm.Pack(*packTypeFlag == "debug")

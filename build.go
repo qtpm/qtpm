@@ -122,7 +122,7 @@ func BuildPackage(rootConfig, config *PackageConfig, refresh, debugBuild, build,
 	} else {
 		printSection("\nBuild Package: %s (release)\n", config.Name)
 	}
-	return detail, RunCMakeAndBuild(rootPackageDir, config.Dir, changed, debugBuild, true, install)
+	return detail, RunCMakeAndBuild(rootPackageDir, config, changed, debugBuild, true, install)
 }
 
 func BuildFolder(debugBuild bool) string {
@@ -149,22 +149,22 @@ func OldestUnixTime(paths ...string) int64 {
 
 func CreateIcon(rootPackageDir string, debugBuild bool) {
 	var iconImage image.Image
-	releaseBuildDir := filepath.Join(rootPackageDir, BuildFolder(false))
-	debugBuildDir := filepath.Join(rootPackageDir, BuildFolder(true))
+	resourceDir := filepath.Join(rootPackageDir, "Resources")
+	os.MkdirAll(resourceDir, 0755)
 
-	resultPath1 := filepath.Join(releaseBuildDir, "WindowsAppIcon.ico")
-	resultPath2 := filepath.Join(debugBuildDir, "WindowsAppIcon.ico")
-	resultPath3 := filepath.Join(releaseBuildDir, "MacOSXAppIcon.icns")
-	resultPath4 := filepath.Join(debugBuildDir, "MacOSXAppIcon.icns")
+	workDir := filepath.Join(rootPackageDir, BuildFolder(debugBuild))
+
+	resultPath1 := filepath.Join(resourceDir, "WindowsAppIcon.ico")
+	resultPath2 := filepath.Join(resourceDir, "MacOSXAppIcon.icns")
 	pngPath := filepath.Join(rootPackageDir, "Resources", "icon.png")
 
 	file, err := os.Open(pngPath)
 	var oldestUnixTime int64
 
 	if runtime.GOOS == "windows" {
-		oldestUnixTime = OldestUnixTime(resultPath1, resultPath2)
+		oldestUnixTime = OldestUnixTime(resultPath1)
 	} else if runtime.GOOS == "darwin" {
-		oldestUnixTime = OldestUnixTime(resultPath3, resultPath4)
+		oldestUnixTime = OldestUnixTime(resultPath2)
 	} else {
 		return
 	}
@@ -185,7 +185,7 @@ func CreateIcon(rootPackageDir string, debugBuild bool) {
 	sourceFile := filepath.Join("Resources", "icon.png")
 	if iconImage == nil {
 		sourceFile = "default image"
-		pngPath = filepath.Join(releaseBuildDir, "icon.png")
+		pngPath = filepath.Join(resourceDir, "icon.png")
 		ioutil.WriteFile(pngPath, MustAsset("resources/qt-logo.png"), 0644)
 		iconImage, _, err = image.Decode(bytes.NewReader(MustAsset("resources/qt-logo.png")))
 		if err != nil {
@@ -200,38 +200,32 @@ func CreateIcon(rootPackageDir string, debugBuild bool) {
 			panic(err)
 		}
 		ico.Encode(icon, iconImage)
-		color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(false), "WindowsAppIcon.ico"), sourceFile)
-
-		CopyFile(resultPath1, resultPath2)
-		color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(true), "WindowsAppIcon.ico"), sourceFile)
+		color.Magenta("Wrote: %s from %s\n", filepath.Join("Resources", "WindowsAppIcon.ico"), sourceFile)
 	} else {
-		os.MkdirAll(filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset"), 0755)
-		err = SequentialRun(releaseBuildDir).
-			Run("sips", "-z", "16", "16", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_16x16.png")).
-			Run("sips", "-z", "32", "32", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_16x16@2x.png")).
-			Run("sips", "-z", "32", "32", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_32x32.png")).
-			Run("sips", "-z", "64", "64", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_32x32@2x.png")).
-			Run("sips", "-z", "128", "128", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_128x128.png")).
-			Run("sips", "-z", "256", "256", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_128x128@2x.png")).
-			Run("sips", "-z", "256", "256", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_256x256.png")).
-			Run("sips", "-z", "512", "512", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_256x256@2x.png")).
-			Run("sips", "-z", "512", "512", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_512x512.png")).
-			Run("sips", "-z", "1024", "1024", pngPath, "--out", filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset", "icon_512x512@2x.png")).
-			Run("iconutil", "-c", "icns", "--output", resultPath3, filepath.Join(releaseBuildDir, "MacOSXAppIcon.iconset")).Finish()
+		os.MkdirAll(filepath.Join(workDir, "MacOSXAppIcon.iconset"), 0755)
+		err = SequentialRun(resourceDir).
+			Run("sips", "-z", "16", "16", pngPath, "--out", filepath.Join(workDir, "MacOSXAppIcon.iconset", "icon_16x16.png")).
+			Run("sips", "-z", "32", "32", pngPath, "--out", filepath.Join(workDir, "MacOSXAppIcon.iconset", "icon_16x16@2x.png")).
+			Run("sips", "-z", "32", "32", pngPath, "--out", filepath.Join(workDir, "MacOSXAppIcon.iconset", "icon_32x32.png")).
+			Run("sips", "-z", "64", "64", pngPath, "--out", filepath.Join(workDir, "MacOSXAppIcon.iconset", "icon_32x32@2x.png")).
+			Run("sips", "-z", "128", "128", pngPath, "--out", filepath.Join(workDir, "MacOSXAppIcon.iconset", "icon_128x128.png")).
+			Run("sips", "-z", "256", "256", pngPath, "--out", filepath.Join(workDir, "MacOSXAppIcon.iconset", "icon_128x128@2x.png")).
+			Run("sips", "-z", "256", "256", pngPath, "--out", filepath.Join(workDir, "MacOSXAppIcon.iconset", "icon_256x256.png")).
+			Run("sips", "-z", "512", "512", pngPath, "--out", filepath.Join(workDir, "MacOSXAppIcon.iconset", "icon_256x256@2x.png")).
+			Run("sips", "-z", "512", "512", pngPath, "--out", filepath.Join(workDir, "MacOSXAppIcon.iconset", "icon_512x512.png")).
+			Run("sips", "-z", "1024", "1024", pngPath, "--out", filepath.Join(workDir, "MacOSXAppIcon.iconset", "icon_512x512@2x.png")).
+			Run("iconutil", "-c", "icns", "--output", resultPath2, filepath.Join(workDir, "MacOSXAppIcon.iconset")).Finish()
 		if err != nil {
 			panic(err)
 		}
-		color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(false), "MacOSXAppIcon.icns"), sourceFile)
-
-		CopyFile(resultPath3, resultPath4)
-		color.Magenta("Wrote: %s from %s\n", filepath.Join(BuildFolder(true), "MacOSXAppIcon.icns"), sourceFile)
+		color.Magenta("Wrote: %s from %s\n", filepath.Join("Resources", "MacOSXAppIcon.icns"), sourceFile)
 	}
 }
 
-func RunCMakeAndBuild(rootPackageDir, packageDir string, update, debug, build, install bool) error {
-	buildPath := filepath.Join(packageDir, BuildFolder(debug))
+func RunCMakeAndBuild(rootPackageDir string, packageConfig *PackageConfig, update, debug, build, install bool) error {
+	buildPath := filepath.Join(packageConfig.Dir, BuildFolder(debug))
 	var installPrefix string
-	if rootPackageDir != packageDir {
+	if rootPackageDir != packageConfig.Dir {
 		installPrefix = filepath.Join(rootPackageDir, BuildFolder(debug))
 	} else {
 		if debug {
@@ -268,19 +262,37 @@ func RunCMakeAndBuild(rootPackageDir, packageDir string, update, debug, build, i
 	if !build {
 		return nil
 	}
-	buildArgs := []string{"--build", "."}
+	commonArgs := []string{"--build", "."}
 	if debug {
-		buildArgs = append(buildArgs, "--config", "Debug")
+		commonArgs = append(commonArgs, "--config", "Debug")
 	} else {
-		buildArgs = append(buildArgs, "--config", "Release")
+		commonArgs = append(commonArgs, "--config", "Release")
+	}
+	if rootPackageDir == packageConfig.Dir {
+		if install {
+			printSubSection("\nStart Building and Installing\n")
+			commonArgs = append(commonArgs, "--target", "install")
+		} else {
+			printSubSection("\nStart Building\n")
+		}
+		makeCmd := Command("cmake", buildPath, commonArgs...)
+		return makeCmd.Run()
 	}
 	if install {
 		printSubSection("\nStart Building and Installing\n")
-		buildArgs = append(buildArgs, "--target", "install")
 	} else {
 		printSubSection("\nStart Building\n")
 	}
-
+	buildArgs := append(commonArgs, "--target", strings.ToLower(packageConfig.Name))
 	makeCmd := Command("cmake", buildPath, buildArgs...)
-	return makeCmd.Run()
+	err = makeCmd.Run()
+	if err != nil {
+		return err
+	}
+	if !install {
+		return nil
+	}
+	installArgs := append(commonArgs, "--target", "install/fast")
+	installCmd := Command("cmake", buildPath, installArgs...)
+	return installCmd.Run()
 }

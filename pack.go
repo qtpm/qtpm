@@ -68,7 +68,7 @@ func Pack(debugBuild bool) {
 			os.Exit(1)
 		}
 		Touch(false, false)
-		err = RunCMakeAndBuild(config.Dir, config.Dir, true, debugBuild, false, false)
+		err = RunCMakeAndBuild(config.Dir, config, true, debugBuild, false, false)
 		if err != nil {
 			color.Red("packaging error at recreate CMakeLists.txt: %s\n", err.Error())
 			os.Exit(1)
