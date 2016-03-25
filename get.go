@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"git"
+	"github.com/fatih/color"
 	"io"
 	"io/ioutil"
 	"log"
@@ -28,9 +29,11 @@ func Get(packageName string, update, useGit bool) {
 		fmt.Println("qtpackage.toml or package name argument are needed")
 		return
 	}
-	parentConfig.SaveIfDirty()
 	if err != nil {
 		log.Fatalln(err)
+	}
+	if parentConfig != nil {
+		parentConfig.SaveIfDirty()
 	}
 	var dir string
 	if parentConfig != nil {
@@ -39,6 +42,10 @@ func Get(packageName string, update, useGit bool) {
 		dir, _ = filepath.Abs(".")
 	}
 	os.MkdirAll(filepath.Join(dir, "qtresources", "translations"), 0755)
+	if len(packages) == 0 {
+		color.Red("%s package has no dependent packages.\n", parentConfig.Name)
+		os.Exit(1)
+	}
 	for _, packageConfig := range packages[:len(packages)-1] {
 		_, err = BuildPackage(parentConfig, packageConfig, update, false, true, false)
 		if err != nil {
