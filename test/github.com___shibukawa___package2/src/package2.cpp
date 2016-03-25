@@ -1,5 +1,5 @@
 #include "package2.h"
-#include <package1/package1.h>
+#include <package1.h>
 
 Package2::Package2(QObject *parent) : QObject(parent)
 {

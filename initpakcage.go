@@ -65,14 +65,6 @@ var commonCommands = []commandHelp{
 		description: "Change your project's license to BSD. All available names are in qtpm's README.",
 	},
 	commandHelp{
-		commands:    []string{"add", "class", "@Message"},
-		description: "Add src/message.cpp, src/message.h, test/message_test.cpp for Message class.",
-	},
-	commandHelp{
-		commands:    []string{"add", "class", "@ErrorDialog@QDialog"},
-		description: "Similar to the above command, but the class inherits QDialog class.",
-	},
-	commandHelp{
 		commands:    []string{"test"},
 		description: "Run tests",
 	},
@@ -94,14 +86,15 @@ var commonCommands = []commandHelp{
 	},
 }
 
-var libCommands = []commandHelp{
-	commandHelp{
-		commands:    []string{"build", ":[release/debug]"},
-		description: "Build library and deploy to dest folder.",
-	},
-}
-
 var appCommands = []commandHelp{
+	commandHelp{
+		commands:    []string{"add", "class", "@Message"},
+		description: "Add src/message.cpp, src/message.h, test/message_test.cpp for Message class.",
+	},
+	commandHelp{
+		commands:    []string{"add", "class", "@ErrorDialog@QDialog"},
+		description: "Similar to the above command, but the class inherits QDialog class.",
+	},
 	commandHelp{
 		commands:    []string{"build", ":[release/debug]"},
 		description: "Build application.",
@@ -124,8 +117,25 @@ var appCommands = []commandHelp{
 	},
 }
 
-func showHelpForLib() {
+func showHelpForLib(packageName string) {
 	fmt.Println(helpComment)
+	packageName = strings.ToLower(packageName)
+
+	var libCommands = []commandHelp{
+		commandHelp{
+			commands:    []string{"add", "class", fmt.Sprintf("@%s/Message", packageName)},
+			description: fmt.Sprintf("Add src/%s/message.cpp, src/%s/message.h, test/message_test.cpp for Message class.", packageName, packageName),
+		},
+		commandHelp{
+			commands:    []string{"add", "class", fmt.Sprintf("@%s/ErrorDialog@QDialog", packageName)},
+			description: "Similar to the above command, but the class inherits QDialog class.",
+		},
+		commandHelp{
+			commands:    []string{"build", ":[release/debug]"},
+			description: "Build library and deploy to dest folder.",
+		},
+	}
+
 	dumpCommandHelp(append(commonCommands, libCommands...))
 }
 
@@ -155,6 +165,7 @@ func prepareProject(name, license string) (*PackageConfig, string) {
 		Dir:              dir,
 		Version:          []int{0, 1, 0},
 		ProjectStartYear: time.Now().Year(),
+		QTPMVersion:      QTPMVersion,
 	}
 	WriteLicense(dir, licenseKey)
 	return config, dir
@@ -177,15 +188,16 @@ func InitLibrary(name, license string) {
 		config: config,
 		Target: packageName,
 	}
-	AddClass(config, packageName, true)
-	AddTest(config, packageName)
+	dirName := strings.ToLower(packageName) + "/"
+	AddClass(config, dirName+packageName, true)
+	AddTest(config, dirName+packageName)
 	WriteTemplate(".", "examples", "example.cpp", "main.cpp", variable, false)
 	WriteTemplate(".", "", ".gitignore", "dotgitignore", variable, false)
 	WriteTemplate(".", "", ".clang-format", "dotclang-format", variable, false)
 	WriteTemplate(".", "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
 	WriteTemplate(".", "", "README.rst", "READMELib.rst", variable, false)
-	Touch(true, false)
-	showHelpForLib()
+	Touch(config, true, false)
+	showHelpForLib(packageName)
 }
 
 func InitApplication(name, license string) {
@@ -204,6 +216,6 @@ func InitApplication(name, license string) {
 	WriteTemplate(".", "", ".clang-format", "dotclang-format", variable, false)
 	WriteTemplate(".", "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
 	WriteTemplate(".", "", "README.rst", "READMEApp.rst", variable, false)
-	Touch(true, false)
+	Touch(config, true, false)
 	showHelpForApp()
 }

@@ -28,6 +28,7 @@ func Get(packageName string, update, useGit bool) {
 		fmt.Println("qtpackage.toml or package name argument are needed")
 		return
 	}
+	parentConfig.SaveIfDirty()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -39,11 +40,10 @@ func Get(packageName string, update, useGit bool) {
 	}
 	os.MkdirAll(filepath.Join(dir, "qtresources", "translations"), 0755)
 	for _, packageConfig := range packages[:len(packages)-1] {
-		_, err = BuildPackage(parentConfig, packageConfig, update, false, true, parentConfig != packageConfig)
+		_, err = BuildPackage(parentConfig, packageConfig, update, false, true, false)
 		if err != nil {
 			continue
 		}
-		BuildPackage(parentConfig, packageConfig, update, true, true, parentConfig != packageConfig)
 	}
 }
 
@@ -65,6 +65,7 @@ func getRecursively(rootPackage *PackageConfig, packages []string, download, sav
 				return nil, err
 			}
 			loadedPackages[packageName] = child
+			child.PackageName = packageName
 			for _, neededPackage := range child.Requires {
 				edges = append(edges, [2]string{neededPackage, packageName})
 				if _, ok := loadedPackages[neededPackage]; !ok && !has(waitingPackage, neededPackage) {
@@ -106,6 +107,7 @@ func has(list []string, entry string) bool {
 }
 
 func getSinglePackage(rootConfig *PackageConfig, packageName string, download, save, update, useGit bool) (*PackageConfig, error) {
+	fmt.Println("getSinglePackage", packageName)
 	// download from git
 	paths := strings.Split(packageName, "/")
 	if len(paths) != 3 {
@@ -117,19 +119,28 @@ func getSinglePackage(rootConfig *PackageConfig, packageName string, download, s
 	} else {
 		parentDir, _ = filepath.Abs(".")
 	}
-	installDir := filepath.Join(parentDir, "vendor", paths[0], paths[1], paths[2])
-	workDir := filepath.Join(parentDir, "vendor", paths[0], paths[1])
-	_, err := os.Stat(filepath.Join(parentDir, "vendor", packageName))
-	if os.IsNotExist(err) {
+	dirName := strings.Join(paths, "___")
+	installDir := filepath.Join(parentDir, "vendor", dirName)
+	workDir := filepath.Dir(installDir)
+	os.MkdirAll(workDir, 0755)
+
+	if _, err := os.Stat(installDir); os.IsNotExist(err) {
+		fmt.Println("not found(1)", installDir)
 		if !download {
-			return nil, fmt.Errorf("%s is not downloaded yet. Run qtpm get first.", packageName)
+			fmt.Println("not found(2)", installDir)
+			installDir = filepath.Clean(filepath.Join(parentDir, "..", dirName))
+			workDir = filepath.Dir(installDir)
+			if _, err := os.Stat(installDir); os.IsNotExist(err) {
+				return nil, fmt.Errorf("%s is not downloaded yet. Run qtpm get first.", packageName)
+			}
 		}
-		os.MkdirAll(workDir, 0755)
 		if useGit || paths[0] != "github.com" {
+			fmt.Println("git clone", installDir)
 			err = git.CloneWithoutFilters([]string{
-				"--depth", "1", fmt.Sprintf("git@%s:%s/%s.git", paths[0], paths[1], paths[2]),
+				"--depth", "1", fmt.Sprintf("git@%s:%s/%s.git", paths[0], paths[1], paths[2]), dirName,
 			}, workDir)
 		} else {
+			fmt.Println("download zip", installDir)
 			err = DownloadZip(installDir, paths[1], paths[2])
 		}
 		if err != nil {
@@ -141,7 +152,6 @@ func getSinglePackage(rootConfig *PackageConfig, packageName string, download, s
 			os.RemoveAll(installDir)
 			err = DownloadZip(installDir, paths[1], paths[2])
 		} else {
-			os.MkdirAll(workDir, 0755)
 			cmd := Command("get", installDir, "pull", "--ff-only")
 			err = cmd.Run()
 		}
@@ -151,7 +161,7 @@ func getSinglePackage(rootConfig *PackageConfig, packageName string, download, s
 	}
 	if save && !has(rootConfig.Requires, packageName) {
 		rootConfig.Requires = append(rootConfig.Requires, packageName)
-		rootConfig.Save()
+		rootConfig.DirtyFlag = true
 	}
 	return LoadConfig(installDir, false)
 }

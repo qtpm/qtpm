@@ -3,6 +3,7 @@ package qtpm
 import (
 	"fmt"
 	"github.com/BurntSushi/toml"
+	"github.com/fatih/color"
 	"os"
 	"path/filepath"
 	"sort"
@@ -11,8 +12,9 @@ import (
 const packageFileName = "qtpackage.toml"
 const userPackageFileName = "qtpackage.user.toml"
 
-const (
-	Version = "0.8.0"
+var (
+	QTPMVersion       = []int{0, 8, 1}
+	QTPMVersionString = fmt.Sprintf("%d.%d.%d", QTPMVersion[0], QTPMVersion[1], QTPMVersion[2])
 )
 
 type PackageConfig struct {
@@ -26,14 +28,27 @@ type PackageConfig struct {
 	Version          []int                     `toml:"version"`
 	ExtraInstallDirs []string                  `toml:"extra_install_dirs"`
 	ProjectStartYear int                       `toml:"project_start_year"`
+	QTPMVersion      []int                     `toml:"qtpm_version"`
 	IsApplication    bool                      `toml:"-"`
 	Dir              string                    `toml:"-"`
+	PackageName      string                    `toml:"-"`
 	Children         map[string]*PackageConfig `toml:"-"`
+	DirtyFlag        bool                      `toml:"-"`
 }
 
 type PackageUserConfig struct {
 	QtDir       string `toml:"qtdir"`
 	BuildNumber int    `toml:"build_number"`
+}
+
+func MustLoadConfig(dir string, traverse bool) *PackageConfig {
+	config, err := LoadConfig(".", traverse)
+	if err != nil {
+		color.Red("%s\n", err.Error())
+		os.Exit(1)
+	}
+	os.Exit(1)
+	return config
 }
 
 func LoadConfig(dir string, traverse bool) (*PackageConfig, error) {
@@ -101,7 +116,21 @@ func (config *PackageConfig) Save() error {
 	sort.Strings(config.Requires)
 	sort.Strings(config.QtModules)
 	encoder := toml.NewEncoder(file)
-	return encoder.Encode(config)
+	err = encoder.Encode(config)
+	if err == nil {
+		color.Magenta("Update: %s\n", packageFileName)
+	} else {
+		color.Red("Write file error: %s - %s\n", packageFileName, err.Error())
+	}
+	return err
+}
+
+func (config *PackageConfig) SaveIfDirty() error {
+	if config.DirtyFlag {
+		config.DirtyFlag = false
+		return config.Save()
+	}
+	return nil
 }
 
 func removeDuplicate(input []string) []string {
@@ -125,4 +154,9 @@ func UserName() string {
 		}
 	}
 	return "(no name)"
+}
+
+func AddQtModule(config *PackageConfig, module string) {
+	config.QtModules = CleanList(append(config.QtModules, module))
+	config.Save()
 }

@@ -1,5 +1,4 @@
-#ifndef [[.ClassNameLarge]]_H
-#define [[.ClassNameLarge]]_H
+#pragma once
 
 #include <[[.Parent]]>
 
@@ -11,6 +10,4 @@ public:
 signals:
 public slots:
 };
-
-#endif // [[.ClassNameLarge]]_H
 

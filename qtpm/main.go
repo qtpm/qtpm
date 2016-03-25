@@ -5,7 +5,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/qtpm/qtpm"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"log"
 	"os"
 	"runtime"
 )
@@ -15,6 +14,60 @@ var (
 	printTitle2 = color.New(color.FgBlack, color.Bold, color.BgWhite).SprintfFunc()
 	printBold   = color.New(color.Bold).SprintfFunc()
 )
+
+var qtmodules = []string{
+	"3DCore",
+	"3DInput",
+	"3DLogic",
+	"3DQuick",
+	"3DQuickInput",
+	"3DQuickRender",
+	"3DRender",
+	"AndroidExtras",
+	"Bluetooth",
+	"CLucene",
+	"Concurrent",
+	"Core",
+	"DBus",
+	"Designer",
+	"DesignerComponents",
+	"Gui",
+	"Help",
+	"LabsControls",
+	"LabsTemplates",
+	"Location",
+	"MacExtras",
+	"Multimedia",
+	"MultimediaQuick_p",
+	"MultimediaWidgets",
+	"Network",
+	"Nfc",
+	"Positioning",
+	"PrintSupport",
+	"Qml",
+	"Quick",
+	"QuickParticles",
+	"QuickTest",
+	"QuickWidgets",
+	"Sensors",
+	"SerialBus",
+	"SerialPort",
+	"Sql",
+	"Svg",
+	"Test",
+	"UiPlugin",
+	"WebChannel",
+	"WebEngine",
+	"WebEngineCore",
+	"WebEngineWidgets",
+	"WebSockets",
+	"WebView",
+	"Widgets",
+	"X11Extras",
+	"Xml",
+	"XmlPatterns",
+	"WinExtras",
+}
 
 var (
 	app    = kingpin.New("qtpm", "Package Manager fot Qt")
@@ -64,14 +117,17 @@ var (
 
 	refreshTestFlag = testCommand.Flag("refresh", "Refresh cache").Short('r').Bool()
 
-	addCommand        = app.Command("add", "Add source template")
-	addClassCommand   = addCommand.Command("class", "Add class template")
-	className         = addClassCommand.Arg("name", "Class name").Required().String()
-	addTestCommand    = addCommand.Command("test", "Add test template")
-	testName          = addTestCommand.Arg("test", "Test class name").Required().String()
-	addLicenseCommand = addCommand.Command("license", "Add license file")
+	addCommand             = app.Command("add", "Add source template")
+	addClassCommand        = addCommand.Command("class", "Add class template with test")
+	className              = addClassCommand.Arg("name", "Class name").Required().String()
+	addTestCommand         = addCommand.Command("test", "Add test template")
+	testName               = addTestCommand.Arg("test", "Test class name").Required().String()
+	addQtModuleCommand     = addCommand.Command("qtmodule", "Add Qt module")
+	qtModuleName           = addQtModuleCommand.Flag("name", "Qt module name").Required().Enum(qtmodules...)
+	addLicenseCommand      = addCommand.Command("license", "Add license file")
+	licenseName            = addLicenseCommand.Arg("name", "License file name").String()
+	addDotGitIgnoreCommand = addCommand.Command(".gitignore", "Add .gitignore")
 
-	licenseName      = addLicenseCommand.Arg("name", "License file name").String()
 	linguistCommand  = app.Command("i18n", "i18n command")
 	linguistAdd      = linguistCommand.Command("add", "Add language")
 	linguistAddLang  = linguistAdd.Arg("lang", "Language (fr, ge, etc...").Required().String()
@@ -92,7 +148,7 @@ func printLogo() {
 	} else {
 		logo = printTitle1("Qt") + printTitle2("pm")
 	}
-	fmt.Println(printBold("\n%s - version %s by Yoshiki Shibukawa\n", logo, qtpm.Version))
+	fmt.Println(printBold("\n%s - version %s by Yoshiki Shibukawa\n", logo, qtpm.QTPMVersionString))
 }
 
 func main() {
@@ -115,7 +171,7 @@ func main() {
 		qtpm.Pack(*packTypeFlag == "debug")
 	case touchCommand.FullCommand():
 		printLogo()
-		qtpm.Touch(*touchTypeFlag == "debug", true)
+		qtpm.Touch(qtpm.MustLoadConfig(".", true), *touchTypeFlag == "debug", true)
 	case cleanCommand.FullCommand():
 		printLogo()
 		qtpm.Clean()
@@ -138,28 +194,28 @@ func main() {
 		qtpm.Env(*envVarsArgs)
 	case addClassCommand.FullCommand():
 		printLogo()
-		config, err := qtpm.LoadConfig(".", true)
-		if err != nil {
-			log.Fatalln(err)
-		}
+		config := qtpm.MustLoadConfig(".", true)
 		qtpm.AddClass(config, *className, !config.IsApplication)
 		qtpm.AddTest(config, *className)
-		qtpm.Touch(true, false)
+		qtpm.Touch(config, true, false)
 	case addTestCommand.FullCommand():
 		printLogo()
-		config, err := qtpm.LoadConfig(".", true)
-		if err != nil {
-			log.Fatalln(err)
-		}
+		config := qtpm.MustLoadConfig(".", true)
 		qtpm.AddTest(config, *testName)
-		qtpm.Touch(true, false)
+		qtpm.Touch(config, true, false)
+	case addQtModuleCommand.FullCommand():
+		printLogo()
+		config := qtpm.MustLoadConfig(".", true)
+		qtpm.AddQtModule(config, *qtModuleName)
+		qtpm.Touch(config, true, false)
 	case addLicenseCommand.FullCommand():
 		printLogo()
-		config, err := qtpm.LoadConfig(".", true)
-		if err != nil {
-			log.Fatalln(err)
-		}
+		config := qtpm.MustLoadConfig(".", true)
 		qtpm.AddLicense(config, *licenseName)
+	case addDotGitIgnoreCommand.FullCommand():
+		printLogo()
+		config := qtpm.MustLoadConfig(".", true)
+		qtpm.AddDotGitIgnore(config)
 	case linguistAdd.FullCommand():
 		printLogo()
 		qtpm.LinguistAdd(*linguistAddLang, false)
@@ -170,6 +226,6 @@ func main() {
 		printLogo()
 		qtpm.LinguistEdit(*linguistEditLang)
 	case versionCommand.FullCommand():
-		fmt.Println(qtpm.Version)
+		fmt.Println(qtpm.QTPMVersionString)
 	}
 }

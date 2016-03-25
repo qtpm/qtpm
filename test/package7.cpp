@@ -1,4 +1,4 @@
-#include <package2/package2.h>
+#include <package2.h>
 #include <iostream>
 
 int main() {

@@ -39,7 +39,7 @@ func (s SourceBundle) DefineList() string {
 	}
 	var buffer bytes.Buffer
 	sort.Strings(s.Files)
-	fmt.Fprintf(&buffer, "set(%s %s)", s.Name, strings.Join(s.Files, " "))
+	fmt.Fprintf(&buffer, "set(%s %s)", s.Name, strings.Join(s.Files, "\n    "))
 	var keys []string
 	for key := range s.PlatformSpecificFiles {
 		keys = append(keys, key)
@@ -49,7 +49,7 @@ func (s SourceBundle) DefineList() string {
 		files := s.PlatformSpecificFiles[key]
 		sort.Strings(files)
 		fmt.Fprintf(&buffer, "\nif(%s)\n", key)
-		fmt.Fprintf(&buffer, "  list(APPEND %s %s)\n", s.Name, strings.Join(files, " "))
+		fmt.Fprintf(&buffer, "  list(APPEND %s %s)\n", s.Name, strings.Join(files, "\n      "))
 		fmt.Fprintf(&buffer, "endif(%s)", key)
 	}
 	return buffer.String()
@@ -97,10 +97,14 @@ const (
 	NoHeaderFile
 )
 
+type Require struct {
+	PackageName string
+	LibName     string
+}
+
 type ProjectDetail struct {
 	Target              string
-	DestinationPath     string
-	Requires            []string
+	Requires            []Require
 	QtModules           []string
 	AllDependencies     []string
 	Sources             *SourceBundle
@@ -111,7 +115,7 @@ type ProjectDetail struct {
 	ExtraExampleSources *SourceBundle
 	Resources           *SourceBundle
 	HasQtResource       bool
-	Debug               bool
+	SubDir              bool
 	BuildNumber         int
 	config              *PackageConfig
 }
@@ -124,17 +128,20 @@ func (sv ProjectDetail) TargetLarge() string {
 	return strings.ToUpper(sv.Target)
 }
 
-func (sv ProjectDetail) TargetLibName() string {
-	name := strings.ToLower(sv.Target)
-	return strings.TrimPrefix(strings.TrimSuffix(name, "lib"), "lib")
+func libname(name string) string {
+	return strings.TrimPrefix(strings.TrimSuffix(strings.ToLower(name), "lib"), "lib")
 }
 
-func (sv ProjectDetail) RequireLibs() []string {
+func (sv ProjectDetail) TargetLibName() string {
+	return libname(sv.Target)
+}
+
+func (sv ProjectDetail) RequireLibs() string {
 	result := make([]string, len(sv.Requires))
 	for i, require := range sv.Requires {
-		result[i] = strings.TrimPrefix(strings.TrimSuffix(require, "lib"), "lib")
+		result[i] = require.LibName
 	}
-	return result
+	return strings.Join(result, " ")
 }
 
 func (sv ProjectDetail) AuthorName() string {
@@ -235,6 +242,7 @@ var ignoreResources = map[string]bool{
 	"icon.png":           true,
 	"WindowsAppIcon.ico": true,
 	"MacOSXAppIcon.icns": true,
+	"windows.rc":         true,
 }
 
 func (sv *ProjectDetail) SearchFiles() {
@@ -389,20 +397,13 @@ func AddClass(config *PackageConfig, name string, isLibrary bool) {
 	}
 	dir := filepath.Join(append([]string{"src"}, strings.Split(dirName, "/")...)...)
 	os.MkdirAll(filepath.Join(config.Dir, dir), 0755)
-	exportFlag := true
 	if dirName != "" {
 		dirName = dirName + "/"
-		exportFlag = false
 	}
 	variable := map[string]interface{}{
 		"Parent":         parent,
 		"ClassName":      className,
 		"ClassNameSmall": strings.ToLower(className),
-		"ClassNameLarge": strings.ToUpper(className),
-		"TargetSmall":    strings.ToLower(config.Name),
-		"TargetLarge":    strings.ToUpper(config.Name),
-		"DoExport":       exportFlag,
-		"Dir":            dirName,
 	}
 	WriteTemplate(config.Dir, dir, strings.ToLower(className)+".h", "classsource.h", variable, false)
 	WriteTemplate(config.Dir, dir, strings.ToLower(className)+".cpp", "classsource.cpp", variable, false)
@@ -439,53 +440,62 @@ func AddLicense(config *PackageConfig, name string) {
 	config.Save()
 }
 
-func RequiredQtModules(dependencies []*PackageConfig) []string {
+func AddDotGitIgnore(config *PackageConfig) {
+	WriteTemplate(config.Dir, "", ".gitignore", "dotgitignore", nil, false)
+}
+
+func RequiredQtModules(config *PackageConfig, dependencies []*PackageConfig) []string {
 	var modules []string
+	modules = append(modules, config.QtModules...)
 	for _, dependency := range dependencies {
 		modules = append(modules, dependency.QtModules...)
 	}
 	return CleanList(modules)
 }
 
-func AllDependenciesPaths(rootPackage *PackageConfig, dependencies []*PackageConfig) []string {
-	var paths []string
-	skip := true
-	for _, dependency := range dependencies {
-		if skip {
-			if dependency == rootPackage {
-				skip = false
+func FilterDependencies(config *PackageConfig, allDependencies []*PackageConfig) []*PackageConfig {
+	allPackages := make(map[string]*PackageConfig)
+	for _, dependency := range allDependencies {
+		allPackages[dependency.PackageName] = dependency
+	}
+	waitingList := config.Requires
+	readPackageNames := make(map[string]bool)
+	for _, packageName := range waitingList {
+		readPackageNames[packageName] = true
+	}
+	for len(waitingList) > 0 {
+		var nextWaitingList []string
+		for _, packageName := range waitingList {
+			dependency := allPackages[packageName]
+			for _, nextPackageName := range dependency.Requires {
+				if !readPackageNames[nextPackageName] {
+					nextWaitingList = append(nextWaitingList, nextPackageName)
+					readPackageNames[nextPackageName] = true
+				}
 			}
-			continue
 		}
-		if rootPackage.Dir == dependency.Dir {
-			paths = append(paths, "")
-		} else {
-			path, _ := filepath.Rel(rootPackage.Dir, dependency.Dir)
-			paths = append(paths, path+"/")
+		waitingList = nextWaitingList
+	}
+
+	var filteredDependencies []*PackageConfig
+	for _, dependency := range allDependencies {
+		if readPackageNames[dependency.PackageName] {
+			filteredDependencies = append(filteredDependencies, dependency)
 		}
 	}
-	return CleanList(paths)
+	return filteredDependencies
 }
 
-func AllDependenciesLibs(config *PackageConfig, dependencies []*PackageConfig) []string {
-	var requires []string
-	skip := true
+func DependenciesLibs(config *PackageConfig, dependencies []*PackageConfig) []Require {
+	var requires []Require
 	for _, dependency := range dependencies {
-		if skip {
-			if dependency == config {
-				skip = false
-			}
-			continue
-		}
-		for _, require := range dependency.Requires {
-			packageNames := strings.Split(require, "/")
-			if len(packageNames) != 3 {
-				continue
-			}
-			requires = append(requires, packageNames[2])
-		}
+		packageNames := strings.Split(dependency.PackageName, "/")
+		requires = append(requires, Require{
+			PackageName: strings.Join(packageNames, "___"),
+			LibName:     libname(packageNames[2]),
+		})
 	}
-	return CleanList(requires)
+	return requires
 }
 
 func AddCMakeForApp(config *PackageConfig, rootPackageDir string, dependencies []*PackageConfig, refresh, debugBuild bool) (bool, *ProjectDetail, error) {
@@ -496,20 +506,17 @@ func AddCMakeForApp(config *PackageConfig, rootPackageDir string, dependencies [
 		destinationPath, _ = filepath.Rel(config.Dir, rootPackageDir)
 		destinationPath += "/"
 	}
-
+	filteredDependencies := FilterDependencies(config, dependencies)
 	detail := &ProjectDetail{
-		config:          config,
-		DestinationPath: filepath.ToSlash(destinationPath),
-		Target:          CleanName(config.Name),
-		QtModules:       RequiredQtModules(dependencies),
-		AllDependencies: AllDependenciesPaths(config, dependencies),
-		Requires:        AllDependenciesLibs(config, dependencies),
+		config:    config,
+		Target:    CleanName(config.Name),
+		QtModules: RequiredQtModules(config, filteredDependencies),
+		Requires:  DependenciesLibs(config, filteredDependencies),
 	}
 	detail.SearchFiles()
 	detail.HasQtResource = CreateResource(config.Dir)
 
-	WriteTemplate(config.Dir, BuildFolder(false), "windows.rc", "windows.rc", detail, !refresh)
-	WriteTemplate(config.Dir, BuildFolder(true), "windows.rc", "windows.rc", detail, !refresh)
+	WriteTemplate(config.Dir, "Resources", "windows.rc", "windows.rc", detail, !refresh)
 	_, err := os.Stat(filepath.Join(config.Dir, BuildFolder(debugBuild)))
 	changed, err2 := WriteTemplate(config.Dir, "", "CMakeLists.txt", "CMakeListsApp.txt", detail, !refresh)
 	return changed || os.IsNotExist(err), detail, err2
@@ -523,21 +530,12 @@ func AddCMakeForLib(config *PackageConfig, rootPackageDir string, dependencies [
 		destinationPath, _ = filepath.Rel(config.Dir, rootPackageDir)
 		destinationPath += "/"
 	}
-
+	filteredDependencies := FilterDependencies(config, dependencies)
 	detail := &ProjectDetail{
-		config:          config,
-		DestinationPath: filepath.ToSlash(destinationPath),
-		Target:          CleanName(config.Name),
-		QtModules:       CleanList(config.QtModules),
-		AllDependencies: AllDependenciesPaths(config, dependencies),
-		Requires:        AllDependenciesLibs(config, dependencies),
-	}
-	for _, require := range config.Requires {
-		packageNames := strings.Split(require, "/")
-		if len(packageNames) != 3 {
-			continue
-		}
-		detail.Requires = append(detail.Requires, packageNames[2])
+		config:    config,
+		Target:    CleanName(config.Name),
+		QtModules: RequiredQtModules(config, filteredDependencies),
+		Requires:  DependenciesLibs(config, filteredDependencies),
 	}
 	detail.SearchFiles()
 	detail.HasQtResource = CreateResource(config.Dir)

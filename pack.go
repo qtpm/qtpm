@@ -67,7 +67,7 @@ func Pack(debugBuild bool) {
 			color.Red("packaging error at windeployqt: %s\n", err.Error())
 			os.Exit(1)
 		}
-		Touch(false, false)
+		Touch(config, false, false)
 		err = RunCMakeAndBuild(config.Dir, config, true, debugBuild, false, false)
 		if err != nil {
 			color.Red("packaging error at recreate CMakeLists.txt: %s\n", err.Error())

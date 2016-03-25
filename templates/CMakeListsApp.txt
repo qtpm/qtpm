@@ -9,15 +9,9 @@ set([[.TargetLarge]]_MINOR_VERSION [[.VersionMinor]])
 set([[.TargetLarge]]_PATCH_VERSION [[.VersionPatch]])
 set([[.TargetLarge]]_VERSION [[.Version]])
 
-if(CMAKE_BUILD_TYPE MATCHES Release)
-    message("-- Release Build")
-    include_directories([[.DestinationPath]]build-release/include)
-    link_directories([[.DestinationPath]]build-release/lib)
-else()
-    message("-- Debug Build")
-    include_directories([[.DestinationPath]]build-debug/include)
-    link_directories([[.DestinationPath]]build-debug/lib)
-endif()
+# qtpm setting
+
+set(VENDOR_PATH ${CMAKE_CURRENT_SOURCE_DIR}/vendor)
 
 # compiler setting
 
@@ -42,9 +36,8 @@ endif()
 [[range $module := .QtModules]]find_package(Qt5[[$module]] REQUIRED)
 [[end]]# include extra settings
 
-[[range $dependency := .AllDependencies]]include("[[$dependency]]CMakeExtra.txt" OPTIONAL)
-[[end]]
 [[if .Tests.HasItem]]
+
 # enable tests
 
 enable_testing()
@@ -55,13 +48,18 @@ find_package(Qt5Test REQUIRED)
   get_filename_component(execname ${file} NAME_WE)
   add_executable(${execname} ${file} ${[[.Sources.Name]]} ${[[.ExtraTestSources.Name]]}[[if .HasQtResource]] ${QRC}[[end]])
   add_test(NAME ${execname} COMMAND ${execname})
-  qt5_use_modules(${execname} Test[[range $module := .QtModules]] [[$module]][[end]])
+  qt5_use_modules(${execname} Test[[range $module := .QtModules]] [[$module]][[end]])[[if gt (len .Requires) 0]]
+  target_link_libraries(${execname} [[.RequireLibs]])[[end]]
 [[.Tests.EndLoop]]
 [[end]][[if gt (len .Requires) 0]]
-#dependencies
 
-link_libraries([[range .RequireLibs]] [[.]][[end]])
-[[end]]
+# dependencies
+
+set(QTPM_IS_ROOT_PROJECT FALSE)
+[[range $dependency := .Requires]]add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vendor/[[$dependency.PackageName]] ${CMAKE_CURRENT_BINARY_DIR}/[[$dependency.LibName]])
+include("${CMAKE_CURRENT_SOURCE_DIR}/vendor/[[$dependency.PackageName]]/CMakeExtra.txt" OPTIONAL)
+include_directories(${VENDOR_PATH}/[[$dependency.PackageName]]/src)
+[[end]][[end]]
 # build setting
 
 include_directories(src)
@@ -96,13 +94,14 @@ elseif(WIN32)
         -i ${winres})
     set(${[[.Sources.Name]]} "${winresobj}")
   else()
-    set(${{[.Sources.Name]]} ${winres})
+    set(${[[.Sources.Name]]} ${winres})
   endif()
   add_executable([[.TargetSmall]] WIN32 src/main.cpp ${[[.Sources.Name]]}[[if .HasQtResource]] qtresources/resource.qrc[[end]])
 else()
   add_executable([[.TargetSmall]] src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .HasQtResource]] qtresources/resource.qrc[[end]])
 endif()
-[[if gt (len .QtModules) 0]]qt5_use_modules([[.TargetSmall]][[range $module := .QtModules]] [[$module]][[end]])[[end]]
+[[if gt (len .QtModules) 0]]qt5_use_modules([[.TargetSmall]][[range $module := .QtModules]] [[$module]][[end]])[[end]][[if gt (len .Requires) 0]]
+target_link_libraries([[.TargetSmall]] [[.RequireLibs]])[[end]]
 
 # installer setting
 

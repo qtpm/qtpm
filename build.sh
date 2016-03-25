@@ -57,9 +57,9 @@ popd >> /dev/null
 #popd >> /dev/null
 
 echo "nested required modules"
-mkdir -p workbench7/vendor/github.com/shibukawa
-cp -r test/package1 workbench7/vendor/github.com/shibukawa
-cp -r test/package2 workbench7/vendor/github.com/shibukawa
+mkdir -p workbench7/vendor
+cp -r test/github.com___shibukawa___package1 workbench7/vendor/
+cp -r test/github.com___shibukawa___package2 workbench7/vendor/
 pushd workbench7 >> /dev/null
 ../qtpmcmd init app
 cp ../test/package7.cpp src/main.cpp

@@ -9,14 +9,17 @@ set([[.TargetLarge]]_MINOR_VERSION [[.VersionMinor]])
 set([[.TargetLarge]]_PATCH_VERSION [[.VersionPatch]])
 set([[.TargetLarge]]_VERSION [[.Version]])
 
-if(CMAKE_BUILD_TYPE MATCHES Release)
-    message("-- Release Build")
-    include_directories([[.DestinationPath]]build-release/include)
-    link_directories([[.DestinationPath]]build-release/lib)
+if(DEFINED QTPM_IS_ROOT_PROJECT)
+    set(READ_SUBDIRECTORIES FALSE)
 else()
-    message("-- Debug Build")
-    include_directories([[.DestinationPath]]build-debug/include)
-    link_directories([[.DestinationPath]]build-debug/lib)
+    set(READ_SUBDIRECTORIES TRUE)
+    set(QTPM_IS_ROOT_PROJECT FALSE)
+endif()
+
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../../vendor)
+    set(VENDOR_PATH ${CMAKE_CURRENT_SOURCE_DIR}/..)
+else()
+    set(VENDOR_PATH ${CMAKE_CURRENT_SOURCE_DIR}/vendor)
 endif()
 
 # compiler setting
@@ -53,29 +56,36 @@ if(DEFINED ENV{QTDIR})
 endif()
 [[range $qtmodule := .QtModules]]find_package(Qt5[[$qtmodule]] REQUIRED)
 [[end]]
-# include extra settings
+# extra setting
 
-[[range $dependency := .AllDependencies]]include("[[$dependency]]CMakeExtra.txt" OPTIONAL)
-[[end]]
-[[if gt (len .Requires) 0]]
+include("CMakeExtra.txt" OPTIONAL)[[if gt (len .Requires) 0]]
+
 # dependencies
 
-link_libraries([[range .RequireLibs]] [[.]][[end]])
-[[end]]
+[[range $dependency := .Requires]]if(${READ_SUBDIRECTORIES})
+    add_subdirectory(${VENDOR_PATH}/[[$dependency.PackageName]] ${CMAKE_BINARY_DIR}/[[$dependency.LibName]])
+endif()
+include("${VENDOR_PATH}/[[$dependency.PackageName]]/CMakeExtra.txt" OPTIONAL)
+include_directories(${VENDOR_PATH}/[[$dependency.PackageName]]/src)
+[[end]][[end]]
+
 # build setting
 
 include_directories(src)
 [[.Sources.DefineList]]
 add_library([[.TargetLibName]] STATIC ${[[.Sources.Name]]}[[if .HasQtResource]] qtresources/resource.qrc[[end]])
-[[if gt (len .QtModules) 0]]qt5_use_modules([[.TargetLibName]][[range $module := .QtModules]] [[$module]][[end]])[[end]][[if .Examples.HasItem]]
+[[if gt (len .QtModules) 0]]qt5_use_modules([[.TargetLibName]][[range $module := .QtModules]] [[$module]][[end]])[[end]][[if gt (len .Requires) 0]]
+target_link_libraries([[.TargetLibName]] [[.RequireLibs]])
+[[end]][[if .Examples.HasItem]]
 # build examples
 
 [[.ExtraExampleSources.DefineList]]
 [[.Examples.DefineList]]
 [[.Examples.StartLoop]]
   get_filename_component(execname ${file} NAME_WE)
-  add_executable(${execname} ${file} ${[[.Sources.Name]]} ${[[.ExtraExampleSources.Name]]}[[if .HasQtResource]] qtresources/resource.qrc[[end]])
+  add_executable(${execname} ${file} ${[[.ExtraExampleSources.Name]]}[[if .HasQtResource]] qtresources/resource.qrc[[end]])
   qt5_use_modules(${execname} Test[[range $module := .QtModules]] [[$module]][[end]])
+  target_link_libraries(${execname} [[.TargetLibName]] [[.RequireLibs]])
 [[.Examples.EndLoop]]
 [[end]][[if .Tests.HasItem]]
 # enable tests
@@ -86,9 +96,10 @@ find_package(Qt5Test REQUIRED)
 [[.Tests.DefineList]]
 [[.Tests.StartLoop]]
   get_filename_component(execname ${file} NAME_WE)
-  add_executable(${execname} ${file} ${[[.Sources.Name]]} ${[[.ExtraTestSources.Name]]}[[if .HasQtResource]] qtresources/resource.qrc[[end]])
+  add_executable(${execname} ${file} ${[[.ExtraTestSources.Name]]}[[if .HasQtResource]] qtresources/resource.qrc[[end]])
   add_test(NAME ${execname} COMMAND ${execname})
   qt5_use_modules(${execname} Test[[range $module := .QtModules]] [[$module]][[end]])
+  target_link_libraries(${execname} [[.TargetLibName]] [[.RequireLibs]])
 [[.Tests.EndLoop]]
 [[end]]# install setting
 
