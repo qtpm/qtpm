@@ -9,7 +9,7 @@ public:
     Test[[.ClassName]]() {
     }
 
-private Q_SLOTS:
+private slots:
     void initTestCase() {
         // This method is called before the first testfunction is executed.
     }

@@ -36,6 +36,8 @@ endif()
 [[range $module := .QtModules]]find_package(Qt5[[$module]] REQUIRED)
 [[end]]# include extra settings
 
+include("${CMAKE_CURRENT_SOURCE_DIR}/CMakeExtra.txt" OPTIONAL)
+
 [[if .Tests.HasItem]]
 
 # enable tests
@@ -79,7 +81,7 @@ if(APPLE)
   set(MACOSX_BUNDLE_COPYRIGHT "(C) [[.CopyRight]]")
   add_executable([[.TargetSmall]] MACOSX_BUNDLE src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .HasQtResource]] qtresources/resource.qrc[[end]][[if .Resources.HasItem]] ${[[.Resources.Name]]}[[end]] Resources/MacOSXAppIcon.icns)
 elseif(WIN32)
-  set(winres "${CMAKE_CURRENT_BINARY_DIR}/windows.rc")
+  set(winres "Resources/windows.rc")
   if(MINGW)
     if(NOT CMAKE_RC_COMPILER)
       set(CMAKE_RC_COMPILER windres.exe)
@@ -113,7 +115,8 @@ if(WIN32)
         ${CMAKE_CURRENT_BINARY_DIR}/iconengines
         ${CMAKE_CURRENT_BINARY_DIR}/imageformats
         ${CMAKE_CURRENT_BINARY_DIR}/platforms
-        ${CMAKE_CURRENT_BINARY_DIR}/translations DESTINATION bin COMPONENT applications)
+        ${CMAKE_CURRENT_BINARY_DIR}/translations DESTINATION bin COMPONENT applications
+        ${CMAKE_CURRENT_BINARY_DIR}/Resources)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
     include(InstallRequiredSystemLibraries)
     install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}
@@ -132,8 +135,8 @@ if(WIN32)
     set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.rst")
     set(CPACK_PACKAGE_INSTALL_DIRECTORY "installer")
     set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "applications ([[.Target]])")
-    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_BINARY_DIR}/WindowsAppIcon.ico")
-    set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_BINARY_DIR}/WindowsAppIcon.ico")
+    set(CPACK_NSIS_MUI_ICON "Resources/WindowsAppIcon.ico")
+    set(CPACK_NSIS_MUI_UNIICON "Resources/WindowsAppIcon.ico")
     set(CPACK_NSIS_MENU_LINKS "programs/[[.TargetSmall]]" "[[.Target]]")
     include(CPack)
 endif()
