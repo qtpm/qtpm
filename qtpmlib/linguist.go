@@ -12,13 +12,10 @@ import (
 )
 
 func LinguistAdd(language string, update bool) {
-	config, err := LoadConfig(".", true)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	config := MustLoadConfig(".", true)
 	tsPath := filepath.Join(config.Dir, "translations", fmt.Sprintf("%s_%s.ts", strings.ToLower(config.Name), language))
 	if !update {
-		_, err = os.Stat(tsPath)
+		_, err := os.Stat(tsPath)
 		if !os.IsNotExist(err) {
 			log.Fatalf("%s already exists in translations folder\n", fmt.Sprintf("%s_%s.ts", strings.ToLower(config.Name), language))
 		}
@@ -35,15 +32,12 @@ func LinguistAdd(language string, update bool) {
 	os.MkdirAll(filepath.Join(config.Dir, "translations"), 0755)
 	srcPath := filepath.Join(config.Dir, "src")
 	cmd := exec.Command(command, "-recursive", "-locations", "relative", "-target-language", language, srcPath, "-ts", tsPath)
-	out, err := cmd.CombinedOutput()
+	out, _ := cmd.CombinedOutput()
 	log.Println(string(out))
 }
 
 func LinguistUpdate() {
-	config, err := LoadConfig(".", true)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	config := MustLoadConfig(".", true)
 	entries, _ := ioutil.ReadDir(filepath.Join(config.Dir, "translations"))
 	for _, entry := range entries {
 		if entry.IsDir() || filepath.Ext(entry.Name()) != ".ts" {
@@ -60,10 +54,7 @@ func GetLangFromTSFile(filename string) string {
 }
 
 func LinguistEdit(language string) {
-	config, err := LoadConfig(".", true)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	config := MustLoadConfig(".", true)
 	if language == "" {
 		files, _ := ioutil.ReadDir(filepath.Join(config.Dir, "translations"))
 		found := false

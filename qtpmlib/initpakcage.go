@@ -189,7 +189,7 @@ func InitLibrary(name, license string) {
 		Target: packageName,
 	}
 	dirName := strings.ToLower(packageName) + "/"
-	AddClass(config, dirName+packageName, true)
+	AddClass(config, dirName+packageName)
 	AddTest(config, dirName+packageName)
 	WriteTemplate(".", "examples", "example.cpp", "main.cpp", variable, false)
 	WriteTemplate(".", "", ".gitignore", "dotgitignore", variable, false)

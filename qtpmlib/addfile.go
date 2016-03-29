@@ -390,7 +390,7 @@ func AddTest(config *PackageConfig, name string) {
 	WriteTemplate(config.Dir, "test", strings.ToLower(className)+"_test.cpp", "testclass.cpp", variable, false)
 }
 
-func AddClass(config *PackageConfig, name string, isLibrary bool) {
+func AddClass(config *PackageConfig, name string) {
 	dirName, className, parent := ParseName(name)
 	if parent == "" {
 		parent = "QObject"

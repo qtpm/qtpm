@@ -47,7 +47,6 @@ func MustLoadConfig(dir string, traverse bool) *PackageConfig {
 		color.Red("%s\n", err.Error())
 		os.Exit(1)
 	}
-	os.Exit(1)
 	return config
 }
 

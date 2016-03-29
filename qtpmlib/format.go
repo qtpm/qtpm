@@ -9,11 +9,7 @@ import (
 )
 
 func Format(targetFiles []string) {
-	config, err := LoadConfig(".", true)
-	if err != nil {
-		color.Red("%s\n", err.Error())
-		os.Exit(1)
-	}
+	config := MustLoadConfig(".", true)
 	detail := &ProjectDetail{
 		config: config,
 	}

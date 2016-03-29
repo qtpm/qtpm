@@ -10,11 +10,7 @@ import (
 )
 
 func Run(refresh, debug bool) {
-	config, err := LoadConfig(".", true)
-	if err != nil {
-		color.Red("%s\n", err.Error())
-		os.Exit(1)
-	}
+	config := MustLoadConfig(".", true)
 	if !config.IsApplication {
 		color.Red("This project is not application\n")
 		os.Exit(1)

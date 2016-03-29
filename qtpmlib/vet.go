@@ -94,11 +94,7 @@ func BuildOptions(defaultOption, compileCommand string, path string) []string {
 }
 
 func Vet(targetFiles []string) {
-	config, err := LoadConfig(".", true)
-	if err != nil {
-		color.Red("%s\n", err.Error())
-		os.Exit(1)
-	}
+	config := MustLoadConfig(".", true)
 	detail, err := BuildPackage(config, config, false, true, false, false)
 	if err != nil {
 		log.Fatalln(err)

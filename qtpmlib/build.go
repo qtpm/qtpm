@@ -15,13 +15,9 @@ import (
 )
 
 func Build(refresh, debugBuild bool) {
-	config, err := LoadConfig(".", true)
-	if err != nil {
-		color.Red(err.Error())
-		os.Exit(1)
-	}
+	config := MustLoadConfig(".", true)
 	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
-	_, err = BuildPackage(config, config, refresh, debugBuild, true, !config.IsApplication)
+	_, err := BuildPackage(config, config, refresh, debugBuild, true, !config.IsApplication)
 	if err != nil {
 		color.Red("\nBuild Error: %s\n", err.Error())
 		os.Exit(1)
@@ -30,13 +26,9 @@ func Build(refresh, debugBuild bool) {
 }
 
 func Test(refresh bool) {
-	config, err := LoadConfig(".", true)
-	if err != nil {
-		color.Red(err.Error())
-		os.Exit(1)
-	}
+	config := MustLoadConfig(".", true)
 	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
-	_, err = BuildPackage(config, config, refresh, true, true, false)
+	_, err := BuildPackage(config, config, refresh, true, true, false)
 	if err != nil {
 		color.Red("\nBuild Error: %s\n", err.Error())
 		os.Exit(1)

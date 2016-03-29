@@ -2,17 +2,13 @@ package qtpm
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 func Clean() {
-	config, err := LoadConfig(".", true)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	config := MustLoadConfig(".", true)
 	dir := config.Dir
 	projectRoots := []string{
 		"",

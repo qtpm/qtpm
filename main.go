@@ -195,7 +195,7 @@ func main() {
 	case addClassCommand.FullCommand():
 		printLogo()
 		config := qtpm.MustLoadConfig(".", true)
-		qtpm.AddClass(config, *className, !config.IsApplication)
+		qtpm.AddClass(config, *className)
 		qtpm.AddTest(config, *className)
 		qtpm.Touch(config, true, false)
 	case addTestCommand.FullCommand():
