@@ -114,7 +114,6 @@ func has(list []string, entry string) bool {
 }
 
 func getSinglePackage(rootConfig *PackageConfig, packageName string, download, save, update, useGit bool) (*PackageConfig, error) {
-	fmt.Println("getSinglePackage", packageName)
 	// download from git
 	paths := strings.Split(packageName, "/")
 	if len(paths) != 3 {
@@ -132,9 +131,7 @@ func getSinglePackage(rootConfig *PackageConfig, packageName string, download, s
 	os.MkdirAll(workDir, 0755)
 
 	if _, err := os.Stat(installDir); os.IsNotExist(err) {
-		fmt.Println("not found(1)", installDir)
 		if !download {
-			fmt.Println("not found(2)", installDir)
 			installDir = filepath.Clean(filepath.Join(parentDir, "..", dirName))
 			workDir = filepath.Dir(installDir)
 			if _, err := os.Stat(installDir); os.IsNotExist(err) {
@@ -142,12 +139,10 @@ func getSinglePackage(rootConfig *PackageConfig, packageName string, download, s
 			}
 		}
 		if useGit || paths[0] != "github.com" {
-			fmt.Println("git clone", installDir)
 			err = git.CloneWithoutFilters([]string{
 				"--depth", "1", fmt.Sprintf("git@%s:%s/%s.git", paths[0], paths[1], paths[2]), dirName,
 			}, workDir)
 		} else {
-			fmt.Println("download zip", installDir)
 			err = DownloadZip(installDir, paths[1], paths[2])
 		}
 		if err != nil {
