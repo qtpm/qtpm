@@ -1,6 +1,5 @@
-qtpmcmd
-qtpm/qtpm
-qtpm/qtpm.exe
+qtpm
+qtpm.exe
 workbench*
 .DS_Store
 Thumbs.db

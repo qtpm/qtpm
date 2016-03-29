@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/qtpm/qtpm"
+	"github.com/qtpm/qtpm/qtpmlib"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 	"runtime"
