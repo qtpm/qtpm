@@ -76,3 +76,7 @@ func (pf PathFilter) Match(path string) bool {
 	}
 	return false
 }
+
+func libname(name string) string {
+	return strings.TrimPrefix(strings.TrimSuffix(strings.ToLower(name), "lib"), "lib")
+}

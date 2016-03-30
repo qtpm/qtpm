@@ -275,7 +275,7 @@ func RunCMakeAndBuild(rootPackageDir string, packageConfig *PackageConfig, updat
 	} else {
 		printSubSection("\nStart Building\n")
 	}
-	buildArgs := append(commonArgs, "--target", strings.ToLower(packageConfig.Name))
+	buildArgs := append(commonArgs, "--target", libname(packageConfig.Name))
 	makeCmd := Command("cmake", buildPath, buildArgs...)
 	err = makeCmd.Run()
 	if err != nil {

@@ -33,8 +33,8 @@ func FindQt(dir string) string {
 	}
 
 	// from setting file
-	userSetting, _ := LoadUserConfig(dir)
-	if userSetting != nil && userSetting.QtDir != "" {
+	userSetting, err := LoadUserConfig(dir)
+	if err == nil && userSetting.QtDir != "" {
 		return userSetting.QtDir
 	}
 

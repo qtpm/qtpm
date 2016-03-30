@@ -128,10 +128,6 @@ func (sv ProjectDetail) TargetLarge() string {
 	return strings.ToUpper(sv.Target)
 }
 
-func libname(name string) string {
-	return strings.TrimPrefix(strings.TrimSuffix(strings.ToLower(name), "lib"), "lib")
-}
-
 func (sv ProjectDetail) TargetLibName() string {
 	return libname(sv.Target)
 }
@@ -318,7 +314,7 @@ func (sv *ProjectDetail) SearchFiles() {
 			if strings.HasPrefix(name, "_") || (!supportedSourceExtensions[ext] && ext != ".ui") {
 				continue
 			}
-			if strings.HasSuffix(name, "_example.cpp") {
+			if strings.HasSuffix(name, "_example.cpp") || name == "example.cpp" {
 				sv.Examples.addfile("examples/" + name)
 			} else {
 				sv.ExtraExampleSources.addfile("examples/" + name)
