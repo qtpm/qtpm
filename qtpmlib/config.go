@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/fatih/color"
+	"github.com/shibukawa/configdir"
 	"os"
 	"path/filepath"
 	"sort"
@@ -87,22 +88,27 @@ func LoadConfig(dir string, traverse bool) (*PackageConfig, error) {
 	return nil, fmt.Errorf("can't find '%s' at %s", packageFileName, origDir)
 }
 
-func LoadUserConfig(dir string) (*PackageUserConfig, error) {
-	dir, err := filepath.Abs(dir)
+func LoadUserConfig(dirPatb string) (*PackageUserConfig, error) {
+	dirPatb, err := filepath.Abs(dirPatb)
 	if err != nil {
 		return nil, err
 	}
-	filePath := filepath.Join(dir, userPackageFileName)
-	file, err := os.Open(filePath)
-	if err == nil {
-		config := &PackageUserConfig{}
-		_, err := toml.DecodeReader(file, config)
-		if err != nil {
-			return nil, err
-		}
-		return config, nil
+	dir := configdir.New("", "qtpm")
+	dir.LocalPath = dirPatb
+	configDir := dir.QueryFolderContainsFile(userPackageFileName)
+	if configDir == nil {
+		return nil, fmt.Errorf("can't find '%s' at %s", userPackageFileName, dir)
 	}
-	return nil, fmt.Errorf("can't find '%s' at %s", userPackageFileName, dir)
+	file, err := configDir.Open(userPackageFileName)
+	if err != nil {
+		return nil, fmt.Errorf("can't read '%s' at %s", userPackageFileName, dir)
+	}
+	config := &PackageUserConfig{}
+	_, err = toml.DecodeReader(file, config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 func (config *PackageConfig) Save() error {
