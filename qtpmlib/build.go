@@ -2,13 +2,11 @@ package qtpm
 
 import (
 	"bytes"
-	"fmt"
 	"image"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 
 	"github.com/Kodeworks/golang-image-ico"
 	"github.com/fatih/color"
@@ -42,35 +40,6 @@ func Test(refresh bool) {
 		os.Exit(1)
 	}
 	printSuccess("\nTest Pass\n")
-}
-
-type sequentialRun struct {
-	workDir string
-	err     error
-}
-
-func SequentialRun(workDir string) *sequentialRun {
-	return &sequentialRun{
-		workDir: workDir,
-	}
-}
-
-func (s *sequentialRun) Run(command string, args ...string) *sequentialRun {
-	if s.err != nil {
-		return s
-
-	}
-	cmd := Command(command, s.workDir, args...)
-	cmd.Silent = true
-	err := cmd.Run()
-	if err != nil {
-		s.err = fmt.Errorf("cmd: `%s %s` err: %s", command, strings.Join(args, " "), err.Error())
-	}
-	return s
-}
-
-func (s *sequentialRun) Finish() error {
-	return s.err
 }
 
 func BuildPackage(rootConfig, config *PackageConfig, refresh, debugBuild, build, install bool) (*ProjectDetail, error) {

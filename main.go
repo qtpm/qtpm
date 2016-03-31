@@ -123,7 +123,7 @@ var (
 	addTestCommand         = addCommand.Command("test", "Add test template")
 	testName               = addTestCommand.Arg("test", "Test class name").Required().String()
 	addQtModuleCommand     = addCommand.Command("qtmodule", "Add Qt module")
-	qtModuleName           = addQtModuleCommand.Flag("name", "Qt module name").Required().Enum(qtmodules...)
+	qtModuleName           = addQtModuleCommand.Arg("name", "Qt module name").Required().Enum(qtmodules...)
 	addLicenseCommand      = addCommand.Command("license", "Add license file")
 	licenseName            = addLicenseCommand.Arg("name", "License file name").String()
 	addDotGitIgnoreCommand = addCommand.Command(".gitignore", "Add .gitignore")
@@ -134,6 +134,10 @@ var (
 	linguistUpdate   = linguistCommand.Command("update", "Update translation source(.ts) file")
 	linguistEdit     = linguistCommand.Command("edit", "Edit language")
 	linguistEditLang = linguistEdit.Arg("lang", "Language (fr, ge, etc...").String()
+
+	setupCommand        = app.Command("setup", "Setup additional tool")
+	setupWebAsmCommand  = setupCommand.Command("webasm", "Setup WebAssembly tool")
+	updateWebAsmCommand = setupWebAsmCommand.Flag("update", "Update").Bool()
 
 	versionCommand = app.Command("version", "Show version")
 )
@@ -225,6 +229,9 @@ func main() {
 	case linguistEdit.FullCommand():
 		printLogo()
 		qtpm.LinguistEdit(*linguistEditLang)
+	case setupWebAsmCommand.FullCommand():
+		printLogo()
+		qtpm.SetupWebAssemblyTool(*updateWebAsmCommand)
 	case versionCommand.FullCommand():
 		fmt.Println(qtpm.QTPMVersionString)
 	}

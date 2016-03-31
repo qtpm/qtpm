@@ -140,7 +140,7 @@ func getSinglePackage(rootConfig *PackageConfig, packageName string, download, s
 		}
 		if useGit || paths[0] != "github.com" {
 			err = git.CloneWithoutFilters([]string{
-				"--depth", "1", fmt.Sprintf("git@%s:%s/%s.git", paths[0], paths[1], paths[2]), dirName,
+				"--depth", "1", fmt.Sprintf("https://%s/%s/%s.git", paths[0], paths[1], paths[2]), dirName,
 			}, workDir)
 		} else {
 			err = DownloadZip(installDir, paths[1], paths[2])
@@ -154,7 +154,7 @@ func getSinglePackage(rootConfig *PackageConfig, packageName string, download, s
 			os.RemoveAll(installDir)
 			err = DownloadZip(installDir, paths[1], paths[2])
 		} else {
-			cmd := Command("get", installDir, "pull", "--ff-only")
+			cmd := Command("git", installDir, "pull", "--ff-only")
 			err = cmd.Run()
 		}
 		if err != nil {

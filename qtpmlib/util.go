@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"fmt"
 )
 
 func ParseName(name string) (dirName, className, parentName string) {
@@ -79,4 +80,34 @@ func (pf PathFilter) Match(path string) bool {
 
 func libname(name string) string {
 	return strings.TrimPrefix(strings.TrimSuffix(strings.ToLower(name), "lib"), "lib")
+}
+
+
+type sequentialRun struct {
+	workDir string
+	err     error
+}
+
+func SequentialRun(workDir string) *sequentialRun {
+	return &sequentialRun{
+		workDir: workDir,
+	}
+}
+
+func (s *sequentialRun) Run(command string, args ...string) *sequentialRun {
+	if s.err != nil {
+		return s
+
+	}
+	cmd := Command(command, s.workDir, args...)
+	cmd.Silent = true
+	err := cmd.Run()
+	if err != nil {
+		s.err = fmt.Errorf("cmd: `%s %s` err: %s", command, strings.Join(args, " "), err.Error())
+	}
+	return s
+}
+
+func (s *sequentialRun) Finish() error {
+	return s.err
 }
