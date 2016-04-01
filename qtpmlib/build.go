@@ -32,7 +32,7 @@ func Test(refresh bool) {
 		os.Exit(1)
 	}
 	buildPath := filepath.Join(config.Dir, BuildFolder(true))
-	makeCmd := Command("make", buildPath, "test")
+	makeCmd := CMake(buildPath, false, false, "test", nil)
 	makeCmd.AddEnv("CTEST_OUTPUT_ON_FAILURE=1")
 	err = makeCmd.Run()
 	if err != nil {
@@ -211,7 +211,7 @@ func RunCMakeAndBuild(rootPackageDir string, packageConfig *PackageConfig, updat
 		}
 		qtDir := FindQt(rootPackageDir)
 		args = append(args, CMakeOptions(qtDir)...)
-		cmd := Command("cmake", buildPath, args...)
+		cmd := CMake(buildPath, true, false, "", args)
 		if qtDir != "" {
 			cmd.AddEnv("QTDIR=" + qtDir)
 		}
@@ -223,20 +223,15 @@ func RunCMakeAndBuild(rootPackageDir string, packageConfig *PackageConfig, updat
 	if !build {
 		return nil
 	}
-	commonArgs := []string{"--build", "."}
-	if debug {
-		commonArgs = append(commonArgs, "--config", "Debug")
-	} else {
-		commonArgs = append(commonArgs, "--config", "Release")
-	}
 	if rootPackageDir == packageConfig.Dir {
+		var target string
 		if install {
 			printSubSection("\nStart Building and Installing\n")
-			commonArgs = append(commonArgs, "--target", "install")
+			target = "install"
 		} else {
 			printSubSection("\nStart Building\n")
 		}
-		makeCmd := Command("cmake", buildPath, commonArgs...)
+		makeCmd := CMake(buildPath, false, debug, target, nil)
 		return makeCmd.Run()
 	}
 	if install {
@@ -244,8 +239,7 @@ func RunCMakeAndBuild(rootPackageDir string, packageConfig *PackageConfig, updat
 	} else {
 		printSubSection("\nStart Building\n")
 	}
-	buildArgs := append(commonArgs, "--target", libname(packageConfig.Name))
-	makeCmd := Command("cmake", buildPath, buildArgs...)
+	makeCmd := CMake(buildPath, false, debug, libname(packageConfig.Name), nil)
 	err = makeCmd.Run()
 	if err != nil {
 		return err
@@ -253,7 +247,6 @@ func RunCMakeAndBuild(rootPackageDir string, packageConfig *PackageConfig, updat
 	if !install {
 		return nil
 	}
-	installArgs := append(commonArgs, "--target", "install/fast")
-	installCmd := Command("cmake", buildPath, installArgs...)
+	installCmd := CMake(buildPath, false, debug, "install/fast", nil)
 	return installCmd.Run()
 }

@@ -71,6 +71,8 @@ var qtmodules = []string{
 
 var (
 	app    = kingpin.New("qtpm", "Package Manager fot Qt")
+	asmJS  = app.Flag("asmjs", "Compile to asm.js").Bool()
+	webAsm = app.Flag("wasm", "Compile to WebAssembly").Bool()
 	silent = app.Flag("silent", "Set silent mode").Short('v').Bool()
 
 	initCommand    = app.Command("init", "Initialize package")
@@ -166,6 +168,7 @@ func main() {
 		qtpm.InitLibrary(*libName, *libLicense)
 	case buildCommand.FullCommand():
 		printLogo()
+		qtpm.SetUseWebAssemblyCompiler(*asmJS, *webAsm)
 		qtpm.Build(*refreshBuildFlag, *buildTypeFlag == "debug")
 	case runCommand.FullCommand():
 		printLogo()
@@ -187,6 +190,7 @@ func main() {
 		qtpm.Format(*fmtTargetFiles)
 	case getCommand.FullCommand():
 		printLogo()
+		qtpm.SetUseWebAssemblyCompiler(*asmJS, *webAsm)
 		qtpm.Get(*getPackageName, *getUpdateFlag, *getUseGitFlag)
 	case testCommand.FullCommand():
 		printLogo()

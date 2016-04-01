@@ -1,23 +1,23 @@
 package qtpm
 
 import (
-	"runtime"
-	"github.com/shibukawa/configdir"
-	"github.com/PuerkitoBio/goquery"
-	"log"
-	"io/ioutil"
-	"net/http"
-	"strings"
-	"fmt"
-	"compress/gzip"
 	"archive/tar"
-	"io"
-	"os"
-	"path/filepath"
-	"github.com/fatih/color"
 	"archive/zip"
 	"bytes"
+	"compress/gzip"
+	"fmt"
 	"git"
+	"github.com/PuerkitoBio/goquery"
+	"github.com/fatih/color"
+	"github.com/shibukawa/configdir"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 func SetupWebAssemblyTool(update bool) {
@@ -45,6 +45,9 @@ func installBinaryen(update bool) {
 		log.Fatal(err)
 	}
 	err = Command("cmake", workDir, "--build", ".").Run()
+	configPath := filepath.Join(os.Getenv("HOME"), ".emscripten")
+	content := fmt.Sprintf("BINARYEN_ROOT='%s", workDir)
+	ioutil.WriteFile(configPath, []byte(content), 0644)
 }
 
 func installEmscripten(update bool) {

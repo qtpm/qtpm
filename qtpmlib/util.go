@@ -1,11 +1,11 @@
 package qtpm
 
 import (
+	"fmt"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
-	"fmt"
 )
 
 func ParseName(name string) (dirName, className, parentName string) {
@@ -81,7 +81,6 @@ func (pf PathFilter) Match(path string) bool {
 func libname(name string) string {
 	return strings.TrimPrefix(strings.TrimSuffix(strings.ToLower(name), "lib"), "lib")
 }
-
 
 type sequentialRun struct {
 	workDir string
