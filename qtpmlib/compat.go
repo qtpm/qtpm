@@ -68,6 +68,10 @@ func FindQt(dir string) string {
 		var biggestDir string
 		for _, version := range versions {
 			if strings.HasPrefix(version.Name(), "5.") {
+				stat, _ := os.Stat(filepath.Join(path, "Qt", version.Name()))
+				if !stat.IsDir() {
+					continue
+				}
 				if version.Name() > biggestDir {
 					biggestDir = version.Name()
 				}
