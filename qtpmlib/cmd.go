@@ -34,6 +34,9 @@ func (c *Cmd) AddEnv(env ...string) {
 	c.command.Env = append(c.command.Env, env...)
 }
 func (c *Cmd) Run() error {
+	if Verbose {
+		PrintCommand(c.command, c.command.Env[len(os.Environ()):])
+	}
 	cmd := c.command
 	outpty, outtty, err := pty.Open()
 	cmd.Stdin = outtty

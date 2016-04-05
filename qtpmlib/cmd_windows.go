@@ -32,6 +32,9 @@ func (c *Cmd) AddEnv(env ...string) {
 }
 
 func (c *Cmd) Run() error {
+	if Verbose {
+		PrintCommand(c.command)
+	}
 	cmd := c.command
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()

@@ -70,10 +70,11 @@ var qtmodules = []string{
 }
 
 var (
-	app    = kingpin.New("qtpm", "Package Manager fot Qt")
-	asmJS  = app.Flag("asmjs", "Compile to asm.js").Bool()
-	webAsm = app.Flag("wasm", "Compile to WebAssembly").Bool()
-	silent = app.Flag("silent", "Set silent mode").Short('v').Bool()
+	app     = kingpin.New("qtpm", "Package Manager fot Qt")
+	asmJS   = app.Flag("asmjs", "Compile to asm.js").Bool()
+	webAsm  = app.Flag("wasm", "Compile to WebAssembly").Bool()
+	silent  = app.Flag("silent", "Set silent mode").Short('s').Bool()
+	verbose = app.Flag("verbose", "Set verbose mode").Short('v').Bool()
 
 	initCommand    = app.Command("init", "Initialize package")
 	initAppCommand = initCommand.Command("app", "Initialize application")
@@ -159,7 +160,11 @@ func printLogo() {
 
 func main() {
 	app.HelpFlag.Short('h')
-	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
+	command := kingpin.MustParse(app.Parse(os.Args[1:]))
+	if *verbose {
+		qtpm.SetVerbose()
+	}
+	switch command {
 	case initAppCommand.FullCommand():
 		printLogo()
 		qtpm.InitApplication(*appName, *appLicense)

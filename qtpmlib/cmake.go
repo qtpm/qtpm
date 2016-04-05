@@ -1,14 +1,14 @@
 package qtpm
 
 import (
+	"fmt"
 	"github.com/fatih/color"
 	"github.com/shibukawa/configdir"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"log"
-	"fmt"
 )
 
 var useAsmJS bool
@@ -40,7 +40,7 @@ func SetUseWebAssemblyCompiler(asmJS, webAsm bool) {
 	useWebAssemblyCompiler = webAsm
 }
 
-func CMake(workDir string, generate, debug bool, target string, args []string) *Cmd {
+func CMake(workDir string, generate, debug bool, target string, buildArgs []string) *Cmd {
 	if useAsmJS {
 		if runtime.GOOS == "windows" {
 			color.Red("Now WebAssembly build on Windows is not supporting.\n")
@@ -58,7 +58,7 @@ func CMake(workDir string, generate, debug bool, target string, args []string) *
 		fmt.Fprintf(shellScript, "source %s\n", filepath.Join(dir.Path, "emsdk", "emsdk_env.sh"))
 
 		if generate {
-			fmt.Fprintf(shellScript, "emcmake cmake .. %s\n", strings.Join(args, " "))
+			fmt.Fprintf(shellScript, "emcmake cmake .. %s\n", strings.Join(buildArgs, " "))
 		} else {
 			fmt.Fprintf(shellScript, "emmake make %s\n", target)
 		}
@@ -66,14 +66,20 @@ func CMake(workDir string, generate, debug bool, target string, args []string) *
 		println(shellScriptPath)
 		return Command("sh", workDir, shellScriptPath)
 	} else {
-		args := []string{"--build", "."}
-		if debug {
-			args = append(args, "--config", "Debug")
+		var args []string
+		if generate {
+			args = append(args, "..")
+			args = append(args, buildArgs...)
 		} else {
-			args = append(args, "--config", "Release")
-		}
-		if target != "" {
-			args = append(args, "--target", target)
+			args = []string{"--build", "."}
+			if debug {
+				args = append(args, "--config", "Debug")
+			} else {
+				args = append(args, "--config", "Release")
+			}
+			if target != "" {
+				args = append(args, "--target", target)
+			}
 		}
 		return Command("cmake", workDir, args...)
 	}

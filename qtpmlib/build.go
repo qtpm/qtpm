@@ -203,7 +203,7 @@ func RunCMakeAndBuild(rootPackageDir string, packageConfig *PackageConfig, updat
 	if update || os.IsNotExist(err) {
 		printSubSection("\nRun CMake\n")
 		os.MkdirAll(buildPath, 0755)
-		args := []string{"..", "-DCMAKE_INSTALL_PREFIX=" + installPrefix, "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"}
+		args := []string{"-DCMAKE_INSTALL_PREFIX=" + installPrefix, "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"}
 		if debug {
 			args = append(args, "-DCMAKE_BUILD_TYPE=Debug")
 		} else {

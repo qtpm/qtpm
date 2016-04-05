@@ -1,7 +1,10 @@
 package qtpm
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/fatih/color"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -99,7 +102,7 @@ func (s *sequentialRun) Run(command string, args ...string) *sequentialRun {
 
 	}
 	cmd := Command(command, s.workDir, args...)
-	cmd.Silent = true
+	cmd.Silent = !Verbose
 	err := cmd.Run()
 	if err != nil {
 		s.err = fmt.Errorf("cmd: `%s %s` err: %s", command, strings.Join(args, " "), err.Error())
@@ -109,4 +112,31 @@ func (s *sequentialRun) Run(command string, args ...string) *sequentialRun {
 
 func (s *sequentialRun) Finish() error {
 	return s.err
+}
+
+var Verbose bool
+
+func SetVerbose() {
+	Verbose = true
+}
+
+func PrintCommand(cmd *exec.Cmd, envs []string) {
+	var buffer bytes.Buffer
+	for _, env := range envs {
+		buffer.WriteString(color.BlueString(env))
+		buffer.WriteByte(' ')
+	}
+	buffer.WriteString(color.RedString(cmd.Path))
+	for _, arg := range cmd.Args[1:] {
+		buffer.WriteByte(' ')
+		if strings.Contains(arg, " ") {
+			buffer.WriteByte('"')
+			buffer.WriteString(color.YellowString(arg))
+			buffer.WriteByte('"')
+		} else {
+			buffer.WriteString(color.YellowString(arg))
+		}
+	}
+	buffer.WriteByte('\n')
+	fmt.Println(buffer.String())
 }

@@ -31,9 +31,8 @@ func LinguistAdd(language string, update bool) {
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "translations"), 0755)
 	srcPath := filepath.Join(config.Dir, "src")
-	cmd := exec.Command(command, "-recursive", "-locations", "relative", "-target-language", language, srcPath, "-ts", tsPath)
-	out, _ := cmd.CombinedOutput()
-	log.Println(string(out))
+	cmd := Command(command, ".", "-recursive", "-locations", "relative", "-target-language", language, srcPath, "-ts", tsPath)
+	cmd.Run()
 }
 
 func LinguistUpdate() {
@@ -110,9 +109,8 @@ func ReleaseTranslation(rootPackageDir, srcDir string) error {
 		}
 		srcPath := filepath.Join(srcDir, "translations", file.Name())
 		destPath := filepath.Join(rootPackageDir, "qtresources", "translations", file.Name()[:len(file.Name())-3]+".qm")
-		cmd := exec.Command(command, srcPath, "-qm", destPath)
-		out, err := cmd.CombinedOutput()
-		log.Println(string(out))
+		cmd := Command(command, ".", srcPath, "-qm", destPath)
+		err := cmd.Run()
 		if err != nil {
 			println(command, srcPath, destPath)
 			println("translate error:", err.Error())
