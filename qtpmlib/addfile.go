@@ -422,7 +422,7 @@ func CreateResource(rootPackageDir string) bool {
 	if len(result) == 0 {
 		return false
 	}
-	WriteTemplate(rootPackageDir, "qtresources", "resource.qrc", "resource.qrc", result, false)
+	WriteTemplate(rootPackageDir, "qtresources", "resource.qrc", "resource.qrc", result, true)
 	return true
 }
 

@@ -54,12 +54,12 @@ func CleanList(modules []string) []string {
 	return result
 }
 
-type PathFilter struct {
+type SourcePathFilter struct {
 	prefixes []string
 }
 
-func NewPathFilter(config *PackageConfig, paths []string) *PathFilter {
-	result := &PathFilter{}
+func NewSourcePathFilter(config *PackageConfig, paths []string) *SourcePathFilter {
+	result := &SourcePathFilter{}
 	for _, path := range paths {
 		absPath, _ := filepath.Abs(filepath.Join(".", path))
 		result.prefixes = append(result.prefixes, filepath.ToSlash(absPath[len(config.Dir)+1:]))
@@ -68,7 +68,10 @@ func NewPathFilter(config *PackageConfig, paths []string) *PathFilter {
 	return result
 }
 
-func (pf PathFilter) Match(path string) bool {
+func (pf SourcePathFilter) Match(path string) bool {
+	if strings.HasSuffix(path, ".ui") {
+		return false
+	}
 	path = filepath.ToSlash(path)
 	if len(pf.prefixes) == 0 {
 		return true

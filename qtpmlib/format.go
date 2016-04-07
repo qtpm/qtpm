@@ -21,7 +21,7 @@ func Format(targetFiles []string) {
 		os.Exit(1)
 	}
 
-	pathFilter := NewPathFilter(config, targetFiles)
+	pathFilter := NewSourcePathFilter(config, targetFiles)
 	changed := 0
 
 	for _, sourceFile := range sourceFiles {

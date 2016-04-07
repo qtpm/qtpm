@@ -37,23 +37,7 @@ endif()
 [[end]]# include extra settings
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/CMakeExtra.txt" OPTIONAL)
-
-[[if .Tests.HasItem]]
-
-# enable tests
-
-enable_testing()
-find_package(Qt5Test REQUIRED)
-[[.ExtraTestSources.DefineList]]
-[[.Tests.DefineList]]
-[[.Tests.StartLoop]]
-  get_filename_component(execname ${file} NAME_WE)
-  add_executable(${execname} ${file} ${[[.Sources.Name]]} ${[[.ExtraTestSources.Name]]}[[if .HasQtResource]] ${QRC}[[end]])
-  add_test(NAME ${execname} COMMAND ${execname})
-  qt5_use_modules(${execname} Test[[range $module := .QtModules]] [[$module]][[end]])[[if gt (len .Requires) 0]]
-  target_link_libraries(${execname} [[.RequireLibs]])[[end]]
-[[.Tests.EndLoop]]
-[[end]][[if gt (len .Requires) 0]]
+[[if gt (len .Requires) 0]]
 
 # dependencies
 
@@ -140,3 +124,20 @@ if(WIN32)
     set(CPACK_NSIS_MENU_LINKS "programs/[[.TargetSmall]]" "[[.Target]]")
     include(CPack)
 endif()
+
+[[if .Tests.HasItem]]
+
+# enable tests
+
+enable_testing()
+find_package(Qt5Test REQUIRED)
+[[.ExtraTestSources.DefineList]]
+[[.Tests.DefineList]]
+[[.Tests.StartLoop]]
+  get_filename_component(execname ${file} NAME_WE)
+  add_executable(${execname} ${file} ${[[.Sources.Name]]} ${[[.ExtraTestSources.Name]]}[[if .HasQtResource]] ${QRC}[[end]])
+  add_test(NAME ${execname} COMMAND ${execname})
+  qt5_use_modules(${execname} Test[[range $module := .QtModules]] [[$module]][[end]])[[if gt (len .Requires) 0]]
+  target_link_libraries(${execname} [[.RequireLibs]])[[end]]
+[[.Tests.EndLoop]]
+[[end]]

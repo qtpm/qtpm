@@ -107,7 +107,7 @@ func Vet(targetFiles []string) {
 		os.Exit(1)
 	}
 
-	pathFilter := NewPathFilter(config, targetFiles)
+	pathFilter := NewSourcePathFilter(config, targetFiles)
 	defaultOption := GetDefaultIncludeOptions(config.Dir)
 	var result error
 
