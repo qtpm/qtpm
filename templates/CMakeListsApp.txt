@@ -50,7 +50,8 @@ include_directories(${VENDOR_PATH}/[[$dependency.PackageName]]/src)
 
 include_directories(src)
 [[.Sources.DefineList]][[if .Resources.HasItem]]
-[[.Resources.DefineList]][[end]]
+[[.Resources.DefineList]][[end]][[if .HasQtResource]]
+set(${[[.Sources.Name]]} qtresources/resource.qrc)[[end]]
 
 if(APPLE)
   set(MACOSX_BUNDLE_BUNDLE_NAME [[.Target]])
@@ -63,7 +64,8 @@ if(APPLE)
   set(MACOSX_BUNDLE_LONG_VERSION_STRING "${[[.TargetLarge]]_VERSION}")
   set(MACOSX_BUNDLE_BUNDLE_VERSION "${[[.TargetLarge]]_VERSION}")
   set(MACOSX_BUNDLE_COPYRIGHT "(C) [[.CopyRight]]")
-  add_executable([[.TargetSmall]] MACOSX_BUNDLE src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .HasQtResource]] qtresources/resource.qrc[[end]][[if .Resources.HasItem]] ${[[.Resources.Name]]}[[end]] Resources/MacOSXAppIcon.icns)
+  add_library([[.Sources.Name]]_lib STATIC ${[[.Sources.Name]]})
+  add_executable([[.TargetSmall]] MACOSX_BUNDLE src/main.cpp[[if .Resources.HasItem]] ${[[.Resources.Name]]}[[end]] Resources/MacOSXAppIcon.icns)
 elseif(WIN32)
   set(winres "Resources/windows.rc")
   if(MINGW)
@@ -82,47 +84,50 @@ elseif(WIN32)
   else()
     set(${[[.Sources.Name]]} ${winres})
   endif()
-  add_executable([[.TargetSmall]] WIN32 src/main.cpp ${[[.Sources.Name]]}[[if .HasQtResource]] qtresources/resource.qrc[[end]])
+  add_library([[.Sources.Name]]_lib STATIC ${[[.Sources.Name]]})
+  add_executable([[.TargetSmall]] WIN32 src/main.cpp)
 else()
-  add_executable([[.TargetSmall]] src/main.cpp[[if .Sources.HasItem]] ${[[.Sources.Name]]}[[end]][[if .HasQtResource]] qtresources/resource.qrc[[end]])
+  add_library([[.Sources.Name]]_lib STATIC ${[[.Sources.Name]]})
+  add_executable([[.TargetSmall]] src/main.cpp)
 endif()
-[[if gt (len .QtModules) 0]]qt5_use_modules([[.TargetSmall]][[range $module := .QtModules]] [[$module]][[end]])[[end]][[if gt (len .Requires) 0]]
-target_link_libraries([[.TargetSmall]] [[.RequireLibs]])[[end]]
+[[if gt (len .QtModules) 0]]qt5_use_modules([[.Sources.Name]]_lib[[range $module := .QtModules]] [[$module]][[end]])
+qt5_use_modules([[.TargetSmall]][[range $module := .QtModules]] [[$module]][[end]])[[end]]
+target_link_libraries([[.TargetSmall]] [[.Sources.Name]]_lib[[if gt (len .Requires) 0]] [[.RequireLibs]][[end]])
 
 # installer setting
 
 if(WIN32)
-    install(TARGETS [[.TargetSmall]] ${dlls} RUNTIME DESTINATION bin COMPONENT applications)
-    file(GLOB dlls ${CMAKE_CURRENT_BINARY_DIR}/*.dll)
-    install(PROGRAMS ${dlls} DESTINATION bin COMPONENT applications)
-    install(DIRECTORY
-        ${CMAKE_CURRENT_BINARY_DIR}/iconengines
-        ${CMAKE_CURRENT_BINARY_DIR}/imageformats
-        ${CMAKE_CURRENT_BINARY_DIR}/platforms
-        ${CMAKE_CURRENT_BINARY_DIR}/translations DESTINATION bin COMPONENT applications
-        ${CMAKE_CURRENT_BINARY_DIR}/Resources)
-    set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
-    include(InstallRequiredSystemLibraries)
-    install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}
-            DESTINATION programs
-            COMPONENT applications)[[if .Resources.HasItem]]
-    install(FILES ${[[.Resources.Name]]}
-            DESTINATION Resources
-            COMPONENT applications)[[end]]
-    set(CPACK_PACKAGE_NAME "[[.Target]]")
-    set(CPACK_PACKAGE_VENDOR "[[.Organization]]")
-    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "[[.Description]]")
-    set(CPACK_PACKAGE_VERSION_MAJOR "${[[.TargetLarge]]_MAJOR_VERSION}")
-    set(CPACK_PACKAGE_VERSION_MINOR "${[[.TargetLarge]]_MINOR_VERSION}")
-    set(CPACK_PACKAGE_VERSION_PATCH "${[[.TargetLarge]]_PATCH_VERSION}")
-    set(CPACK_PACKAGE_VERSION "${[[.TargetLarge]]_VERSION}")
-    set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.rst")
-    set(CPACK_PACKAGE_INSTALL_DIRECTORY "installer")
-    set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "applications ([[.Target]])")
-    set(CPACK_NSIS_MUI_ICON "Resources/WindowsAppIcon.ico")
-    set(CPACK_NSIS_MUI_UNIICON "Resources/WindowsAppIcon.ico")
-    set(CPACK_NSIS_MENU_LINKS "programs/[[.TargetSmall]]" "[[.Target]]")
-    include(CPack)
+  install(TARGETS [[.TargetSmall]] ${dlls} RUNTIME DESTINATION bin COMPONENT applications)
+  file(GLOB dlls ${CMAKE_CURRENT_BINARY_DIR}/*.dll)
+  install(PROGRAMS ${dlls} DESTINATION bin COMPONENT applications)
+  install(DIRECTORY
+    ${CMAKE_CURRENT_BINARY_DIR}/iconengines
+    ${CMAKE_CURRENT_BINARY_DIR}/imageformats
+    ${CMAKE_CURRENT_BINARY_DIR}/platforms
+    ${CMAKE_CURRENT_BINARY_DIR}/translations DESTINATION bin COMPONENT applications
+    ${CMAKE_CURRENT_BINARY_DIR}/Resources)
+  set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
+  include(InstallRequiredSystemLibraries)
+  install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}
+    DESTINATION programs
+    COMPONENT applications)[[if .Resources.HasItem]]
+  install(FILES ${[[.Resources.Name]]}
+    DESTINATION Resources
+    COMPONENT applications)[[end]]
+  set(CPACK_PACKAGE_NAME "[[.Target]]")
+  set(CPACK_PACKAGE_VENDOR "[[.Organization]]")
+  set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "[[.Description]]")
+  set(CPACK_PACKAGE_VERSION_MAJOR "${[[.TargetLarge]]_MAJOR_VERSION}")
+  set(CPACK_PACKAGE_VERSION_MINOR "${[[.TargetLarge]]_MINOR_VERSION}")
+  set(CPACK_PACKAGE_VERSION_PATCH "${[[.TargetLarge]]_PATCH_VERSION}")
+  set(CPACK_PACKAGE_VERSION "${[[.TargetLarge]]_VERSION}")
+  set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.rst")
+  set(CPACK_PACKAGE_INSTALL_DIRECTORY "installer")
+  set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "applications ([[.Target]])")
+  set(CPACK_NSIS_MUI_ICON "Resources/WindowsAppIcon.ico")
+  set(CPACK_NSIS_MUI_UNIICON "Resources/WindowsAppIcon.ico")
+  set(CPACK_NSIS_MENU_LINKS "programs/[[.TargetSmall]]" "[[.Target]]")
+  include(CPack)
 endif()
 
 [[if .Tests.HasItem]]
@@ -135,9 +140,9 @@ find_package(Qt5Test REQUIRED)
 [[.Tests.DefineList]]
 [[.Tests.StartLoop]]
   get_filename_component(execname ${file} NAME_WE)
-  add_executable(${execname} ${file} ${[[.Sources.Name]]} ${[[.ExtraTestSources.Name]]}[[if .HasQtResource]] ${QRC}[[end]])
+  add_executable(${execname} ${file} ${[[.ExtraTestSources.Name]]}[[if .HasQtResource]] ${QRC}[[end]])
   add_test(NAME ${execname} COMMAND ${execname})
-  qt5_use_modules(${execname} Test[[range $module := .QtModules]] [[$module]][[end]])[[if gt (len .Requires) 0]]
-  target_link_libraries(${execname} [[.RequireLibs]])[[end]]
+  qt5_use_modules(${execname} Test[[range $module := .QtModules]] [[$module]][[end]])
+  target_link_libraries(${execname} [[.Sources.Name]]_lib[[if gt (len .Requires) 0]] [[.RequireLibs]][[end]])
 [[.Tests.EndLoop]]
 [[end]]
