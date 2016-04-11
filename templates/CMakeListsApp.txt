@@ -50,8 +50,7 @@ include_directories(${VENDOR_PATH}/[[$dependency.PackageName]]/src)
 
 include_directories(src)
 [[.Sources.DefineList]][[if .Resources.HasItem]]
-[[.Resources.DefineList]][[end]][[if .HasQtResource]]
-set(${[[.Sources.Name]]} qtresources/resource.qrc)[[end]]
+[[.Resources.DefineList]][[end]]
 
 if(APPLE)
   set(MACOSX_BUNDLE_BUNDLE_NAME [[.Target]])
@@ -65,7 +64,7 @@ if(APPLE)
   set(MACOSX_BUNDLE_BUNDLE_VERSION "${[[.TargetLarge]]_VERSION}")
   set(MACOSX_BUNDLE_COPYRIGHT "(C) [[.CopyRight]]")
   add_library([[.Sources.Name]]_lib STATIC ${[[.Sources.Name]]})
-  add_executable([[.TargetSmall]] MACOSX_BUNDLE src/main.cpp[[if .Resources.HasItem]] ${[[.Resources.Name]]}[[end]] Resources/MacOSXAppIcon.icns)
+  add_executable([[.TargetSmall]] MACOSX_BUNDLE src/main.cpp[[if .HasQtResource]] qtresources/resource.qrc[[end]][[if .Resources.HasItem]] ${[[.Resources.Name]]}[[end]] Resources/MacOSXAppIcon.icns)
 elseif(WIN32)
   set(winres "Resources/windows.rc")
   if(MINGW)
@@ -85,10 +84,10 @@ elseif(WIN32)
     set(${[[.Sources.Name]]} ${winres})
   endif()
   add_library([[.Sources.Name]]_lib STATIC ${[[.Sources.Name]]})
-  add_executable([[.TargetSmall]] WIN32 src/main.cpp)
+  add_executable([[.TargetSmall]] WIN32 src/main.cpp[[if .HasQtResource]] qtresources/resource.qrc[[end]])
 else()
   add_library([[.Sources.Name]]_lib STATIC ${[[.Sources.Name]]})
-  add_executable([[.TargetSmall]] src/main.cpp)
+  add_executable([[.TargetSmall]] src/main.cpp[[if .HasQtResource]] qtresources/resource.qrc[[end]])
 endif()
 [[if gt (len .QtModules) 0]]qt5_use_modules([[.Sources.Name]]_lib[[range $module := .QtModules]] [[$module]][[end]])
 qt5_use_modules([[.TargetSmall]][[range $module := .QtModules]] [[$module]][[end]])[[end]]
@@ -140,7 +139,7 @@ find_package(Qt5Test REQUIRED)
 [[.Tests.DefineList]]
 [[.Tests.StartLoop]]
   get_filename_component(execname ${file} NAME_WE)
-  add_executable(${execname} ${file} ${[[.ExtraTestSources.Name]]}[[if .HasQtResource]] ${QRC}[[end]])
+  add_executable(${execname} ${file} ${[[.ExtraTestSources.Name]]}[[if .HasQtResource]] qtresources/resource.qrc[[end]])
   add_test(NAME ${execname} COMMAND ${execname})
   qt5_use_modules(${execname} Test[[range $module := .QtModules]] [[$module]][[end]])
   target_link_libraries(${execname} [[.Sources.Name]]_lib[[if gt (len .Requires) 0]] [[.RequireLibs]][[end]])
