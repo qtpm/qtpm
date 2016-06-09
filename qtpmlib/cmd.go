@@ -80,7 +80,9 @@ func (c *Cmd) Run() error {
 	}
 
 	outtty.Close()
+	outpty.Close()
 	errtty.Close()
+	errpty.Close()
 
 	err = cmd.Wait()
 	outputWait.Wait()
