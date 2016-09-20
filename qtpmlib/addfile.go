@@ -64,14 +64,22 @@ func (s SourceBundle) EndLoop() string {
 }
 
 var platformNames = map[string]string{
-	"windows": "WIN32",
-	"darwin":  "APPLE",
-	"unix":    "UNIX",
-	"linux":   "UNIX AND NOT APPLE AND NOT CYGWIN",
-	"mingw":   "MINGW",
-	"msys":    "MSYS",
-	"cygwin":  "CYGWIN",
-	"msvc":    "MSVC",
+	"windows":     "WIN32",
+	"darwin":      "APPLE",
+	"unix":        "UNIX",
+	"linux":       "UNIX AND NOT APPLE AND NOT CYGWIN",
+	"mingw":       "MINGW",
+	"msys":        "MSYS",
+	"cygwin":      "CYGWIN",
+	"msvc":        "MSVC",
+	"not_windows": "NOT WIN32",
+	"not_darwin":  "NOT APPLE",
+	"not_unix":    "NOT UNIX",
+	"not_linux":   "NOT UNIX OR APPLE OR CYGWIN",
+	"not_mingw":   "NOT MINGW",
+	"not_msys":    "NOT MSYS",
+	"not_cygwin":  "NOT CYGWIN",
+	"not_msvc":    "NOT MSVC",
 }
 
 func (s *SourceBundle) addfile(path string) {
@@ -83,6 +91,9 @@ func (s *SourceBundle) addfile(path string) {
 	}
 	fragments := strings.Split(basename, "_")
 	last := fragments[len(fragments)-1]
+	if len(fragments) > 2 && fragments[len(fragments)-2] == "not" {
+		last = "not_" + last
+	}
 	if platform, ok := platformNames[last]; ok {
 		s.PlatformSpecificFiles[platform] = append(s.PlatformSpecificFiles[platform], path)
 	} else {
