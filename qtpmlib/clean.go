@@ -20,6 +20,9 @@ func Clean() {
 		"dest",
 	}
 	filepath.Walk(filepath.Join(dir, "vendor"), func(fullPath string, info os.FileInfo, err error) error {
+		if info == nil {
+			return filepath.SkipDir
+		}
 		if info.IsDir() {
 			relPath := fullPath[len(dir)+1:]
 			if strings.Count(filepath.ToSlash(relPath), "/") > 3 {
