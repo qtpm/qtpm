@@ -17,12 +17,20 @@ var defaultTools = map[string][]string{
 	"msvc2015_64": []string{"-G", "Visual Studio 14 2015 Win64"},
 }
 
-func CMakeOptions(qtdir string) []string {
-	base := filepath.Base(qtdir)
+func CMakeOptions(qtDir string) []string {
+	base := filepath.Base(qtDir)
 	if strings.HasPrefix(base, "mingw") {
 		return defaultTools["mingw"]
 	}
-	return defaultTools[base]
+	opt, ok := defaultTools[base]
+	if !ok {
+		cmd := exec.Command("ninja", "--version")
+		output, err := cmd.CombinedOutput()
+		if err == nil && len(output) > 0 {
+			return []string{"-G", "Ninja"}
+		}
+	}
+	return opt
 }
 
 func FindQt(dir string) string {
