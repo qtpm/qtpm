@@ -1,11 +1,8 @@
 package qtpm
 
 import (
-	"io/ioutil"
-	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -31,85 +28,6 @@ func CMakeOptions(qtDir string) []string {
 		}
 	}
 	return opt
-}
-
-func FindQt(dir string) string {
-	// from environment variable
-	env := os.Getenv("QTDIR")
-	if env != "" {
-		return env
-	}
-
-	// from setting file
-	userSetting, err := LoadUserConfig(dir)
-	if err == nil && userSetting.QtDir != "" {
-		return userSetting.QtDir
-	}
-
-	// from qmake
-	cmd := exec.Command("qmake", "-query", "QT_INSTALL_PREFIX")
-	output, err := cmd.CombinedOutput()
-	if err == nil {
-		return strings.TrimSpace(string(output))
-	}
-
-	// Search default install folder
-	var paths []string
-	if runtime.GOOS == "windows" {
-		paths = []string{
-			os.Getenv("USERPROFILE"),
-			"C:\\", "D:\\",
-			os.Getenv("ProgramFiles"),
-			os.Getenv("ProgramFiles(x86)"),
-		}
-	} else {
-		paths = []string{
-			os.Getenv("HOME"),
-			"/",
-		}
-	}
-	for _, path := range paths {
-		versions, err := ioutil.ReadDir(filepath.Join(path, "Qt"))
-		if err != nil {
-			continue
-		}
-		var biggestDir string
-		for _, version := range versions {
-			if strings.HasPrefix(version.Name(), "5.") {
-				stat, _ := os.Stat(filepath.Join(path, "Qt", version.Name()))
-				if !stat.IsDir() {
-					continue
-				}
-				if version.Name() > biggestDir {
-					biggestDir = version.Name()
-				}
-			}
-		}
-		if biggestDir == "" {
-			continue
-		}
-		targets, err := ioutil.ReadDir(filepath.Join(path, "Qt", biggestDir))
-		var candidate string
-		for _, target := range targets {
-			name := target.Name()
-			if hasPrefixes(name, "ios", "android", "winphone", "winrt") {
-				continue
-			}
-			if strings.HasPrefix(name, "mingw") {
-				// mingw has higher priority than MSVC by default
-				// because Qt bundles mingw. It is good for default behavior to make it easy
-				candidate = name
-				break
-			} else if name > candidate {
-				// Higher version of MSVC has higher priority
-				candidate = name
-			}
-		}
-		if candidate != "" {
-			return filepath.Join(path, "Qt", biggestDir, candidate)
-		}
-	}
-	return ""
 }
 
 func hasPrefixes(str string, prefixes ...string) bool {
