@@ -125,7 +125,7 @@ if(WIN32)
   set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "applications ([[.Target]])")
   set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Resources/WindowsAppIcon.ico")
   set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/Resources/WindowsAppIcon.ico")
-  set(CPACK_NSIS_MENU_LINKS "programs/[[.TargetSmall]]" "[[.Target]]")
+  set(CPACK_NSIS_MENU_LINKS "bin/[[.TargetSmall]].exe" "[[.Target]]")
   include(CPack)
 endif()
 
