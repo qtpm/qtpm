@@ -38,8 +38,12 @@ func (s SourceBundle) DefineList() string {
 		return ""
 	}
 	var buffer bytes.Buffer
-	sort.Strings(s.Files)
-	fmt.Fprintf(&buffer, "set(%s %s)", s.Name, strings.Join(s.Files, "\n    "))
+	if len(s.Files) > 0 {
+		sort.Strings(s.Files)
+		fmt.Fprintf(&buffer, "set(%s %s)", s.Name, strings.Join(s.Files, "\n    "))
+	} else {
+		fmt.Fprintf(&buffer, "set(%s)", s.Name)
+	}
 	var keys []string
 	for key := range s.PlatformSpecificFiles {
 		keys = append(keys, key)
@@ -82,22 +86,39 @@ var platformNames = map[string]string{
 	"not_msvc":    "NOT MSVC",
 }
 
-func (s *SourceBundle) addfile(path string) {
+func (s *SourceBundle) addfile(dir, path string) {
 	_, name := filepath.Split(path)
 	path = filepath.ToSlash(path)
-	basename := name[:len(name)-len(filepath.Ext(name))]
-	if s.Test {
-		basename = basename[:len(name)-5]
+	pathFragments := strings.Split(path, "/")
+
+	platformSpecific := false
+	var platform string
+	if len(pathFragments) > 1 {
+		if p, ok := platformNames[pathFragments[0]]; ok {
+			platformSpecific = true
+			platform = p
+		}
 	}
-	fragments := strings.Split(basename, "_")
-	last := fragments[len(fragments)-1]
-	if len(fragments) > 2 && fragments[len(fragments)-2] == "not" {
-		last = "not_" + last
+	if !platformSpecific {
+		basename := name[:len(name)-len(filepath.Ext(name))]
+		if s.Test {
+			basename = basename[:len(name)-5]
+		}
+		fragments := strings.Split(basename, "_")
+		last := fragments[len(fragments)-1]
+		if len(fragments) > 2 && fragments[len(fragments)-2] == "not" {
+			last = "not_" + last
+		}
+		if p, ok := platformNames[last]; ok {
+			platformSpecific = true
+			platform = p
+		}
 	}
-	if platform, ok := platformNames[last]; ok {
-		s.PlatformSpecificFiles[platform] = append(s.PlatformSpecificFiles[platform], path)
+
+	if platformSpecific {
+		s.PlatformSpecificFiles[platform] = append(s.PlatformSpecificFiles[platform], dir+"/"+path)
 	} else {
-		s.Files = append(s.Files, path)
+		s.Files = append(s.Files, dir+"/"+path)
 	}
 }
 
@@ -283,20 +304,19 @@ func (sv *ProjectDetail) SearchFiles() {
 		if path == "main.cpp" {
 			return nil
 		}
-		outputPath := "src/" + path
 		dir := filepath.Dir(path)
 		if dir == "." {
 			dir = ""
 		}
 		ext := filepath.Ext(path)
 		if supportedSourceExtensions[ext] || ext == ".ui" {
-			sv.Sources.addfile(outputPath)
+			sv.Sources.addfile("src", path)
 		} else if supportedHeaderExtensions[ext] {
 			_, ok := sv.InstallHeaderDirs[dir]
 			if ok {
-				sv.InstallHeaderDirs[dir].addfile(outputPath)
+				sv.InstallHeaderDirs[dir].addfile("src", path)
 			} else {
-				sv.Sources.addfile(outputPath)
+				sv.Sources.addfile("src", path)
 			}
 		}
 		return nil
@@ -310,9 +330,9 @@ func (sv *ProjectDetail) SearchFiles() {
 				continue
 			}
 			if strings.HasSuffix(name, "_test.cpp") {
-				sv.Tests.addfile("test/" + name)
+				sv.Tests.addfile("test", name)
 			} else {
-				sv.ExtraTestSources.addfile("test/" + name)
+				sv.ExtraTestSources.addfile("test", name)
 			}
 		}
 	}
@@ -326,9 +346,9 @@ func (sv *ProjectDetail) SearchFiles() {
 				continue
 			}
 			if strings.HasSuffix(name, "_example.cpp") || name == "example.cpp" {
-				sv.Examples.addfile("examples/" + name)
+				sv.Examples.addfile("examples", name)
 			} else {
-				sv.ExtraExampleSources.addfile("examples/" + name)
+				sv.ExtraExampleSources.addfile("examples", name)
 			}
 		}
 	}
@@ -341,7 +361,7 @@ func (sv *ProjectDetail) SearchFiles() {
 		if info.IsDir() || strings.HasPrefix(info.Name(), "_") || ignoreResources[info.Name()] {
 			return nil
 		}
-		sv.Resources.addfile("Resources/" + fullPath[len(resourceDir)+1:])
+		sv.Resources.addfile("Resources", fullPath[len(resourceDir)+1:])
 		return nil
 	})
 }

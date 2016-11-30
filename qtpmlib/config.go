@@ -14,7 +14,7 @@ const packageFileName = "qtpackage.toml"
 const userPackageFileName = "qtpackage.user.toml"
 
 var (
-	QTPMVersion       = []int{0, 8, 2}
+	QTPMVersion       = []int{0, 8, 3}
 	QTPMVersionString = fmt.Sprintf("%d.%d.%d", QTPMVersion[0], QTPMVersion[1], QTPMVersion[2])
 )
 

@@ -80,7 +80,7 @@ cp ../test/workbench8_ja.ts translations/
 ../qtpm build
 popd >> /dev/null
 
-#echo "conditional build test"
+#echo "conditional build test 2"
 #mkdir workbench9
 #pushd workbench9 >> /dev/null
 #../qtpm init lib
@@ -89,3 +89,19 @@ popd >> /dev/null
 #cp ../test/package9_extra_header.h src/extra
 #../qtpm build
 #popd >> /dev/null
+
+echo "conditional build test 3"
+mkdir workbench10
+pushd workbench10 >> /dev/null
+../qtpm init app
+mkdir src/windows
+mkdir src/linux
+mkdir src/darwin
+cp ../test/package8_windows.cpp src/windows/package8.cpp
+cp ../test/package8_linux.cpp src/linux/package8.cpp
+cp ../test/package8_darwin.cpp src/darwin/package8.cpp
+cp ../test/package8_main.cpp src/main.cpp
+mkdir -p qtresources/translations/
+cp ../test/workbench8_ja.ts translations/
+../qtpm build
+popd >> /dev/null
