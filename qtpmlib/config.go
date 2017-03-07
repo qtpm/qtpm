@@ -2,19 +2,20 @@ package qtpm
 
 import (
 	"fmt"
-	"github.com/BurntSushi/toml"
-	"github.com/fatih/color"
-	"github.com/shibukawa/configdir"
 	"os"
 	"path/filepath"
 	"sort"
+
+	"github.com/BurntSushi/toml"
+	"github.com/fatih/color"
+	"github.com/shibukawa/configdir"
 )
 
 const packageFileName = "qtpackage.toml"
 const userPackageFileName = "qtpackage.user.toml"
 
 var (
-	QTPMVersion       = []int{0, 8, 4}
+	QTPMVersion       = []int{0, 8, 5}
 	QTPMVersionString = fmt.Sprintf("%d.%d.%d", QTPMVersion[0], QTPMVersion[1], QTPMVersion[2])
 )
 

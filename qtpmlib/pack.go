@@ -2,11 +2,12 @@ package qtpm
 
 import (
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 func Pack(buildType BuildType, zipPack, nsisPack bool) {
@@ -51,11 +52,8 @@ func Pack(buildType BuildType, zipPack, nsisPack bool) {
 			windeployqtPath = filepath.Join(qtDir, "bin", "windeployqt")
 		}
 		printSection("\nCreating Installer: %s\n", config.Name)
-		var args []string
-		if buildType == Debug {
-			args = append(args, "--debug", strings.ToLower(config.Name)+".exe")
-		} else {
-			args = append(args, "--release", strings.ToLower(config.Name)+".exe")
+		args := []string{
+			"--release", strings.ToLower(config.Name) + ".exe",
 		}
 		cmd := Command(windeployqtPath, buildDirPath, args...)
 		err := cmd.Run()
@@ -71,13 +69,13 @@ func Pack(buildType BuildType, zipPack, nsisPack bool) {
 		}
 		var packArgs []string
 		if zipPack {
-			packArgs = append(packArgs, "-D", "CPACK_GENERATOR=\"ZIP\"")
+			packArgs = append(packArgs, "-G", "ZIP")
 		} else if nsisPack {
-			packArgs = append(packArgs, "-D", "CPACK_GENERATOR=\"NSIS\"")
-		} else if runtime.GOOS == "windows" {
-			packArgs = append(packArgs, "-D", "CPACK_GENERATOR=\"WIX\"")
+			// do nothing
+		} else {
+			packArgs = append(packArgs, "-G", "WIX")
 		}
-		cmd2 := Command("cpack", buildDirPath, args...)
+		cmd2 := Command("cpack", buildDirPath, packArgs...)
 		err = cmd2.Run()
 		if err != nil {
 			color.Red("packaging error at cpack: %s\n", err.Error())
