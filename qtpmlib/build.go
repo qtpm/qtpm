@@ -12,10 +12,64 @@ import (
 	"github.com/fatih/color"
 )
 
-func Build(refresh, debugBuild bool) {
+type BuildType int
+
+const (
+	Debug BuildType = iota
+	Release
+	ReleaseWithDebug
+	MinSizeRel
+)
+
+func (t BuildType) String() string {
+	switch t {
+	case Debug:
+		return "debug"
+	case Release:
+		return "release"
+	case ReleaseWithDebug:
+		return "reldebug"
+	case MinSizeRel:
+		return "relminsize"
+	default:
+		return "unknown"
+	}
+}
+
+func (t BuildType) CMakeFlag() string {
+	switch t {
+	case Debug:
+		return "Debug"
+	case Release:
+		return "Release"
+	case ReleaseWithDebug:
+		return "RelWithDebInfo"
+	case MinSizeRel:
+		return "MinSizeRel"
+	default:
+		return "Debug"
+	}
+}
+
+func BuildTypeFromString(buildType string) BuildType {
+	switch buildType {
+	case "debug":
+		return Debug
+	case "release":
+		return Release
+	case "reldebug":
+		return ReleaseWithDebug
+	case "relminsize":
+		return MinSizeRel
+	default:
+		return Debug
+	}
+}
+
+func Build(refresh bool, buildType BuildType) {
 	config := MustLoadConfig(".", true)
 	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
-	_, err := BuildPackage(config, config, refresh, debugBuild, true, !config.IsApplication)
+	_, err := BuildPackage(config, config, buildType, refresh, true, !config.IsApplication)
 	if err != nil {
 		color.Red("\nBuild Error: %s\n", err.Error())
 		os.Exit(1)
@@ -26,13 +80,13 @@ func Build(refresh, debugBuild bool) {
 func Test(refresh bool) {
 	config := MustLoadConfig(".", true)
 	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
-	_, err := BuildPackage(config, config, refresh, true, true, false)
+	_, err := BuildPackage(config, config, Debug, refresh, true, false)
 	if err != nil {
 		color.Red("\nBuild Error: %s\n", err.Error())
 		os.Exit(1)
 	}
-	buildPath := filepath.Join(config.Dir, BuildFolder(true))
-	makeCmd := CMake(buildPath, false, false, "test", nil)
+	buildPath := filepath.Join(config.Dir, BuildFolder(Debug))
+	makeCmd := CMake(buildPath, false, Debug, "test", nil)
 	makeCmd.AddEnv("CTEST_OUTPUT_ON_FAILURE=1")
 	err = makeCmd.Run()
 	if err != nil {
@@ -42,7 +96,7 @@ func Test(refresh bool) {
 	printSuccess("\nTest Pass\n")
 }
 
-func BuildPackage(rootConfig, config *PackageConfig, refresh, debugBuild, build, install bool) (*ProjectDetail, error) {
+func BuildPackage(rootConfig, config *PackageConfig, buildType BuildType, refresh, build, install bool) (*ProjectDetail, error) {
 	var changed bool
 	var rootPackageDir string
 	if rootConfig != nil {
@@ -55,7 +109,7 @@ func BuildPackage(rootConfig, config *PackageConfig, refresh, debugBuild, build,
 	if err != nil {
 		return nil, err
 	}
-	rootPackageBuildPath := filepath.Join(rootPackageDir, BuildFolder(debugBuild))
+	rootPackageBuildPath := filepath.Join(rootPackageDir, BuildFolder(buildType))
 	dependencies, err := getRecursively(rootConfig, config.Requires, false, false, false, false)
 	if err != nil {
 		return nil, err
@@ -63,12 +117,12 @@ func BuildPackage(rootConfig, config *PackageConfig, refresh, debugBuild, build,
 	dependencies = append(dependencies, config)
 	var detail *ProjectDetail
 	if config.IsApplication {
-		changed, detail, err = AddCMakeForApp(config, rootPackageDir, dependencies, refresh, debugBuild)
-		buildPath := filepath.Join(config.Dir, BuildFolder(debugBuild))
+		changed, detail, err = AddCMakeForApp(config, rootPackageDir, dependencies, refresh, buildType)
+		buildPath := filepath.Join(config.Dir, BuildFolder(buildType))
 		os.MkdirAll(buildPath, 0755)
-		CreateIcon(config.Dir, debugBuild)
+		CreateIcon(config.Dir, buildType)
 	} else {
-		changed, detail, err = AddCMakeForLib(config, rootPackageDir, dependencies, refresh, debugBuild)
+		changed, detail, err = AddCMakeForLib(config, rootPackageDir, dependencies, refresh, buildType)
 		os.MkdirAll(filepath.Join(rootPackageBuildPath, "include"), 0755)
 		os.MkdirAll(filepath.Join(rootPackageBuildPath, "lib"), 0755)
 	}
@@ -78,19 +132,21 @@ func BuildPackage(rootConfig, config *PackageConfig, refresh, debugBuild, build,
 	if !build {
 		return detail, nil
 	}
-	if debugBuild {
-		printSection("\nBuild Package: %s (debug)\n", config.Name)
-	} else {
-		printSection("\nBuild Package: %s (release)\n", config.Name)
-	}
-	return detail, RunCMakeAndBuild(rootPackageDir, config, changed, debugBuild, true, install)
+	printSection("\nBuild Package: %s (%s)\n", config.Name, buildType.String())
+
+	return detail, RunCMakeAndBuild(rootPackageDir, config, buildType, changed, true, install)
 }
 
-func BuildFolder(debugBuild bool) string {
-	if debugBuild {
+func BuildFolder(buildType BuildType) string {
+	switch buildType {
+	case Debug:
 		return "build-debug"
-	} else {
+	case Release:
 		return "build-release"
+	case ReleaseWithDebug:
+		return "build-reldebug"
+	default:
+		return "build-debug"
 	}
 }
 
@@ -108,12 +164,12 @@ func OldestUnixTime(paths ...string) int64 {
 	return unixTime
 }
 
-func CreateIcon(rootPackageDir string, debugBuild bool) {
+func CreateIcon(rootPackageDir string, buildType BuildType) {
 	var iconImage image.Image
 	resourceDir := filepath.Join(rootPackageDir, "Resources")
 	os.MkdirAll(resourceDir, 0755)
 
-	workDir := filepath.Join(rootPackageDir, BuildFolder(debugBuild))
+	workDir := filepath.Join(rootPackageDir, BuildFolder(buildType))
 
 	resultPath1 := filepath.Join(resourceDir, "WindowsAppIcon.ico")
 	resultPath2 := filepath.Join(resourceDir, "MacOSXAppIcon.icns")
@@ -183,17 +239,13 @@ func CreateIcon(rootPackageDir string, debugBuild bool) {
 	}
 }
 
-func RunCMakeAndBuild(rootPackageDir string, packageConfig *PackageConfig, update, debug, build, install bool) error {
-	buildPath := filepath.Join(packageConfig.Dir, BuildFolder(debug))
+func RunCMakeAndBuild(rootPackageDir string, packageConfig *PackageConfig, buildType BuildType, update, build, install bool) error {
+	buildPath := filepath.Join(packageConfig.Dir, BuildFolder(buildType))
 	var installPrefix string
 	if rootPackageDir != packageConfig.Dir {
-		installPrefix = filepath.Join(rootPackageDir, BuildFolder(debug))
+		installPrefix = filepath.Join(rootPackageDir, BuildFolder(buildType))
 	} else {
-		if debug {
-			installPrefix = filepath.Join(rootPackageDir, "dest", "debug")
-		} else {
-			installPrefix = filepath.Join(rootPackageDir, "dest", "release")
-		}
+		installPrefix = filepath.Join(rootPackageDir, "dest", buildType.String())
 		os.MkdirAll(installPrefix, 0755)
 	}
 
@@ -204,14 +256,10 @@ func RunCMakeAndBuild(rootPackageDir string, packageConfig *PackageConfig, updat
 		printSubSection("\nRun CMake\n")
 		os.MkdirAll(buildPath, 0755)
 		args := []string{"-DCMAKE_INSTALL_PREFIX=" + installPrefix, "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"}
-		if debug {
-			args = append(args, "-DCMAKE_BUILD_TYPE=Debug")
-		} else {
-			args = append(args, "-DCMAKE_BUILD_TYPE=Release")
-		}
+		args = append(args, "-DCMAKE_BUILD_TYPE="+buildType.CMakeFlag())
 		qtDir := FindQt(rootPackageDir)
 		args = append(args, CMakeOptions(qtDir)...)
-		cmd := CMake(buildPath, true, false, "", args)
+		cmd := CMake(buildPath, true, buildType, "", args)
 		if qtDir != "" {
 			cmd.AddEnv("QTDIR=" + qtDir)
 		}
@@ -231,7 +279,7 @@ func RunCMakeAndBuild(rootPackageDir string, packageConfig *PackageConfig, updat
 		} else {
 			printSubSection("\nStart Building\n")
 		}
-		makeCmd := CMake(buildPath, false, debug, target, nil)
+		makeCmd := CMake(buildPath, false, buildType, target, nil)
 		return makeCmd.Run()
 	}
 	if install {
@@ -239,7 +287,7 @@ func RunCMakeAndBuild(rootPackageDir string, packageConfig *PackageConfig, updat
 	} else {
 		printSubSection("\nStart Building\n")
 	}
-	makeCmd := CMake(buildPath, false, debug, libname(packageConfig.Name), nil)
+	makeCmd := CMake(buildPath, false, buildType, libname(packageConfig.Name), nil)
 	err = makeCmd.Run()
 	if err != nil {
 		return err
@@ -247,6 +295,6 @@ func RunCMakeAndBuild(rootPackageDir string, packageConfig *PackageConfig, updat
 	if !install {
 		return nil
 	}
-	installCmd := CMake(buildPath, false, debug, "install/fast", nil)
+	installCmd := CMake(buildPath, false, buildType, "install/fast", nil)
 	return installCmd.Run()
 }

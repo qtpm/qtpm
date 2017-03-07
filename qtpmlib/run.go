@@ -9,14 +9,14 @@ import (
 	"strings"
 )
 
-func Run(refresh, debug bool) {
+func Run(refresh bool, buildType BuildType) {
 	config := MustLoadConfig(".", true)
 	if !config.IsApplication {
 		color.Red("This project is not application\n")
 		os.Exit(1)
 	}
-	Build(refresh, debug)
-	cmdPath := filepath.Join(config.Dir, BuildFolder(debug), strings.ToLower(config.Name))
+	Build(refresh, buildType)
+	cmdPath := filepath.Join(config.Dir, BuildFolder(buildType), strings.ToLower(config.Name))
 	if runtime.GOOS == "darwin" {
 		cmd := exec.Command("open", "-a", cmdPath+".app")
 		cmd.Start()

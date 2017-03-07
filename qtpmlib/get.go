@@ -47,7 +47,7 @@ func Get(packageName string, update, useGit bool) {
 		os.Exit(1)
 	}
 	for _, packageConfig := range packages[:len(packages)-1] {
-		_, err = BuildPackage(parentConfig, packageConfig, update, false, true, false)
+		_, err = BuildPackage(parentConfig, packageConfig, Release, update, true, false)
 		if err != nil {
 			continue
 		}

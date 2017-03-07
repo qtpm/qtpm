@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-func Touch(rootConfig *PackageConfig, debug, verbose bool) {
+func Touch(rootConfig *PackageConfig, buildType BuildType, verbose bool) {
 	projects := []*PackageConfig{
 		rootConfig,
 	}
@@ -20,7 +20,7 @@ func Touch(rootConfig *PackageConfig, debug, verbose bool) {
 	}
 	for _, project := range projects {
 		printSubSection("Refreshing %s\n", project.Name)
-		_, err := BuildPackage(rootConfig, project, true, debug, false, !project.IsApplication)
+		_, err := BuildPackage(rootConfig, project, buildType, true, false, !project.IsApplication)
 		if err != nil {
 			color.Red("\nTouch Error: %v\n", err)
 			os.Exit(1)

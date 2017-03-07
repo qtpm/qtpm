@@ -40,7 +40,7 @@ func SetUseWebAssemblyCompiler(asmJS, webAsm bool) {
 	useWebAssemblyCompiler = webAsm
 }
 
-func CMake(workDir string, generate, debug bool, target string, buildArgs []string) *Cmd {
+func CMake(workDir string, generate bool, buildType BuildType, target string, buildArgs []string) *Cmd {
 	if useAsmJS {
 		if runtime.GOOS == "windows" {
 			color.Red("Now WebAssembly build on Windows is not supporting.\n")
@@ -71,12 +71,7 @@ func CMake(workDir string, generate, debug bool, target string, buildArgs []stri
 			args = append(args, "..")
 			args = append(args, buildArgs...)
 		} else {
-			args = []string{"--build", "."}
-			if debug {
-				args = append(args, "--config", "Debug")
-			} else {
-				args = append(args, "--config", "Release")
-			}
+			args = []string{"--build", ".", "--config", buildType.CMakeFlag()}
 			if target != "" {
 				args = append(args, "--target", target)
 			}

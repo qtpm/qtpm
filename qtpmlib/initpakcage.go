@@ -196,7 +196,7 @@ func InitLibrary(name, license string) {
 	WriteTemplate(".", "", ".clang-format", "dotclang-format", variable, false)
 	WriteTemplate(".", "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
 	WriteTemplate(".", "", "README.rst", "READMELib.rst", variable, false)
-	Touch(config, true, false)
+	Touch(config, Debug, false)
 	showHelpForLib(packageName)
 }
 
@@ -216,6 +216,6 @@ func InitApplication(name, license string) {
 	WriteTemplate(".", "", ".clang-format", "dotclang-format", variable, false)
 	WriteTemplate(".", "", "CMakeExtra.txt", "CMakeExtra.txt", variable, false)
 	WriteTemplate(".", "", "README.rst", "READMEApp.rst", variable, false)
-	Touch(config, true, false)
+	Touch(config, Debug, false)
 	showHelpForApp()
 }

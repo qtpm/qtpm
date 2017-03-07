@@ -9,20 +9,20 @@ import (
 	"strings"
 )
 
-func Pack(debugBuild bool) {
+func Pack(buildType BuildType, zipPack, nsisPack bool) {
 	config := MustLoadConfig(".", true)
 	if !config.IsApplication {
 		color.Red("pack command is for application package.\n")
 		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "qtresources", "translations"), 0755)
-	_, err := BuildPackage(config, config, false, debugBuild, true, false)
+	_, err := BuildPackage(config, config, buildType, false, true, false)
 	if err != nil {
 		color.Red("\nBuild Error\n")
 		os.Exit(1)
 	}
 	os.MkdirAll(filepath.Join(config.Dir, "release"), 0755)
-	buildDirPath := filepath.Join(config.Dir, BuildFolder(debugBuild))
+	buildDirPath := filepath.Join(config.Dir, BuildFolder(buildType))
 	qtDir := FindQt(config.Dir)
 	if runtime.GOOS == "darwin" {
 		macdeployqtPath := "macdeployqt"
@@ -30,10 +30,10 @@ func Pack(debugBuild bool) {
 			macdeployqtPath = filepath.Join(qtDir, "bin", "macdeployqt")
 		}
 		var dmgFileName string
-		if debugBuild {
-			dmgFileName = fmt.Sprintf("%s-%d.%d.%d-debug.dmg", config.Name, config.Version[0], config.Version[1], config.Version[2])
-		} else {
+		if buildType == Release {
 			dmgFileName = fmt.Sprintf("%s-%d.%d.%d.dmg", config.Name, config.Version[0], config.Version[1], config.Version[2])
+		} else {
+			dmgFileName = fmt.Sprintf("%s-%d.%d.%d-%s.dmg", config.Name, config.Version[0], config.Version[1], config.Version[2], buildType.String())
 		}
 		printSection("\nCreating Installer: %s\n", config.Name)
 		err := SequentialRun(buildDirPath).
@@ -52,7 +52,7 @@ func Pack(debugBuild bool) {
 		}
 		printSection("\nCreating Installer: %s\n", config.Name)
 		var args []string
-		if debugBuild {
+		if buildType == Debug {
 			args = append(args, "--debug", strings.ToLower(config.Name)+".exe")
 		} else {
 			args = append(args, "--release", strings.ToLower(config.Name)+".exe")
@@ -63,13 +63,21 @@ func Pack(debugBuild bool) {
 			color.Red("packaging error at windeployqt: %s\n", err.Error())
 			os.Exit(1)
 		}
-		Touch(config, false, false)
-		err = RunCMakeAndBuild(config.Dir, config, true, debugBuild, false, false)
+		Touch(config, buildType, false)
+		err = RunCMakeAndBuild(config.Dir, config, buildType, true, false, false)
 		if err != nil {
 			color.Red("packaging error at recreate CMakeLists.txt: %s\n", err.Error())
 			os.Exit(1)
 		}
-		cmd2 := Command("cpack", buildDirPath)
+		var packArgs []string
+		if zipPack {
+			packArgs = append(packArgs, "-D", "CPACK_GENERATOR=\"ZIP\"")
+		} else if nsisPack {
+			packArgs = append(packArgs, "-D", "CPACK_GENERATOR=\"NSIS\"")
+		} else if runtime.GOOS == "windows" {
+			packArgs = append(packArgs, "-D", "CPACK_GENERATOR=\"WIX\"")
+		}
+		cmd2 := Command("cpack", buildDirPath, args...)
 		err = cmd2.Run()
 		if err != nil {
 			color.Red("packaging error at cpack: %s\n", err.Error())

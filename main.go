@@ -70,6 +70,9 @@ var qtmodules = []string{
 }
 
 var (
+	buildTypesLabel = "release/debug/reldebug/minsize"
+	buildTypes      = []string{"debug", "release", "reldebug", "relminsize"}
+
 	app     = kingpin.New("qtpm", "Package Manager fot Qt")
 	asmJS   = app.Flag("asmjs", "Compile to asm.js").Bool()
 	webAsm  = app.Flag("wasm", "Compile to WebAssembly").Bool()
@@ -85,18 +88,20 @@ var (
 	libLicense     = initLibCommand.Flag("license", "License name").Short('l').Default("MIT").String()
 
 	buildCommand     = app.Command("build", "Build program")
-	buildTypeFlag    = buildCommand.Arg("build type", "release/debug").Default("debug").Enum("debug", "release")
+	buildTypeFlag    = buildCommand.Arg("build type", buildTypesLabel).Default("debug").Enum(buildTypes...)
 	refreshBuildFlag = buildCommand.Flag("refresh", "Refresh cache").Short('r').Bool()
 
 	runCommand     = app.Command("run", "Build and launch program")
-	runTypeFlag    = runCommand.Arg("build type", "release/debug").Default("debug").Enum("debug", "release")
+	runTypeFlag    = runCommand.Arg("build type", buildTypesLabel).Default("debug").Enum(buildTypes...)
 	refreshRunFlag = runCommand.Flag("refresh", "Refresh cache").Short('r').Bool()
 
 	packCommand  = app.Command("pack", "Create installer")
-	packTypeFlag = packCommand.Arg("build type", "release/debug").Default("release").Enum("debug", "release")
+	packZipFlag  = packCommand.Flag("zip", "Pack as Zip file").Short('z').Bool()
+	packNSISFlag = packCommand.Flag("nsis", "Pack with NSIS fow Windows (Default is WiX)").Short('n').Bool()
+	packTypeFlag = packCommand.Arg("build type", buildTypesLabel).Default("release").Enum(buildTypes...)
 
 	touchCommand  = app.Command("touch", "Recreate CMakeLists.txt")
-	touchTypeFlag = touchCommand.Arg("build type", "release/debug").Default("debug").Enum("debug", "release")
+	touchTypeFlag = touchCommand.Arg("build type", buildTypesLabel).Default("debug").Enum(buildTypes...)
 
 	cleanCommand = app.Command("clean", "Clean temp files")
 
@@ -174,16 +179,16 @@ func main() {
 	case buildCommand.FullCommand():
 		printLogo()
 		qtpm.SetUseWebAssemblyCompiler(*asmJS, *webAsm)
-		qtpm.Build(*refreshBuildFlag, *buildTypeFlag == "debug")
+		qtpm.Build(*refreshBuildFlag, qtpm.BuildTypeFromString(*buildTypeFlag))
 	case runCommand.FullCommand():
 		printLogo()
-		qtpm.Run(*refreshRunFlag, *runTypeFlag == "debug")
+		qtpm.Run(*refreshRunFlag, qtpm.BuildTypeFromString(*runTypeFlag))
 	case packCommand.FullCommand():
 		printLogo()
-		qtpm.Pack(*packTypeFlag == "debug")
+		qtpm.Pack(qtpm.BuildTypeFromString(*packTypeFlag), *packZipFlag, *packNSISFlag)
 	case touchCommand.FullCommand():
 		printLogo()
-		qtpm.Touch(qtpm.MustLoadConfig(".", true), *touchTypeFlag == "debug", true)
+		qtpm.Touch(qtpm.MustLoadConfig(".", true), qtpm.BuildTypeFromString(*touchTypeFlag), true)
 	case cleanCommand.FullCommand():
 		printLogo()
 		qtpm.Clean()
@@ -210,17 +215,17 @@ func main() {
 		config := qtpm.MustLoadConfig(".", true)
 		qtpm.AddClass(config, *className)
 		qtpm.AddTest(config, *className)
-		qtpm.Touch(config, true, false)
+		qtpm.Touch(config, qtpm.Debug, false)
 	case addTestCommand.FullCommand():
 		printLogo()
 		config := qtpm.MustLoadConfig(".", true)
 		qtpm.AddTest(config, *testName)
-		qtpm.Touch(config, true, false)
+		qtpm.Touch(config, qtpm.Debug, false)
 	case addQtModuleCommand.FullCommand():
 		printLogo()
 		config := qtpm.MustLoadConfig(".", true)
 		qtpm.AddQtModule(config, *qtModuleName)
-		qtpm.Touch(config, true, false)
+		qtpm.Touch(config, qtpm.Debug, false)
 	case addLicenseCommand.FullCommand():
 		printLogo()
 		config := qtpm.MustLoadConfig(".", true)

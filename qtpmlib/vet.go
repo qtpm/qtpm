@@ -21,7 +21,7 @@ type CompileCommand struct {
 
 func GetCompileCommand(dir string) map[string]string {
 	result := make(map[string]string)
-	compileCommandsRaw, err := ioutil.ReadFile(filepath.Join(dir, BuildFolder(true), "compile_commands.json"))
+	compileCommandsRaw, err := ioutil.ReadFile(filepath.Join(dir, BuildFolder(Debug), "compile_commands.json"))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -41,7 +41,7 @@ int main() {
 
 func GetDefaultIncludeOptions(dir string) string {
 	var buffer bytes.Buffer
-	workDir := filepath.Join(dir, BuildFolder(true))
+	workDir := filepath.Join(dir, BuildFolder(Debug))
 	option, err := ioutil.ReadFile(filepath.Join(workDir, "default_include_options.txt"))
 	if err == nil {
 		return string(option)
@@ -95,7 +95,7 @@ func BuildOptions(defaultOption, compileCommand string, path string) []string {
 
 func Vet(targetFiles []string) {
 	config := MustLoadConfig(".", true)
-	detail, err := BuildPackage(config, config, false, true, false, false)
+	detail, err := BuildPackage(config, config, Debug, false, false, false)
 	if err != nil {
 		log.Fatalln(err)
 	}

@@ -525,7 +525,7 @@ func DependenciesLibs(config *PackageConfig, dependencies []*PackageConfig) []Re
 	return requires
 }
 
-func AddCMakeForApp(config *PackageConfig, rootPackageDir string, dependencies []*PackageConfig, refresh, debugBuild bool) (bool, *ProjectDetail, error) {
+func AddCMakeForApp(config *PackageConfig, rootPackageDir string, dependencies []*PackageConfig, refresh bool, buildType BuildType) (bool, *ProjectDetail, error) {
 	var destinationPath string
 	if config.Dir == rootPackageDir {
 		destinationPath = ""
@@ -544,12 +544,12 @@ func AddCMakeForApp(config *PackageConfig, rootPackageDir string, dependencies [
 	detail.HasQtResource = CreateResource(config.Dir)
 
 	WriteTemplate(config.Dir, "Resources", "windows.rc", "windows.rc", detail, !refresh)
-	_, err := os.Stat(filepath.Join(config.Dir, BuildFolder(debugBuild)))
+	_, err := os.Stat(filepath.Join(config.Dir, BuildFolder(buildType)))
 	changed, err2 := WriteTemplate(config.Dir, "", "CMakeLists.txt", "CMakeListsApp.txt", detail, !refresh)
 	return changed || os.IsNotExist(err), detail, err2
 }
 
-func AddCMakeForLib(config *PackageConfig, rootPackageDir string, dependencies []*PackageConfig, refresh, debugBuild bool) (bool, *ProjectDetail, error) {
+func AddCMakeForLib(config *PackageConfig, rootPackageDir string, dependencies []*PackageConfig, refresh bool, buildType BuildType) (bool, *ProjectDetail, error) {
 	var destinationPath string
 	if config.Dir == rootPackageDir {
 		destinationPath = ""
@@ -567,7 +567,7 @@ func AddCMakeForLib(config *PackageConfig, rootPackageDir string, dependencies [
 	detail.SearchFiles()
 	detail.HasQtResource = CreateResource(config.Dir)
 
-	_, err := os.Stat(filepath.Join(config.Dir, BuildFolder(debugBuild)))
+	_, err := os.Stat(filepath.Join(config.Dir, BuildFolder(buildType)))
 	changed, err2 := WriteTemplate(config.Dir, "", "CMakeLists.txt", "CMakeListsLib.txt", detail, !refresh)
 	return changed || os.IsNotExist(err), detail, err2
 }
