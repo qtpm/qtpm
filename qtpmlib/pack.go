@@ -10,7 +10,7 @@ import (
 	"github.com/fatih/color"
 )
 
-func Pack(buildType BuildType, zipPack, nsisPack bool) {
+func Pack(buildType BuildType, zipPack, wixPack bool) {
 	config := MustLoadConfig(".", true)
 	if !config.IsApplication {
 		color.Red("pack command is for application package.\n")
@@ -70,12 +70,10 @@ func Pack(buildType BuildType, zipPack, nsisPack bool) {
 		var packArgs []string
 		if zipPack {
 			packArgs = append(packArgs, "-G", "ZIP")
-		} else if nsisPack {
-			// do nothing
-		} else {
+		} else if wixPack {
 			packArgs = append(packArgs, "-G", "WIX")
 		}
-		cmd2 := Command("cpack", buildDirPath, packArgs...)
+		cmd2 := CommandWithPath("cpack", buildDirPath, FindWix(), packArgs...)
 		err = cmd2.Run()
 		if err != nil {
 			color.Red("packaging error at cpack: %s\n", err.Error())

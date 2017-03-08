@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"runtime"
+
 	"github.com/fatih/color"
 	"github.com/qtpm/qtpm/qtpmlib"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"os"
-	"runtime"
 )
 
 var (
@@ -97,7 +98,7 @@ var (
 
 	packCommand  = app.Command("pack", "Create installer")
 	packZipFlag  = packCommand.Flag("zip", "Pack as Zip file").Short('z').Bool()
-	packNSISFlag = packCommand.Flag("nsis", "Pack with NSIS fow Windows (Default is WiX)").Short('n').Bool()
+	packWiXFlag  = packCommand.Flag("wix", "Pack with WiX (Default is NSIS)").Short('w').Bool()
 	packTypeFlag = packCommand.Arg("build type", buildTypesLabel).Default("release").Enum(buildTypes...)
 
 	touchCommand  = app.Command("touch", "Recreate CMakeLists.txt")
@@ -185,7 +186,7 @@ func main() {
 		qtpm.Run(*refreshRunFlag, qtpm.BuildTypeFromString(*runTypeFlag))
 	case packCommand.FullCommand():
 		printLogo()
-		qtpm.Pack(qtpm.BuildTypeFromString(*packTypeFlag), *packZipFlag, *packNSISFlag)
+		qtpm.Pack(qtpm.BuildTypeFromString(*packTypeFlag), *packZipFlag, *packWiXFlag)
 	case touchCommand.FullCommand():
 		printLogo()
 		qtpm.Touch(qtpm.MustLoadConfig(".", true), qtpm.BuildTypeFromString(*touchTypeFlag), true)

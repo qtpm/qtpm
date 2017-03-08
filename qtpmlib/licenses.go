@@ -103,7 +103,7 @@ func NormalizeLicense(licenseName string) (string, string, error) {
 }
 
 func WriteLicense(dir, license string) error {
-	file, err := os.Create(filepath.Join(dir, "LICENSE.rst"))
+	file, err := os.Create(filepath.Join(dir, "LICENSE.txt"))
 	if err != nil {
 		return err
 	}
