@@ -103,7 +103,6 @@ if(WIN32)
     ${CMAKE_CURRENT_BINARY_DIR}/iconengines
     ${CMAKE_CURRENT_BINARY_DIR}/imageformats
     ${CMAKE_CURRENT_BINARY_DIR}/platforms
-    ${CMAKE_CURRENT_SOURCE_DIR}/Resources
     ${CMAKE_CURRENT_BINARY_DIR}/translations DESTINATION bin COMPONENT applications)
   set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
   include(InstallRequiredSystemLibraries)
