@@ -52,8 +52,17 @@ func Pack(buildType BuildType, zipPack, wixPack bool) {
 			windeployqtPath = filepath.Join(qtDir, "bin", "windeployqt")
 		}
 		printSection("\nCreating Installer: %s\n", config.Name)
+		targetName := strings.ToLower(config.Name) + ".exe"
+		// Visual Studio generates target file under Release/Debug folder
+		if _, err := os.Stat(filepath.Join(buildDirPath, targetName)); err != nil {
+			if buildType == Release {
+				os.Rename(targetName, filepath.Join("Release", targetName))
+			} else {
+				os.Rename(targetName, filepath.Join("Debug", targetName))
+			}
+		}
 		args := []string{
-			"--release", strings.ToLower(config.Name) + ".exe",
+			"--release", targetName,
 		}
 		cmd := Command(windeployqtPath, buildDirPath, args...)
 		err := cmd.Run()
