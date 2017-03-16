@@ -56,9 +56,9 @@ func Pack(buildType BuildType, zipPack, wixPack bool) {
 		// Visual Studio generates target file under Release/Debug folder
 		if _, err := os.Stat(filepath.Join(buildDirPath, targetName)); err != nil {
 			if buildType == Release {
-				os.Rename(targetName, filepath.Join("Release", targetName))
+				FileCopy(filepath.Join(buildDirPath, targetName), filepath.Join(buildDirPath, "Release", targetName))
 			} else {
-				os.Rename(targetName, filepath.Join("Debug", targetName))
+				FileCopy(filepath.Join(buildDirPath, targetName), filepath.Join(buildDirPath, "Debug", targetName))
 			}
 		}
 		args := []string{

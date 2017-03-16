@@ -15,14 +15,14 @@ BEGIN
     BEGIN
         BLOCK "000004b0"
         BEGIN
-            VALUE "CompanyName", "[[.Organization]]"
-            VALUE "FileDescription", "[[.Target]]"
-            VALUE "FileVersion", "[[.Version]]"
-            VALUE "LegalCopyright", "[[.CopyRight]]"
-            VALUE "InternalName", "[[.Target]]"
-            VALUE "OriginalFilename", "[[.Target]].exe"
-            VALUE "ProductName", "[[.Target]]"
-            VALUE "ProductVersion", "[[.Version]]"
+            VALUE "CompanyName", "[[.Organization]]\0"
+            VALUE "FileDescription", "[[.Target]]\0"
+            VALUE "FileVersion", "[[.Version]]\0"
+            VALUE "LegalCopyright", "[[.CopyRight]]\0"
+            VALUE "InternalName", "[[.Target]]\0"
+            VALUE "OriginalFilename", "[[.Target]].exe\0"
+            VALUE "ProductName", "[[.Target]]\0"
+            VALUE "ProductVersion", "[[.Version]]\0"
         END
     END
 END

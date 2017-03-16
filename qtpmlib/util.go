@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/fatih/color"
+	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -142,4 +144,23 @@ func PrintCommand(cmd *exec.Cmd, envs []string) {
 	}
 	buffer.WriteByte('\n')
 	fmt.Println(buffer.String())
+}
+
+func FileCopy(dest, source string) error {
+	srcFile, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+	stat, err := srcFile.Stat()
+	if err != nil {
+		return err
+	}
+	destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE, stat.Mode())
+	if err != nil {
+		return err
+	}
+	defer destFile.Close()
+	_, err = io.Copy(destFile, srcFile)
+	return err
 }
